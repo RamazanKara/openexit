@@ -74,7 +74,7 @@ func promAlertName(name string) string {
 		if part == "" {
 			continue
 		}
-		b.WriteString(strings.Title(strings.ToLower(part)))
+		b.WriteString(titleCaseASCII(strings.ToLower(part)))
 	}
 	if b.Len() == 0 {
 		return "DatadogMonitorCandidate"
@@ -119,10 +119,10 @@ func convertDatadogMonitorQuery(query string) promConversion {
 	threshold := match[11]
 	rangeExpr := metric + labels + "[" + window + "]"
 	var vectorExpr string
-	switch {
-	case converter == "as_count":
+	switch converter {
+	case "as_count":
 		vectorExpr = "increase(" + rangeExpr + ")"
-	case converter == "as_rate":
+	case "as_rate":
 		vectorExpr = "rate(" + rangeExpr + ")"
 	default:
 		switch metricAgg {

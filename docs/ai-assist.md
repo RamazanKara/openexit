@@ -33,7 +33,7 @@ Set the LiteLLM endpoint through environment variables:
 
 ```bash
 export OPENEXIT_LITELLM_BASE_URL=http://localhost:4000
-export OPENEXIT_LITELLM_API_KEY=optional-token
+export OPENEXIT_LITELLM_API_KEY=<optional-placeholder>
 ```
 
 Then run:

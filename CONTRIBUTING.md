@@ -8,6 +8,7 @@ Thanks for helping make OpenExit useful and trustworthy.
 make test
 make lint
 make build
+make release-dist VERSION=0.1.0-dev
 ```
 
 Keep changes local-first and deterministic. New collectors must default to read-only behavior, must never store credentials, and must redact raw evidence before it is written to disk.
@@ -27,3 +28,5 @@ Include:
 - Why it matters.
 - Validation performed.
 - Any known limitations or manual-review areas.
+
+Before a release-oriented PR, run `make verify` and check `docs/release.md`.

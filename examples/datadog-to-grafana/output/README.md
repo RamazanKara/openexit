@@ -1,3 +1,3 @@
 # Example Output
 
-Run the quick-start commands from the repository root to generate a complete example project.
+Run the commands in `examples/datadog-to-grafana/README.md` from the repository root to generate a complete example project under `./demo`.

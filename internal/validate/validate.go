@@ -338,7 +338,7 @@ func addEvidenceChecks(projectDir string, inv *inventory.Inventory, a *assessmen
 
 func addSecretScan(projectDir string, add func(string, string, string, bool)) {
 	var findings []string
-	for _, path := range append(globRecursive(projectDir, ".json"), globRecursive(projectDir, ".yaml")...) {
+	for _, path := range secretScanFiles(projectDir) {
 		if strings.Contains(path, string(filepath.Separator)+"validation"+string(filepath.Separator)) {
 			continue
 		}
@@ -352,6 +352,23 @@ func addSecretScan(projectDir string, add func(string, string, string, bool)) {
 		return
 	}
 	add("secret-scan", "passed", "", true)
+}
+
+func secretScanFiles(projectDir string) []string {
+	suffixes := []string{".json", ".yaml", ".yml", ".md", ".txt", ".cfg", ".conf", ".vcl"}
+	seen := map[string]struct{}{}
+	var files []string
+	for _, suffix := range suffixes {
+		for _, path := range globRecursive(projectDir, suffix) {
+			if _, ok := seen[path]; ok {
+				continue
+			}
+			seen[path] = struct{}{}
+			files = append(files, path)
+		}
+	}
+	sort.Strings(files)
+	return files
 }
 
 func writeReport(projectDir string, report *Report) error {

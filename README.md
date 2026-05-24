@@ -2,7 +2,7 @@
 
 Local-first migration assessments from proprietary SaaS platforms to open-source infrastructure.
 
-OpenExit v0.1 focuses on Datadog to Grafana LGTM, Prometheus-compatible alerting, and OpenTelemetry Collector or Grafana Alloy. It collects inventory, normalizes it, analyzes migration risks, generates candidate target files, validates outputs, and exports a local evidence bundle.
+OpenExit v0.1 focuses on Datadog to Grafana LGTM, Prometheus-compatible alerting, and OpenTelemetry Collector or Grafana Alloy. It collects inventory, normalizes it, analyzes migration risks, generates candidate target files, validates outputs, and exports a local evidence bundle. Additional migration paths are included only as fixture-first previews.
 
 ## Safety Model
 
@@ -26,6 +26,24 @@ make build
 ./bin/openexit export --project ./demo --format zip --out ./openexit-demo.zip
 ```
 
+## Install From Source
+
+```bash
+git clone https://github.com/RamazanKara/openexit.git
+cd openexit
+make verify
+make build VERSION=0.1.0
+./bin/openexit version
+```
+
+Release candidates can be built locally with:
+
+```bash
+make release-dist VERSION=0.1.0
+```
+
+This writes OS/architecture binaries and `dist/SHA256SUMS`.
+
 ## Commands
 
 - `openexit version`
@@ -43,6 +61,17 @@ make build
 - `openexit assist summarize --project <project-dir> --provider noop`
 
 The Datadog collector is read-only. API keys are read from environment variables, are not printed, and are not stored.
+
+## Supported Paths
+
+| Source | Target | Status | Collector |
+| --- | --- | --- | --- |
+| Datadog | Grafana LGTM, Prometheus-compatible alerting, OpenTelemetry Collector/Alloy | v0.1 primary path | Fixture and read-only live Datadog collector |
+| GitHub Enterprise | Forgejo | Preview | Fixture only |
+| Okta/Auth0 | Keycloak/Zitadel | Preview | Fixture only |
+| Cloudflare/Akamai | Varnish/HAProxy/Coraza | Preview | Fixture only |
+
+Preview paths are useful for local assessment shape, report generation, and test fixtures. They are not live collectors and are not part of the stable v0.1 Datadog migration guarantee.
 
 ## Current Scope
 
@@ -91,6 +120,10 @@ OpenExit is intentionally conservative:
 ## Risk Coverage
 
 The v0.1 assessment engine includes dashboard, monitor, SLO, cost, scale, and migration risk rules from the implementation plan. Findings have stable IDs, severity, affected assets, evidence refs, and recommendations.
+
+## Release Process
+
+The release checklist lives in `docs/release.md`. A release build should pass `make verify`, `make release-dist VERSION=0.1.0`, the Datadog definition-of-done pipeline, and validation/export for preview fixtures.
 
 ## v0.2 Preview
 

@@ -49,7 +49,7 @@ func newVersionCommand() *cobra.Command {
 		Use:   "version",
 		Short: "Print OpenExit version information",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(cmd.OutOrStdout(), "name: %s\nversion: %s\ncommit: %s\ndate: %s\n", version.Name, version.Version, version.Commit, version.Date)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "name: %s\nversion: %s\ncommit: %s\ndate: %s\n", version.Name, version.Version, version.Commit, version.Date)
 		},
 	}
 }
@@ -63,7 +63,7 @@ func newInitCommand() *cobra.Command {
 			if err := InitProject(args[0]); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "initialized %s\n", args[0])
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "initialized %s\n", args[0])
 			return nil
 		},
 	}
@@ -82,7 +82,7 @@ func newStatusCommand() *cobra.Command {
 			if len(status.Missing) > 0 {
 				return fmt.Errorf("project is missing required directories: %s", strings.Join(status.Missing, ", "))
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "project ok: %s\n", status.ProjectDir)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "project ok: %s\n", status.ProjectDir)
 			return nil
 		},
 	}
@@ -197,7 +197,7 @@ func runCollector(ctx context.Context, cmd *cobra.Command, projectDir string, c 
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "collected %s inventory: %s\n", c.Name(), inventorySummary(inv))
+	_, _ = fmt.Fprintf(cmd.OutOrStdout(), "collected %s inventory: %s\n", c.Name(), inventorySummary(inv))
 	return nil
 }
 
@@ -238,7 +238,7 @@ func newAssessCommand() *cobra.Command {
 			if err := writeAssessmentManifest(project, result); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "assessment written with %d findings\n", len(result.Findings))
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "assessment written with %d findings\n", len(result.Findings))
 			return nil
 		},
 	}
@@ -259,7 +259,7 @@ func newGenerateCommand() *cobra.Command {
 				if err := generate.GenerateAll(project); err != nil {
 					return err
 				}
-				fmt.Fprintln(cmd.OutOrStdout(), "generated all artifacts")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "generated all artifacts")
 				return nil
 			}
 			if len(artifacts) == 0 {
@@ -268,7 +268,7 @@ func newGenerateCommand() *cobra.Command {
 			if err := generate.Generate(project, artifacts); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "generated artifacts: %s\n", strings.Join(artifacts, ", "))
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "generated artifacts: %s\n", strings.Join(artifacts, ", "))
 			return nil
 		},
 	}
@@ -286,7 +286,7 @@ func newValidateCommand() *cobra.Command {
 		Short: "Validate generated OpenExit output",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			report, err := validate.Run(project, strict)
-			fmt.Fprintf(cmd.OutOrStdout(), "validation status: %s\n", report.Status)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "validation status: %s\n", report.Status)
 			return err
 		},
 	}
@@ -305,7 +305,7 @@ func newExportCommand() *cobra.Command {
 			if err := openexport.Bundle(openexport.Options{ProjectDir: project, Format: format, Out: out, Force: force}); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "exported %s\n", out)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "exported %s\n", out)
 			return nil
 		},
 	}
@@ -343,6 +343,10 @@ func newAssistSummarizeCommand() *cobra.Command {
 			if providerName == "" {
 				providerName = "noop"
 			}
+			provider, err := assistProvider(providerName)
+			if err != nil {
+				return err
+			}
 			if err := ensureAssistAllowed(cfg, providerName); err != nil {
 				return err
 			}
@@ -378,10 +382,6 @@ func newAssistSummarizeCommand() *cobra.Command {
 					return err
 				}
 			}
-			provider, err := assistProvider(providerName)
-			if err != nil {
-				return err
-			}
 			resp, err := provider.Complete(cmd.Context(), req)
 			if err != nil {
 				return err
@@ -394,7 +394,7 @@ func newAssistSummarizeCommand() *cobra.Command {
 			if err := os.WriteFile(out, []byte(assist.EnsureReviewHeader(resp.Text)+"\n"), 0o644); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "assist output written: %s\n", out)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "assist output written: %s\n", out)
 			return nil
 		},
 	}

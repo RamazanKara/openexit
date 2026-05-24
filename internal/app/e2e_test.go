@@ -42,6 +42,65 @@ func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
 	}
 }
 
+func TestCLICommandFailuresAreActionable(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	if err := executeForTest("init", projectDir); err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		args []string
+		want string
+	}{
+		{args: []string{"generate", "--project", projectDir}, want: "set --all or at least one --artifact"},
+		{args: []string{"collect", "fixture", "--project", projectDir, "--input", filepath.Join(t.TempDir(), "missing.json")}, want: "read fixture"},
+		{args: []string{"assist", "summarize", "--project", projectDir, "--provider", "not-a-provider"}, want: "unsupported assist provider"},
+	}
+	for _, tt := range tests {
+		if err := executeForTest(tt.args...); err == nil {
+			t.Fatalf("expected openexit %s to fail", strings.Join(tt.args, " "))
+		} else if !strings.Contains(err.Error(), tt.want) {
+			t.Fatalf("expected openexit %s error to contain %q, got %q", strings.Join(tt.args, " "), tt.want, err.Error())
+		}
+	}
+}
+
+func TestInvalidFixtureInputFails(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	if err := executeForTest("init", projectDir); err != nil {
+		t.Fatal(err)
+	}
+	fixturePath := filepath.Join(t.TempDir(), "broken.json")
+	if err := os.WriteFile(fixturePath, []byte("{not-json"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("collect", "fixture", "--project", projectDir, "--input", fixturePath); err == nil {
+		t.Fatal("expected invalid fixture input to fail")
+	}
+}
+
+func TestValidationScansGeneratedTextArtifacts(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "grafana-lgtm"},
+		{"generate", "--project", projectDir, "--all"},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	secretPath := filepath.Join(projectDir, "generated-config", "manual.candidate.conf")
+	if err := os.WriteFile(secretPath, []byte("api_key: dd123456789012345678901234567890\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when generated text artifact contains a secret-like value")
+	}
+}
+
 func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "ghe-demo")
 	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
@@ -263,7 +322,7 @@ func assertBundle(bundlePath string, expected []string) error {
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	files := map[string][]byte{}
 	for _, file := range reader.File {
@@ -284,6 +343,12 @@ func assertBundle(bundlePath string, expected []string) error {
 	for _, name := range expected {
 		if _, ok := files[name]; !ok {
 			return &missingBundleFileError{name: name}
+		}
+	}
+	readme := files["openexit-evidence/README.md"]
+	for _, marker := range [][]byte{[]byte("Version:"), []byte("Commit:"), []byte("Bundle generated at:"), []byte("not production-ready")} {
+		if !bytes.Contains(readme, marker) {
+			return &checksumError{message: "bundle README missing marker " + string(marker)}
 		}
 	}
 	return verifyChecksums(files)

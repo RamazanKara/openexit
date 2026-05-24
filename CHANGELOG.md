@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-dev
+## 0.1.0 - 2026-05-24
 
 - Initial OpenExit implementation.
 - Added mocked live Datadog collector coverage and evidence ref hardening.
@@ -8,6 +8,7 @@
 - Added explicit opt-in LiteLLM assist with redacted input handling and audit-file support.
 - Added full v0.1 risk-rule coverage for dashboard, monitor, SLO, cost, scale, and migration risks.
 - Added definition-of-done coverage for generated layout, export refusal, and bundle checksum verification.
-- Added v0.2 preview support for fixture-based GitHub Enterprise to Forgejo assessment.
-- Added v0.3 preview support for fixture-based Okta/Auth0 to Keycloak/Zitadel assessment.
-- Added v0.4 preview support for fixture-based Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment.
+- Added CI, release artifact builds, version stamping, expanded secret scanning, and release documentation.
+- Added preview support for fixture-based GitHub Enterprise to Forgejo assessment.
+- Added preview support for fixture-based Okta/Auth0 to Keycloak/Zitadel assessment.
+- Added preview support for fixture-based Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment.

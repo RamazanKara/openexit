@@ -160,7 +160,7 @@ func loadContext(projectDir string) (*Context, error) {
 
 func writeMarkdown(ctx *Context, artifact string) error {
 	var b bytes.Buffer
-	title := strings.Title(strings.ReplaceAll(artifact, "-", " "))
+	title := titleCaseASCII(strings.ReplaceAll(artifact, "-", " "))
 	fmt.Fprintf(&b, "# %s\n\n", title)
 	writeCommonHeader(&b, ctx)
 	switch artifact {
@@ -854,4 +854,16 @@ func sortedStrings(values []string) []string {
 	out := append([]string{}, values...)
 	sort.Strings(out)
 	return out
+}
+
+func titleCaseASCII(value string) string {
+	parts := strings.Fields(value)
+	for i, part := range parts {
+		if part == "" {
+			continue
+		}
+		lower := strings.ToLower(part)
+		parts[i] = strings.ToUpper(lower[:1]) + lower[1:]
+	}
+	return strings.Join(parts, " ")
 }

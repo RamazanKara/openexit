@@ -145,9 +145,7 @@ func extractRawQueries(def map[string]any) []string {
 func dashboardRawDataSources(raw map[string]any) []string {
 	var out []string
 	for _, key := range []string{"data_sources", "dataSources"} {
-		for _, source := range stringSlice(raw[key]) {
-			out = append(out, source)
-		}
+		out = append(out, stringSlice(raw[key])...)
 	}
 	return out
 }

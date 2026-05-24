@@ -2,14 +2,54 @@ name: Release Draft
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example v0.1.0
+        required: true
+        default: v0.1.0
+      create_release:
+        description: Create a GitHub draft release
+        type: boolean
+        required: true
+        default: false
 
 jobs:
   draft:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Build
-        run: go build ./cmd/openexit
-      - name: Draft notes
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Verify
+        run: make verify VERSION=${{ inputs.version }}
+      - name: Build release artifacts
+        run: make release-dist VERSION=${{ inputs.version }}
+      - name: Draft release notes
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          printf 'OpenExit release draft\n\nReview CHANGELOG.md before publishing.\n' > RELEASE_NOTES.md
+          version_without_v="${VERSION#v}"
+          awk -v version="$version_without_v" '$0 ~ "^## " version {flag=1} flag{print} /^## / && flag && NR>1{if (++seen>1) exit}' CHANGELOG.md > RELEASE_NOTES.md
+          printf '\n\nRelease checklist: docs/release.md\n' >> RELEASE_NOTES.md
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openexit-${{ inputs.version }}-artifacts
+          path: |
+            dist/*
+            RELEASE_NOTES.md
+      - name: Create draft GitHub release
+        if: ${{ inputs.create_release }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "$VERSION" dist/* \
+            --draft \
+            --title "OpenExit $VERSION" \
+            --notes-file RELEASE_NOTES.md \
+            --target "$GITHUB_SHA"

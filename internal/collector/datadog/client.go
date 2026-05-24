@@ -23,7 +23,7 @@ type Client struct {
 
 func NewClient(site, apiKey, appKey string) (*Client, error) {
 	if strings.TrimSpace(apiKey) == "" || strings.TrimSpace(appKey) == "" {
-		return nil, fmt.Errorf("Datadog API and app keys are required")
+		return nil, fmt.Errorf("datadog API and app keys are required")
 	}
 	baseURL, err := datadogBaseURL(site)
 	if err != nil {
@@ -48,7 +48,7 @@ func datadogBaseURL(site string) (string, error) {
 			return "", err
 		}
 		if u.Scheme != "https" {
-			return "", fmt.Errorf("Datadog site URL must use https")
+			return "", fmt.Errorf("datadog site URL must use https")
 		}
 		return strings.TrimRight(site, "/"), nil
 	}
@@ -98,11 +98,11 @@ func (c *Client) get(ctx context.Context, path string, query url.Values, out any
 		if resp.StatusCode == http.StatusTooManyRequests {
 			sleep := retryAfter(resp.Header.Get("Retry-After"), attempt)
 			time.Sleep(sleep)
-			lastErr = fmt.Errorf("Datadog rate limited request to %s", path)
+			lastErr = fmt.Errorf("datadog rate limited request to %s", path)
 			continue
 		}
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			return nil, fmt.Errorf("Datadog API %s returned %s: %s", path, resp.Status, sanitizeBody(body))
+			return nil, fmt.Errorf("datadog API %s returned %s: %s", path, resp.Status, sanitizeBody(body))
 		}
 		if out != nil {
 			if err := json.Unmarshal(body, out); err != nil {

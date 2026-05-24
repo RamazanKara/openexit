@@ -2,6 +2,13 @@
 
 See `openexit --help` for the command tree.
 
+Release builds stamp version metadata:
+
+```bash
+make build VERSION=0.1.0
+./bin/openexit version
+```
+
 The minimum local demo is:
 
 ```bash
@@ -14,6 +21,8 @@ openexit export --project ./demo --format zip --out ./openexit-demo.zip
 ```
 
 The CI test suite also runs this definition-of-done pipeline against the fixture inventory and checks that the generated project layout and export bundle contain the expected artifacts. Bundle checksums are verified against the archived file bytes.
+
+Generate individual artifacts with `openexit generate --artifact <name>`. The primary Datadog path supports `assessment`, `risk-register`, `manual-review`, `cost-drivers`, `target-architecture`, `acceptance-criteria`, `rollback-plan`, `runbook`, `restore-drill-checklist`, `alert-shadowing-plan`, `grafana-dashboards`, `prometheus-rules`, `opentelemetry`, and `argocd`.
 
 The GitHub Enterprise to Forgejo preview uses a fixture-first path:
 

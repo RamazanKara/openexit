@@ -77,7 +77,7 @@ func (p LiteLLMProvider) Complete(ctx context.Context, req Request) (*Response, 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
