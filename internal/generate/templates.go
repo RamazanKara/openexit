@@ -21,6 +21,13 @@ var githubMarkdownArtifacts = []string{
 	"repository-ownership-report",
 }
 
+var identityMarkdownArtifacts = []string{
+	"identity-migration-risk-register",
+	"break-glass-checklist",
+	"identity-cutover-plan",
+	"identity-rollback-plan",
+}
+
 func MarkdownArtifacts() []string {
 	out := make([]string, len(markdownArtifacts))
 	copy(out, markdownArtifacts)

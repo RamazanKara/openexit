@@ -275,6 +275,21 @@ func addEvidenceChecks(projectDir string, inv *inventory.Inventory, a *assessmen
 	for _, app := range inv.Assets.GitHubApps {
 		refs[app.EvidenceRef] = struct{}{}
 	}
+	for _, app := range inv.Assets.IdentityApps {
+		refs[app.EvidenceRef] = struct{}{}
+	}
+	for _, group := range inv.Assets.IdentityGroups {
+		refs[group.EvidenceRef] = struct{}{}
+	}
+	for _, policy := range inv.Assets.IdentityPolicies {
+		refs[policy.EvidenceRef] = struct{}{}
+	}
+	for _, setting := range inv.Assets.MFASettings {
+		refs[setting.EvidenceRef] = struct{}{}
+	}
+	for _, account := range inv.Assets.BreakGlassAccounts {
+		refs[account.EvidenceRef] = struct{}{}
+	}
 	for _, finding := range a.Findings {
 		for _, ref := range finding.EvidenceRefs {
 			refs[ref] = struct{}{}

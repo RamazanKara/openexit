@@ -31,19 +31,24 @@ type Source struct {
 }
 
 type Assets struct {
-	Dashboards        []Dashboard        `json:"dashboards,omitempty" yaml:"dashboards,omitempty"`
-	Monitors          []Monitor          `json:"monitors,omitempty" yaml:"monitors,omitempty"`
-	SLOs              []SLO              `json:"slos,omitempty" yaml:"slos,omitempty"`
-	Integrations      []Integration      `json:"integrations,omitempty" yaml:"integrations,omitempty"`
-	Metrics           []MetricRef        `json:"metrics,omitempty" yaml:"metrics,omitempty"`
-	Repositories      []Repository       `json:"repositories,omitempty" yaml:"repositories,omitempty"`
-	Teams             []Team             `json:"teams,omitempty" yaml:"teams,omitempty"`
-	BranchProtections []BranchProtection `json:"branchProtections,omitempty" yaml:"branchProtections,omitempty"`
-	ActionsWorkflows  []ActionsWorkflow  `json:"actionsWorkflows,omitempty" yaml:"actionsWorkflows,omitempty"`
-	Secrets           []SecretMetadata   `json:"secrets,omitempty" yaml:"secrets,omitempty"`
-	Runners           []Runner           `json:"runners,omitempty" yaml:"runners,omitempty"`
-	DeployKeys        []DeployKey        `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
-	GitHubApps        []GitHubApp        `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
+	Dashboards         []Dashboard         `json:"dashboards,omitempty" yaml:"dashboards,omitempty"`
+	Monitors           []Monitor           `json:"monitors,omitempty" yaml:"monitors,omitempty"`
+	SLOs               []SLO               `json:"slos,omitempty" yaml:"slos,omitempty"`
+	Integrations       []Integration       `json:"integrations,omitempty" yaml:"integrations,omitempty"`
+	Metrics            []MetricRef         `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+	Repositories       []Repository        `json:"repositories,omitempty" yaml:"repositories,omitempty"`
+	Teams              []Team              `json:"teams,omitempty" yaml:"teams,omitempty"`
+	BranchProtections  []BranchProtection  `json:"branchProtections,omitempty" yaml:"branchProtections,omitempty"`
+	ActionsWorkflows   []ActionsWorkflow   `json:"actionsWorkflows,omitempty" yaml:"actionsWorkflows,omitempty"`
+	Secrets            []SecretMetadata    `json:"secrets,omitempty" yaml:"secrets,omitempty"`
+	Runners            []Runner            `json:"runners,omitempty" yaml:"runners,omitempty"`
+	DeployKeys         []DeployKey         `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
+	GitHubApps         []GitHubApp         `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
+	IdentityApps       []IdentityApp       `json:"identityApplications,omitempty" yaml:"identityApplications,omitempty"`
+	IdentityGroups     []IdentityGroup     `json:"identityGroups,omitempty" yaml:"identityGroups,omitempty"`
+	IdentityPolicies   []IdentityPolicy    `json:"identityPolicies,omitempty" yaml:"identityPolicies,omitempty"`
+	MFASettings        []MFASetting        `json:"mfaSettings,omitempty" yaml:"mfaSettings,omitempty"`
+	BreakGlassAccounts []BreakGlassAccount `json:"breakGlassAccounts,omitempty" yaml:"breakGlassAccounts,omitempty"`
 }
 
 type Dashboard struct {
@@ -124,6 +129,11 @@ type Summary struct {
 	Runners             int `json:"runners,omitempty" yaml:"runners,omitempty"`
 	DeployKeys          int `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
 	GitHubApps          int `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
+	IdentityApps        int `json:"identityApplications,omitempty" yaml:"identityApplications,omitempty"`
+	IdentityGroups      int `json:"identityGroups,omitempty" yaml:"identityGroups,omitempty"`
+	IdentityPolicies    int `json:"identityPolicies,omitempty" yaml:"identityPolicies,omitempty"`
+	MFASettings         int `json:"mfaSettings,omitempty" yaml:"mfaSettings,omitempty"`
+	BreakGlassAccounts  int `json:"breakGlassAccounts,omitempty" yaml:"breakGlassAccounts,omitempty"`
 }
 
 type Volumes struct {
@@ -208,6 +218,53 @@ type GitHubApp struct {
 	EvidenceRef    string   `json:"evidenceRef" yaml:"evidenceRef"`
 }
 
+type IdentityApp struct {
+	ID                       string   `json:"id" yaml:"id"`
+	Name                     string   `json:"name" yaml:"name"`
+	Protocol                 string   `json:"protocol" yaml:"protocol"`
+	ClientID                 string   `json:"clientId,omitempty" yaml:"clientId,omitempty"`
+	Owners                   []string `json:"owners,omitempty" yaml:"owners,omitempty"`
+	Groups                   []string `json:"groups,omitempty" yaml:"groups,omitempty"`
+	RedirectURIs             []string `json:"redirectUris,omitempty" yaml:"redirectUris,omitempty"`
+	GrantTypes               []string `json:"grantTypes,omitempty" yaml:"grantTypes,omitempty"`
+	SAMLSigningCertPresent   bool     `json:"samlSigningCertPresent,omitempty" yaml:"samlSigningCertPresent,omitempty"`
+	SAMLSigningCertExpiresAt string   `json:"samlSigningCertExpiresAt,omitempty" yaml:"samlSigningCertExpiresAt,omitempty"`
+	EvidenceRef              string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type IdentityGroup struct {
+	ID          string   `json:"id" yaml:"id"`
+	Name        string   `json:"name" yaml:"name"`
+	Owners      []string `json:"owners,omitempty" yaml:"owners,omitempty"`
+	Members     int      `json:"members" yaml:"members"`
+	EvidenceRef string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type IdentityPolicy struct {
+	ID           string   `json:"id" yaml:"id"`
+	Name         string   `json:"name" yaml:"name"`
+	Type         string   `json:"type" yaml:"type"`
+	Groups       []string `json:"groups,omitempty" yaml:"groups,omitempty"`
+	Applications []string `json:"applications,omitempty" yaml:"applications,omitempty"`
+	EnforcesMFA  bool     `json:"enforcesMfa" yaml:"enforcesMfa"`
+	Priority     int      `json:"priority,omitempty" yaml:"priority,omitempty"`
+	EvidenceRef  string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type MFASetting struct {
+	Name        string   `json:"name" yaml:"name"`
+	Required    bool     `json:"required" yaml:"required"`
+	Factors     []string `json:"factors,omitempty" yaml:"factors,omitempty"`
+	EvidenceRef string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type BreakGlassAccount struct {
+	Username    string `json:"username" yaml:"username"`
+	MFAEnabled  bool   `json:"mfaEnabled" yaml:"mfaEnabled"`
+	ManagedBy   string `json:"managedBy,omitempty" yaml:"managedBy,omitempty"`
+	EvidenceRef string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
 func New(project, source, site, collectorVersion string, collectedAt time.Time) *Inventory {
 	return &Inventory{
 		APIVersion: APIVersion,
@@ -261,5 +318,10 @@ func (inv *Inventory) RecomputeSummary() {
 		Runners:             len(inv.Assets.Runners),
 		DeployKeys:          len(inv.Assets.DeployKeys),
 		GitHubApps:          len(inv.Assets.GitHubApps),
+		IdentityApps:        len(inv.Assets.IdentityApps),
+		IdentityGroups:      len(inv.Assets.IdentityGroups),
+		IdentityPolicies:    len(inv.Assets.IdentityPolicies),
+		MFASettings:         len(inv.Assets.MFASettings),
+		BreakGlassAccounts:  len(inv.Assets.BreakGlassAccounts),
 	}
 }

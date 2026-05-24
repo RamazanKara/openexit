@@ -25,7 +25,12 @@
         "secrets": { "type": "array" },
         "runners": { "type": "array" },
         "deployKeys": { "type": "array" },
-        "githubApps": { "type": "array" }
+        "githubApps": { "type": "array" },
+        "identityApplications": { "type": "array" },
+        "identityGroups": { "type": "array" },
+        "identityPolicies": { "type": "array" },
+        "mfaSettings": { "type": "array" },
+        "breakGlassAccounts": { "type": "array" }
       }
     },
     "summary": { "type": "object" },

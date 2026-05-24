@@ -14,6 +14,7 @@ import (
 	"github.com/RamazanKara/openexit/internal/collector"
 	"github.com/RamazanKara/openexit/internal/collector/datadog"
 	"github.com/RamazanKara/openexit/internal/collector/githubenterprise"
+	"github.com/RamazanKara/openexit/internal/collector/identity"
 	openexport "github.com/RamazanKara/openexit/internal/export"
 	"github.com/RamazanKara/openexit/internal/generate"
 	"github.com/RamazanKara/openexit/internal/inventory"
@@ -96,6 +97,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectFixtureCommand())
 	collectCmd.AddCommand(newCollectDatadogCommand())
 	collectCmd.AddCommand(newCollectGitHubFixtureCommand())
+	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
 	return collectCmd
 }
 
@@ -149,6 +151,21 @@ func newCollectGitHubFixtureCommand() *cobra.Command {
 	return cmd
 }
 
+func newCollectIdentityFixtureCommand() *cobra.Command {
+	var project, input string
+	cmd := &cobra.Command{
+		Use:   "identity-fixture",
+		Short: "Collect Okta/Auth0-like fixture inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, identity.FixtureCollector{}, map[string]string{"input": input})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&input, "input", "", "Okta/Auth0 identity fixture JSON file")
+	_ = cmd.MarkFlagRequired("input")
+	return cmd
+}
+
 func runCollector(ctx context.Context, cmd *cobra.Command, projectDir string, c collector.Collector, options map[string]string) error {
 	cfg, err := LoadProjectConfig(projectDir)
 	if err != nil {
@@ -171,6 +188,8 @@ func inventorySummary(inv *inventory.Inventory) string {
 	switch inv.Source.Type {
 	case "github-enterprise":
 		return fmt.Sprintf("%d repositories, %d teams, %d workflows", inv.Summary.Repositories, inv.Summary.Teams, inv.Summary.ActionsWorkflows)
+	case "identity":
+		return fmt.Sprintf("%d applications, %d groups, %d policies", inv.Summary.IdentityApps, inv.Summary.IdentityGroups, inv.Summary.IdentityPolicies)
 	default:
 		return fmt.Sprintf("%d dashboards, %d monitors, %d SLOs", inv.Summary.Dashboards, inv.Summary.Monitors, inv.Summary.SLOs)
 	}

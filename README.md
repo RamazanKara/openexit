@@ -33,6 +33,7 @@ make build
 - `openexit status --project <project-dir>`
 - `openexit collect fixture --project <project-dir> --input <file>`
 - `openexit collect github-fixture --project <project-dir> --input <file>`
+- `openexit collect identity-fixture --project <project-dir> --input <file>`
 - `openexit collect datadog --project <project-dir> --site datadoghq.eu --api-key-env DATADOG_API_KEY --app-key-env DATADOG_APP_KEY`
 - `openexit assess --project <project-dir> --target grafana-lgtm`
 - `openexit generate --project <project-dir> --all`
@@ -60,6 +61,7 @@ Included in this first implementation:
 - Evidence bundle export.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - Fixture-based GitHub Enterprise to Forgejo assessment preview.
+- Fixture-based Okta/Auth0 to Keycloak/Zitadel assessment preview.
 
 Not included in v0.1:
 
@@ -91,6 +93,10 @@ The v0.1 assessment engine includes dashboard, monitor, SLO, cost, scale, and mi
 ## v0.2 Preview
 
 The first v0.2 scaffold supports GitHub Enterprise fixture inventory for Forgejo migration assessment. It collects repository, team, branch protection, Actions workflow, secret metadata, runner, deploy key, and GitHub App metadata from local fixtures, then generates Forgejo migration reports without calling a live API.
+
+## v0.3 Preview
+
+The v0.3 scaffold supports Okta/Auth0-like identity fixture inventory for Keycloak/Zitadel assessment. It collects applications, SAML/OIDC client metadata, groups, policies, MFA settings, redirect URIs, owners, and break-glass account metadata from local fixtures, then generates identity migration reports and a candidate realm/client YAML without calling a live API.
 
 ## License
 

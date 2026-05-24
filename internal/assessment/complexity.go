@@ -29,6 +29,18 @@ func ScoreInventory(inv *inventory.Inventory, findings []Finding) Score {
 		value += 10
 		drivers = append(drivers, fmt.Sprintf("%d secret metadata entries require migration", inv.Summary.Secrets))
 	}
+	if inv.Summary.IdentityApps > 20 {
+		value += 15
+		drivers = append(drivers, fmt.Sprintf("%d identity applications", inv.Summary.IdentityApps))
+	}
+	if inv.Summary.IdentityPolicies > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d identity policies require mapping", inv.Summary.IdentityPolicies))
+	}
+	if inv.Summary.BreakGlassAccounts == 0 && inv.Source.Type == "identity" {
+		value += 10
+		drivers = append(drivers, "break-glass account metadata missing")
+	}
 	unsupported := 0
 	for _, dashboard := range inv.Assets.Dashboards {
 		unsupported += dashboard.Widgets.Unsupported
@@ -44,7 +56,7 @@ func ScoreInventory(inv *inventory.Inventory, findings []Finding) Score {
 	}
 	missingOwner := 0
 	for _, finding := range findings {
-		if finding.ID == "dd.ownership.missing.001" || finding.ID == "dd.monitor.missing-owner.001" {
+		if finding.ID == "dd.ownership.missing.001" || finding.ID == "dd.monitor.missing-owner.001" || finding.ID == "identity.application.owner-missing.001" || finding.ID == "identity.group.owner-missing.001" {
 			missingOwner++
 		}
 	}

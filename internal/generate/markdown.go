@@ -33,8 +33,12 @@ func Generate(projectDir string, artifacts []string) error {
 			if err := GenerateAll(projectDir); err != nil {
 				return err
 			}
-		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report":
+		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report", "identity-migration-risk-register", "break-glass-checklist", "identity-cutover-plan", "identity-rollback-plan":
 			if err := writeMarkdown(ctx, artifact); err != nil {
+				return err
+			}
+		case "realm-client-candidate":
+			if err := writeIdentityRealmClientCandidate(ctx); err != nil {
 				return err
 			}
 		case "prometheus-rules":
@@ -69,6 +73,9 @@ func GenerateAll(projectDir string) error {
 	if ctx.Inventory.Source.Type == "github-enterprise" {
 		artifacts = []string{"assessment", "risk-register", "manual-review"}
 	}
+	if ctx.Inventory.Source.Type == "identity" {
+		artifacts = []string{"assessment", "risk-register", "manual-review"}
+	}
 	for _, artifact := range artifacts {
 		if err := writeMarkdown(ctx, artifact); err != nil {
 			return err
@@ -81,6 +88,14 @@ func GenerateAll(projectDir string) error {
 			}
 		}
 		return nil
+	}
+	if ctx.Inventory.Source.Type == "identity" {
+		for _, artifact := range identityMarkdownArtifacts {
+			if err := writeMarkdown(ctx, artifact); err != nil {
+				return err
+			}
+		}
+		return writeIdentityRealmClientCandidate(ctx)
 	}
 	if err := Grafana(ctx); err != nil {
 		return err
@@ -156,6 +171,14 @@ func writeMarkdown(ctx *Context, artifact string) error {
 		writeRunnerMigrationPlan(&b, ctx)
 	case "repository-ownership-report":
 		writeRepositoryOwnershipReport(&b, ctx)
+	case "identity-migration-risk-register":
+		writeIdentityMigrationRiskRegister(&b, ctx)
+	case "break-glass-checklist":
+		writeBreakGlassChecklist(&b, ctx)
+	case "identity-cutover-plan":
+		writeIdentityCutoverPlan(&b, ctx)
+	case "identity-rollback-plan":
+		writeIdentityRollbackPlan(&b, ctx)
 	}
 	writeGeneratedBy(&b)
 	path := filepath.Join(ctx.ProjectDir, "assessment", artifact+".md")
@@ -177,18 +200,26 @@ func writeCommonHeader(b *bytes.Buffer, ctx *Context) {
 
 func writeAssessmentBody(b *bytes.Buffer, ctx *Context) {
 	fmt.Fprintln(b, "## Inventory Summary")
-	fmt.Fprintf(b, "- Dashboards: %d\n", ctx.Inventory.Summary.Dashboards)
-	fmt.Fprintf(b, "- Monitors: %d\n", ctx.Inventory.Summary.Monitors)
-	fmt.Fprintf(b, "- SLOs: %d\n", ctx.Inventory.Summary.SLOs)
-	fmt.Fprintf(b, "- Integrations: %d\n", ctx.Inventory.Summary.Integrations)
-	fmt.Fprintf(b, "- Unique metrics: %d\n\n", ctx.Inventory.Summary.UniqueMetrics)
-	if ctx.Inventory.Source.Type == "github-enterprise" {
+	switch ctx.Inventory.Source.Type {
+	case "github-enterprise":
 		fmt.Fprintf(b, "- Repositories: %d\n", ctx.Inventory.Summary.Repositories)
 		fmt.Fprintf(b, "- Teams: %d\n", ctx.Inventory.Summary.Teams)
 		fmt.Fprintf(b, "- Branch protections: %d\n", ctx.Inventory.Summary.BranchProtections)
 		fmt.Fprintf(b, "- Actions workflows: %d\n", ctx.Inventory.Summary.ActionsWorkflows)
 		fmt.Fprintf(b, "- Secrets metadata entries: %d\n", ctx.Inventory.Summary.Secrets)
 		fmt.Fprintf(b, "- Runners: %d\n\n", ctx.Inventory.Summary.Runners)
+	case "identity":
+		fmt.Fprintf(b, "- Identity applications: %d\n", ctx.Inventory.Summary.IdentityApps)
+		fmt.Fprintf(b, "- Identity groups: %d\n", ctx.Inventory.Summary.IdentityGroups)
+		fmt.Fprintf(b, "- Identity policies: %d\n", ctx.Inventory.Summary.IdentityPolicies)
+		fmt.Fprintf(b, "- MFA settings: %d\n", ctx.Inventory.Summary.MFASettings)
+		fmt.Fprintf(b, "- Break-glass accounts: %d\n\n", ctx.Inventory.Summary.BreakGlassAccounts)
+	default:
+		fmt.Fprintf(b, "- Dashboards: %d\n", ctx.Inventory.Summary.Dashboards)
+		fmt.Fprintf(b, "- Monitors: %d\n", ctx.Inventory.Summary.Monitors)
+		fmt.Fprintf(b, "- SLOs: %d\n", ctx.Inventory.Summary.SLOs)
+		fmt.Fprintf(b, "- Integrations: %d\n", ctx.Inventory.Summary.Integrations)
+		fmt.Fprintf(b, "- Unique metrics: %d\n\n", ctx.Inventory.Summary.UniqueMetrics)
 	}
 	fmt.Fprintln(b, "## Complexity Drivers")
 	for _, driver := range ctx.Assessment.Score.Drivers {
@@ -360,6 +391,161 @@ func writeRepositoryOwnershipReport(b *bytes.Buffer, ctx *Context) {
 		fmt.Fprintf(b, "- %s: teams=%s codeowners=%t visibility=%s evidence=%s\n", repo.Name, strings.Join(repo.Teams, ", "), repo.HasCODEOWNERS, repo.Visibility, repo.EvidenceRef)
 	}
 	fmt.Fprintln(b)
+}
+
+func writeIdentityMigrationRiskRegister(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Identity Migration Risk Register")
+	fmt.Fprintf(b, "- Applications: %d\n", ctx.Inventory.Summary.IdentityApps)
+	fmt.Fprintf(b, "- Groups: %d\n", ctx.Inventory.Summary.IdentityGroups)
+	fmt.Fprintf(b, "- Policies: %d\n", ctx.Inventory.Summary.IdentityPolicies)
+	fmt.Fprintf(b, "- MFA settings: %d\n\n", ctx.Inventory.Summary.MFASettings)
+	writeRiskRegister(b, ctx, ctx.Assessment.Findings)
+}
+
+func writeBreakGlassChecklist(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Break-Glass Checklist")
+	if len(ctx.Inventory.Assets.BreakGlassAccounts) == 0 {
+		fmt.Fprintln(b, "- No break-glass account metadata was captured.")
+	} else {
+		for _, account := range ctx.Inventory.Assets.BreakGlassAccounts {
+			fmt.Fprintf(b, "- %s: mfa-enabled=%t managed-by=%s evidence=%s\n", account.Username, account.MFAEnabled, account.ManagedBy, account.EvidenceRef)
+		}
+	}
+	fmt.Fprintln(b, "- Confirm emergency account custody and approval path.")
+	fmt.Fprintln(b, "- Test emergency login against the target realm before cutover.")
+	fmt.Fprintln(b, "- Store recovery codes according to the organization's access-control policy.")
+	fmt.Fprintln(b)
+}
+
+func writeIdentityCutoverPlan(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Cutover Plan")
+	fmt.Fprintln(b, "1. Freeze source application and policy changes for the approved cutover window.")
+	fmt.Fprintln(b, "2. Import candidate groups, clients, redirect URIs, and MFA settings into a non-production target realm.")
+	fmt.Fprintln(b, "3. Validate SAML metadata, OIDC grant types, and redirect URI behavior with application owners.")
+	fmt.Fprintln(b, "4. Run parallel login tests for high-priority applications and privileged groups.")
+	fmt.Fprintln(b, "5. Switch DNS, issuer, or federation configuration only after owner sign-off is recorded.")
+	fmt.Fprintln(b)
+}
+
+func writeIdentityRollbackPlan(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Rollback Plan")
+	fmt.Fprintln(b, "- Preserve source Okta/Auth0 tenant configuration until target sign-in is accepted.")
+	fmt.Fprintln(b, "- Keep source SAML metadata and OIDC client settings available for reactivation.")
+	fmt.Fprintln(b, "- Revert issuer, callback, and federation changes in reverse cutover order.")
+	fmt.Fprintln(b, "- Disable target clients that received production traffic during the failed cutover.")
+	fmt.Fprintln(b, "- Use the verified break-glass account if administrative SSO is impaired.")
+	fmt.Fprintln(b)
+}
+
+func writeIdentityRealmClientCandidate(ctx *Context) error {
+	dir := filepath.Join(ctx.ProjectDir, "generated-config", "identity")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	candidate := map[string]any{
+		"apiVersion": "openexit.dev/v1alpha1",
+		"kind":       "IdentityRealmClientCandidate",
+		"metadata": map[string]any{
+			"project": ctx.Assessment.Metadata.Project,
+			"source":  ctx.Inventory.Source.Type,
+			"target":  ctx.Assessment.Target.Type,
+		},
+		"realm": map[string]any{
+			"name":     inventory.Slug(ctx.Assessment.Metadata.Project),
+			"provider": ctx.Inventory.Source.Site,
+		},
+		"clients":            identityClientCandidates(ctx.Inventory.Assets.IdentityApps),
+		"groups":             identityGroupCandidates(ctx.Inventory.Assets.IdentityGroups),
+		"policies":           identityPolicyCandidates(ctx.Inventory.Assets.IdentityPolicies),
+		"mfaSettings":        identityMFACandidates(ctx.Inventory.Assets.MFASettings),
+		"breakGlassAccounts": identityBreakGlassCandidates(ctx.Inventory.Assets.BreakGlassAccounts),
+	}
+	data, err := yaml.Marshal(candidate)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(dir, "realm-client-candidate.yaml"), data, 0o644); err != nil {
+		return err
+	}
+	readme := "# Identity Candidate Config\n\nThis directory contains deterministic Keycloak/Zitadel candidate configuration derived from redacted identity inventory. Review every client, redirect URI, policy, and break-glass account before use.\n"
+	return os.WriteFile(filepath.Join(dir, "README.md"), []byte(readme), 0o644)
+}
+
+func identityClientCandidates(apps []inventory.IdentityApp) []map[string]any {
+	out := make([]map[string]any, 0, len(apps))
+	for _, app := range apps {
+		out = append(out, map[string]any{
+			"id":                       app.ID,
+			"name":                     app.Name,
+			"protocol":                 app.Protocol,
+			"clientId":                 app.ClientID,
+			"owners":                   sortedStrings(app.Owners),
+			"groups":                   sortedStrings(app.Groups),
+			"redirectUris":             sortedStrings(app.RedirectURIs),
+			"grantTypes":               sortedStrings(app.GrantTypes),
+			"samlSigningCertPresent":   app.SAMLSigningCertPresent,
+			"samlSigningCertExpiresAt": app.SAMLSigningCertExpiresAt,
+			"evidenceRef":              app.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func identityGroupCandidates(groups []inventory.IdentityGroup) []map[string]any {
+	out := make([]map[string]any, 0, len(groups))
+	for _, group := range groups {
+		out = append(out, map[string]any{
+			"id":          group.ID,
+			"name":        group.Name,
+			"owners":      sortedStrings(group.Owners),
+			"members":     group.Members,
+			"evidenceRef": group.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func identityPolicyCandidates(policies []inventory.IdentityPolicy) []map[string]any {
+	out := make([]map[string]any, 0, len(policies))
+	for _, policy := range policies {
+		out = append(out, map[string]any{
+			"id":           policy.ID,
+			"name":         policy.Name,
+			"type":         policy.Type,
+			"groups":       sortedStrings(policy.Groups),
+			"applications": sortedStrings(policy.Applications),
+			"enforcesMfa":  policy.EnforcesMFA,
+			"priority":     policy.Priority,
+			"evidenceRef":  policy.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func identityMFACandidates(settings []inventory.MFASetting) []map[string]any {
+	out := make([]map[string]any, 0, len(settings))
+	for _, setting := range settings {
+		out = append(out, map[string]any{
+			"name":        setting.Name,
+			"required":    setting.Required,
+			"factors":     sortedStrings(setting.Factors),
+			"evidenceRef": setting.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func identityBreakGlassCandidates(accounts []inventory.BreakGlassAccount) []map[string]any {
+	out := make([]map[string]any, 0, len(accounts))
+	for _, account := range accounts {
+		out = append(out, map[string]any{
+			"username":    account.Username,
+			"mfaEnabled":  account.MFAEnabled,
+			"managedBy":   account.ManagedBy,
+			"evidenceRef": account.EvidenceRef,
+		})
+	}
+	return out
 }
 
 func writeGeneratedBy(b *bytes.Buffer) {

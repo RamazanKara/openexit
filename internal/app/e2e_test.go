@@ -91,6 +91,55 @@ func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
 	}
 }
 
+func TestIdentityFixturePipeline(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "identity-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "identity", "small.json")
+
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "identity-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "keycloak-zitadel"},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	for _, rel := range []string{
+		"inventory/openexit.inventory.yaml",
+		"assessment/openexit.assessment.yaml",
+		"assessment/identity-migration-risk-register.md",
+		"assessment/break-glass-checklist.md",
+		"assessment/identity-cutover-plan.md",
+		"assessment/identity-rollback-plan.md",
+		"generated-config/identity/realm-client-candidate.yaml",
+		"evidence/identity/applications/app-api.json",
+		"evidence/identity/mfa-settings/default.json",
+		"validation/openexit.validation.yaml",
+	} {
+		path := filepath.Join(projectDir, filepath.FromSlash(rel))
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("expected identity generated file %s: %v", rel, err)
+		}
+	}
+	assessmentData, err := os.ReadFile(filepath.Join(projectDir, "assessment", "openexit.assessment.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{
+		"identity.oidc.implicit-grant.001",
+		"identity.redirect-uri.insecure.001",
+		"identity.mfa.not-required.001",
+		"identity.break-glass.mfa-missing.001",
+	} {
+		if !strings.Contains(string(assessmentData), id) {
+			t.Fatalf("expected assessment finding %s", id)
+		}
+	}
+}
+
 func TestExportRefusesInvalidProjectWithoutForce(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "broken")
 	if err := executeForTest("init", projectDir); err != nil {

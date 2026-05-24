@@ -1,0 +1,93 @@
+{
+  "provider": "okta",
+  "tenant": "acme-preview",
+  "applications": [
+    {
+      "id": "app-api",
+      "name": "Production API",
+      "protocol": "oidc",
+      "clientId": "api-web",
+      "owners": ["platform-identity"],
+      "groups": ["grp-engineering"],
+      "redirectUris": [
+        "https://api.example.com/oauth/callback",
+        "http://localhost:3000/callback"
+      ],
+      "grantTypes": ["authorization_code", "refresh_token"],
+      "samlSigningCertPresent": false,
+      "samlSigningCertExpiresAt": ""
+    },
+    {
+      "id": "app-legacy-spa",
+      "name": "Legacy SPA",
+      "protocol": "oidc",
+      "clientId": "legacy-spa",
+      "owners": [],
+      "groups": [],
+      "redirectUris": ["https://*.example.com/callback"],
+      "grantTypes": ["implicit", "authorization_code"],
+      "samlSigningCertPresent": false,
+      "samlSigningCertExpiresAt": ""
+    },
+    {
+      "id": "app-saml-hr",
+      "name": "HR Portal",
+      "protocol": "saml",
+      "clientId": "hr-portal",
+      "owners": ["people-ops"],
+      "groups": ["grp-hr"],
+      "redirectUris": [],
+      "grantTypes": [],
+      "samlSigningCertPresent": true,
+      "samlSigningCertExpiresAt": ""
+    }
+  ],
+  "groups": [
+    {
+      "id": "grp-engineering",
+      "name": "Engineering",
+      "owners": ["platform-identity"],
+      "members": 42
+    },
+    {
+      "id": "grp-hr",
+      "name": "Human Resources",
+      "owners": [],
+      "members": 7
+    }
+  ],
+  "policies": [
+    {
+      "id": "pol-global-sign-on",
+      "name": "Global Sign-On",
+      "type": "sign-on",
+      "groups": [],
+      "applications": ["app-api", "app-legacy-spa", "app-saml-hr"],
+      "enforcesMfa": false,
+      "priority": 1
+    },
+    {
+      "id": "pol-hr-mfa",
+      "name": "HR MFA",
+      "type": "mfa",
+      "groups": ["grp-hr"],
+      "applications": ["app-saml-hr"],
+      "enforcesMfa": true,
+      "priority": 10
+    }
+  ],
+  "mfaSettings": [
+    {
+      "name": "default",
+      "required": false,
+      "factors": ["sms", "totp"]
+    }
+  ],
+  "breakGlassAccounts": [
+    {
+      "username": "breakglass-admin",
+      "mfaEnabled": false,
+      "managedBy": "security"
+    }
+  ]
+}

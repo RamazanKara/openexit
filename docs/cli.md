@@ -24,3 +24,13 @@ openexit assess --project ./ghe-demo --target forgejo
 openexit generate --project ./ghe-demo --all
 openexit validate --project ./ghe-demo
 ```
+
+The Okta/Auth0 to Keycloak/Zitadel preview also uses a fixture-first path:
+
+```bash
+openexit init ./identity-demo
+openexit collect identity-fixture --project ./identity-demo --input ./testdata/identity/small.json
+openexit assess --project ./identity-demo --target keycloak-zitadel
+openexit generate --project ./identity-demo --all
+openexit validate --project ./identity-demo
+```

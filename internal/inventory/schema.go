@@ -44,6 +44,46 @@ func Validate(inv *Inventory) error {
 			problems = append(problems, "each repository requires evidenceRef")
 		}
 	}
+	for _, app := range inv.Assets.IdentityApps {
+		if strings.TrimSpace(app.ID) == "" || strings.TrimSpace(app.Name) == "" || strings.TrimSpace(app.Protocol) == "" {
+			problems = append(problems, "each identity application requires id, name, and protocol")
+		}
+		if strings.TrimSpace(app.EvidenceRef) == "" {
+			problems = append(problems, "each identity application requires evidenceRef")
+		}
+	}
+	for _, group := range inv.Assets.IdentityGroups {
+		if strings.TrimSpace(group.ID) == "" || strings.TrimSpace(group.Name) == "" {
+			problems = append(problems, "each identity group requires id and name")
+		}
+		if strings.TrimSpace(group.EvidenceRef) == "" {
+			problems = append(problems, "each identity group requires evidenceRef")
+		}
+	}
+	for _, policy := range inv.Assets.IdentityPolicies {
+		if strings.TrimSpace(policy.ID) == "" || strings.TrimSpace(policy.Name) == "" {
+			problems = append(problems, "each identity policy requires id and name")
+		}
+		if strings.TrimSpace(policy.EvidenceRef) == "" {
+			problems = append(problems, "each identity policy requires evidenceRef")
+		}
+	}
+	for _, setting := range inv.Assets.MFASettings {
+		if strings.TrimSpace(setting.Name) == "" {
+			problems = append(problems, "each MFA setting requires name")
+		}
+		if strings.TrimSpace(setting.EvidenceRef) == "" {
+			problems = append(problems, "each MFA setting requires evidenceRef")
+		}
+	}
+	for _, account := range inv.Assets.BreakGlassAccounts {
+		if strings.TrimSpace(account.Username) == "" {
+			problems = append(problems, "each break-glass account requires username")
+		}
+		if strings.TrimSpace(account.EvidenceRef) == "" {
+			problems = append(problems, "each break-glass account requires evidenceRef")
+		}
+	}
 	if len(problems) > 0 {
 		return errors.New(strings.Join(problems, "; "))
 	}

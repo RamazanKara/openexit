@@ -41,6 +41,16 @@ func PathForRef(projectDir, ref string) (string, error) {
 		dir = "deploy-keys"
 	case "github-app":
 		dir = "github-apps"
+	case "application":
+		dir = "applications"
+	case "group":
+		dir = "groups"
+	case "policy":
+		dir = "policies"
+	case "mfa-setting":
+		dir = "mfa-settings"
+	case "break-glass-account":
+		dir = "break-glass-accounts"
 	default:
 		dir = kind
 	}
