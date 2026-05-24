@@ -57,7 +57,7 @@ Included in this first implementation:
 - ArgoCD starter manifest.
 - Validation report with YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export.
-- No-op assist provider.
+- No-op assist provider and explicit opt-in LiteLLM assist.
 
 Not included in v0.1:
 
@@ -66,6 +66,12 @@ Not included in v0.1:
 - Hosted portal.
 - Perfect Datadog to Grafana parity.
 - AI-required decision making.
+
+## Optional Assist
+
+`openexit assist summarize` defaults to the local no-op provider. LiteLLM is available only when `openexit.yaml` explicitly sets `policy.allowAI: true`, `assist.enabled: true`, `assist.provider: litellm`, and `assist.allowExternalProvider: true`.
+
+Assist inputs are redacted before provider calls, outputs must use `.ai.md`, and deterministic artifacts are never overwritten.
 
 ## Candidate Conversion Policy
 

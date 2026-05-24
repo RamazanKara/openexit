@@ -264,6 +264,7 @@ func newAssistCommand() *cobra.Command {
 
 func newAssistSummarizeCommand() *cobra.Command {
 	var project, providerName, model, input, out string
+	var saveRedactedInput bool
 	cmd := &cobra.Command{
 		Use:   "summarize",
 		Short: "Create an optional AI-assisted summary",
@@ -277,6 +278,12 @@ func newAssistSummarizeCommand() *cobra.Command {
 			}
 			if providerName == "" {
 				providerName = "noop"
+			}
+			if err := ensureAssistAllowed(cfg, providerName); err != nil {
+				return err
+			}
+			if model == "" {
+				model = cfg.Assist.Model
 			}
 			if input == "" {
 				input = filepath.Join(project, "assessment", "openexit.assessment.yaml")
@@ -294,21 +301,33 @@ func newAssistSummarizeCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			redactedInput := assist.Redact(string(data))
+			req := assist.Request{
+				Task:         "summarize",
+				Model:        model,
+				SystemPrompt: assist.SummarySystemPrompt,
+				Input:        map[string]any{"content": redactedInput},
+				Metadata:     map[string]string{"project": cfg.Metadata.Name, "input": input},
+			}
+			if saveRedactedInput {
+				if err := writeAssistAuditInput(out, providerName, req); err != nil {
+					return err
+				}
+			}
 			provider, err := assistProvider(providerName)
 			if err != nil {
 				return err
 			}
-			resp, err := provider.Complete(cmd.Context(), assist.Request{
-				Task:         "summarize",
-				Model:        model,
-				SystemPrompt: assist.SummarySystemPrompt,
-				Input:        map[string]any{"content": assist.Redact(string(data))},
-				Metadata:     map[string]string{"project": cfg.Metadata.Name},
-			})
+			resp, err := provider.Complete(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
-			if err := os.WriteFile(out, []byte(resp.Text+"\n"), 0o644); err != nil {
+			if dir := filepath.Dir(out); dir != "." {
+				if err := os.MkdirAll(dir, 0o755); err != nil {
+					return err
+				}
+			}
+			if err := os.WriteFile(out, []byte(assist.EnsureReviewHeader(resp.Text)+"\n"), 0o644); err != nil {
 				return err
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "assist output written: %s\n", out)
@@ -316,10 +335,11 @@ func newAssistSummarizeCommand() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
-	cmd.Flags().StringVar(&providerName, "provider", "noop", "Assist provider")
+	cmd.Flags().StringVar(&providerName, "provider", "", "Assist provider")
 	cmd.Flags().StringVar(&model, "model", "", "Assist model")
 	cmd.Flags().StringVar(&input, "input", "", "Input file")
 	cmd.Flags().StringVar(&out, "out", "", "Output .ai.md file")
+	cmd.Flags().BoolVar(&saveRedactedInput, "save-redacted-input", false, "Save redacted assist input next to the output for audit")
 	return cmd
 }
 
@@ -328,10 +348,53 @@ func assistProvider(name string) (assist.Provider, error) {
 	case "noop", "":
 		return assist.NoopProvider{}, nil
 	case "litellm":
-		return assist.LiteLLMProvider{}, nil
+		return assist.NewLiteLLMProviderFromEnv(), nil
 	default:
 		return nil, fmt.Errorf("unsupported assist provider %q", name)
 	}
+}
+
+func ensureAssistAllowed(cfg *ProjectConfig, providerName string) error {
+	if providerName == "" || providerName == "noop" {
+		return nil
+	}
+	if !cfg.Policy.AllowAI {
+		return fmt.Errorf("policy.allowAI must be true to use provider %q", providerName)
+	}
+	if !cfg.Assist.Enabled {
+		return fmt.Errorf("assist.enabled must be true to use provider %q", providerName)
+	}
+	if !cfg.Assist.AllowExternalProvider {
+		return fmt.Errorf("assist.allowExternalProvider must be true to use provider %q", providerName)
+	}
+	if cfg.Assist.Provider != providerName {
+		return fmt.Errorf("assist.provider must be %q to use this provider", providerName)
+	}
+	return nil
+}
+
+func writeAssistAuditInput(outPath, providerName string, req assist.Request) error {
+	auditPath := strings.TrimSuffix(outPath, ".ai.md") + ".input.redacted.json"
+	if _, err := os.Stat(auditPath); err == nil {
+		return fmt.Errorf("refusing to overwrite existing assist audit input %s", auditPath)
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	if dir := filepath.Dir(auditPath); dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
+	payload := map[string]any{
+		"provider": providerName,
+		"request":  req,
+		"redacted": true,
+	}
+	data, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(auditPath, append(data, '\n'), 0o644)
 }
 
 func loadInventoryManifest(project string) (*inventory.Inventory, error) {
