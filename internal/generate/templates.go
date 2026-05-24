@@ -28,6 +28,11 @@ var identityMarkdownArtifacts = []string{
 	"identity-rollback-plan",
 }
 
+var edgeMarkdownArtifacts = []string{
+	"cache-parity-report",
+	"waf-enforcement-risk-report",
+}
+
 func MarkdownArtifacts() []string {
 	out := make([]string, len(markdownArtifacts))
 	copy(out, markdownArtifacts)

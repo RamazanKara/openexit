@@ -10,3 +10,4 @@
 - Added definition-of-done coverage for generated layout, export refusal, and bundle checksum verification.
 - Added v0.2 preview support for fixture-based GitHub Enterprise to Forgejo assessment.
 - Added v0.3 preview support for fixture-based Okta/Auth0 to Keycloak/Zitadel assessment.
+- Added v0.4 preview support for fixture-based Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment.

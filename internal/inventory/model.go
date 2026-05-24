@@ -49,6 +49,14 @@ type Assets struct {
 	IdentityPolicies   []IdentityPolicy    `json:"identityPolicies,omitempty" yaml:"identityPolicies,omitempty"`
 	MFASettings        []MFASetting        `json:"mfaSettings,omitempty" yaml:"mfaSettings,omitempty"`
 	BreakGlassAccounts []BreakGlassAccount `json:"breakGlassAccounts,omitempty" yaml:"breakGlassAccounts,omitempty"`
+	DNSRecords         []DNSRecord         `json:"dnsRecords,omitempty" yaml:"dnsRecords,omitempty"`
+	WAFRules           []WAFRule           `json:"wafRules,omitempty" yaml:"wafRules,omitempty"`
+	CacheRules         []CacheRule         `json:"cacheRules,omitempty" yaml:"cacheRules,omitempty"`
+	Redirects          []RedirectRule      `json:"redirects,omitempty" yaml:"redirects,omitempty"`
+	Origins            []OriginConfig      `json:"origins,omitempty" yaml:"origins,omitempty"`
+	TLSSettings        []TLSSetting        `json:"tlsSettings,omitempty" yaml:"tlsSettings,omitempty"`
+	BotRules           []BotRule           `json:"botRules,omitempty" yaml:"botRules,omitempty"`
+	PageRules          []PageRule          `json:"pageRules,omitempty" yaml:"pageRules,omitempty"`
 }
 
 type Dashboard struct {
@@ -134,6 +142,14 @@ type Summary struct {
 	IdentityPolicies    int `json:"identityPolicies,omitempty" yaml:"identityPolicies,omitempty"`
 	MFASettings         int `json:"mfaSettings,omitempty" yaml:"mfaSettings,omitempty"`
 	BreakGlassAccounts  int `json:"breakGlassAccounts,omitempty" yaml:"breakGlassAccounts,omitempty"`
+	DNSRecords          int `json:"dnsRecords,omitempty" yaml:"dnsRecords,omitempty"`
+	WAFRules            int `json:"wafRules,omitempty" yaml:"wafRules,omitempty"`
+	CacheRules          int `json:"cacheRules,omitempty" yaml:"cacheRules,omitempty"`
+	Redirects           int `json:"redirects,omitempty" yaml:"redirects,omitempty"`
+	Origins             int `json:"origins,omitempty" yaml:"origins,omitempty"`
+	TLSSettings         int `json:"tlsSettings,omitempty" yaml:"tlsSettings,omitempty"`
+	BotRules            int `json:"botRules,omitempty" yaml:"botRules,omitempty"`
+	PageRules           int `json:"pageRules,omitempty" yaml:"pageRules,omitempty"`
 }
 
 type Volumes struct {
@@ -265,6 +281,85 @@ type BreakGlassAccount struct {
 	EvidenceRef string `json:"evidenceRef" yaml:"evidenceRef"`
 }
 
+type DNSRecord struct {
+	ID          string `json:"id" yaml:"id"`
+	Name        string `json:"name" yaml:"name"`
+	Type        string `json:"type" yaml:"type"`
+	Value       string `json:"value" yaml:"value"`
+	TTL         int    `json:"ttl,omitempty" yaml:"ttl,omitempty"`
+	Proxied     bool   `json:"proxied,omitempty" yaml:"proxied,omitempty"`
+	EvidenceRef string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type WAFRule struct {
+	ID          string `json:"id" yaml:"id"`
+	Name        string `json:"name" yaml:"name"`
+	Expression  string `json:"expression" yaml:"expression"`
+	Action      string `json:"action" yaml:"action"`
+	Enabled     bool   `json:"enabled" yaml:"enabled"`
+	Managed     bool   `json:"managed,omitempty" yaml:"managed,omitempty"`
+	EvidenceRef string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type CacheRule struct {
+	ID          string   `json:"id" yaml:"id"`
+	Name        string   `json:"name" yaml:"name"`
+	Pattern     string   `json:"pattern" yaml:"pattern"`
+	Action      string   `json:"action" yaml:"action"`
+	EdgeTTL     int      `json:"edgeTtl,omitempty" yaml:"edgeTtl,omitempty"`
+	BrowserTTL  int      `json:"browserTtl,omitempty" yaml:"browserTtl,omitempty"`
+	CacheKey    []string `json:"cacheKey,omitempty" yaml:"cacheKey,omitempty"`
+	EvidenceRef string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type RedirectRule struct {
+	ID            string `json:"id" yaml:"id"`
+	Name          string `json:"name" yaml:"name"`
+	Source        string `json:"source" yaml:"source"`
+	Target        string `json:"target" yaml:"target"`
+	StatusCode    int    `json:"statusCode" yaml:"statusCode"`
+	PreserveQuery bool   `json:"preserveQuery,omitempty" yaml:"preserveQuery,omitempty"`
+	EvidenceRef   string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type OriginConfig struct {
+	ID          string `json:"id" yaml:"id"`
+	Hostname    string `json:"hostname" yaml:"hostname"`
+	Scheme      string `json:"scheme" yaml:"scheme"`
+	Port        int    `json:"port" yaml:"port"`
+	HostHeader  string `json:"hostHeader,omitempty" yaml:"hostHeader,omitempty"`
+	TLSVerify   bool   `json:"tlsVerify" yaml:"tlsVerify"`
+	HealthCheck bool   `json:"healthCheck" yaml:"healthCheck"`
+	EvidenceRef string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type TLSSetting struct {
+	ID          string `json:"id" yaml:"id"`
+	Hostname    string `json:"hostname" yaml:"hostname"`
+	Mode        string `json:"mode" yaml:"mode"`
+	MinVersion  string `json:"minVersion" yaml:"minVersion"`
+	HSTSEnabled bool   `json:"hstsEnabled" yaml:"hstsEnabled"`
+	EvidenceRef string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type BotRule struct {
+	ID          string `json:"id" yaml:"id"`
+	Name        string `json:"name" yaml:"name"`
+	Expression  string `json:"expression" yaml:"expression"`
+	Action      string `json:"action" yaml:"action"`
+	Enabled     bool   `json:"enabled" yaml:"enabled"`
+	EvidenceRef string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type PageRule struct {
+	ID          string   `json:"id" yaml:"id"`
+	Target      string   `json:"target" yaml:"target"`
+	Actions     []string `json:"actions,omitempty" yaml:"actions,omitempty"`
+	Priority    int      `json:"priority,omitempty" yaml:"priority,omitempty"`
+	Enabled     bool     `json:"enabled" yaml:"enabled"`
+	EvidenceRef string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
 func New(project, source, site, collectorVersion string, collectedAt time.Time) *Inventory {
 	return &Inventory{
 		APIVersion: APIVersion,
@@ -323,5 +418,13 @@ func (inv *Inventory) RecomputeSummary() {
 		IdentityPolicies:    len(inv.Assets.IdentityPolicies),
 		MFASettings:         len(inv.Assets.MFASettings),
 		BreakGlassAccounts:  len(inv.Assets.BreakGlassAccounts),
+		DNSRecords:          len(inv.Assets.DNSRecords),
+		WAFRules:            len(inv.Assets.WAFRules),
+		CacheRules:          len(inv.Assets.CacheRules),
+		Redirects:           len(inv.Assets.Redirects),
+		Origins:             len(inv.Assets.Origins),
+		TLSSettings:         len(inv.Assets.TLSSettings),
+		BotRules:            len(inv.Assets.BotRules),
+		PageRules:           len(inv.Assets.PageRules),
 	}
 }

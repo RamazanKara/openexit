@@ -290,6 +290,30 @@ func addEvidenceChecks(projectDir string, inv *inventory.Inventory, a *assessmen
 	for _, account := range inv.Assets.BreakGlassAccounts {
 		refs[account.EvidenceRef] = struct{}{}
 	}
+	for _, record := range inv.Assets.DNSRecords {
+		refs[record.EvidenceRef] = struct{}{}
+	}
+	for _, rule := range inv.Assets.WAFRules {
+		refs[rule.EvidenceRef] = struct{}{}
+	}
+	for _, rule := range inv.Assets.CacheRules {
+		refs[rule.EvidenceRef] = struct{}{}
+	}
+	for _, redirect := range inv.Assets.Redirects {
+		refs[redirect.EvidenceRef] = struct{}{}
+	}
+	for _, origin := range inv.Assets.Origins {
+		refs[origin.EvidenceRef] = struct{}{}
+	}
+	for _, setting := range inv.Assets.TLSSettings {
+		refs[setting.EvidenceRef] = struct{}{}
+	}
+	for _, rule := range inv.Assets.BotRules {
+		refs[rule.EvidenceRef] = struct{}{}
+	}
+	for _, rule := range inv.Assets.PageRules {
+		refs[rule.EvidenceRef] = struct{}{}
+	}
 	for _, finding := range a.Findings {
 		for _, ref := range finding.EvidenceRefs {
 			refs[ref] = struct{}{}

@@ -51,6 +51,22 @@ func PathForRef(projectDir, ref string) (string, error) {
 		dir = "mfa-settings"
 	case "break-glass-account":
 		dir = "break-glass-accounts"
+	case "dns-record":
+		dir = "dns-records"
+	case "waf-rule":
+		dir = "waf-rules"
+	case "cache-rule":
+		dir = "cache-rules"
+	case "redirect":
+		dir = "redirects"
+	case "origin":
+		dir = "origins"
+	case "tls-setting":
+		dir = "tls-settings"
+	case "bot-rule":
+		dir = "bot-rules"
+	case "page-rule":
+		dir = "page-rules"
 	default:
 		dir = kind
 	}

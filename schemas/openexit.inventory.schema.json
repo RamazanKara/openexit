@@ -30,7 +30,15 @@
         "identityGroups": { "type": "array" },
         "identityPolicies": { "type": "array" },
         "mfaSettings": { "type": "array" },
-        "breakGlassAccounts": { "type": "array" }
+        "breakGlassAccounts": { "type": "array" },
+        "dnsRecords": { "type": "array" },
+        "wafRules": { "type": "array" },
+        "cacheRules": { "type": "array" },
+        "redirects": { "type": "array" },
+        "origins": { "type": "array" },
+        "tlsSettings": { "type": "array" },
+        "botRules": { "type": "array" },
+        "pageRules": { "type": "array" }
       }
     },
     "summary": { "type": "object" },

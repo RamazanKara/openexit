@@ -7,3 +7,5 @@ Inventory dashboards can include optional `dataSources` and `templateVariables` 
 For the GitHub Enterprise to Forgejo preview, inventory can include `repositories`, `teams`, `branchProtections`, `actionsWorkflows`, `secrets`, `runners`, `deployKeys`, and `githubApps`. Secret entries are metadata only; OpenExit should never collect or store secret values.
 
 For the Okta/Auth0 to Keycloak/Zitadel preview, inventory can include `identityApplications`, `identityGroups`, `identityPolicies`, `mfaSettings`, and `breakGlassAccounts`. Client entries include redirect URIs, grant types, owners, group assignments, and SAML signing metadata; they do not include client secrets.
+
+For the Cloudflare/Akamai to Varnish/HAProxy/Coraza preview, inventory can include `dnsRecords`, `wafRules`, `cacheRules`, `redirects`, `origins`, `tlsSettings`, `botRules`, and `pageRules`. WAF entries contain rule metadata and expressions only; they should not contain provider credentials.

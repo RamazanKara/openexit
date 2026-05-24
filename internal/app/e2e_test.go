@@ -140,6 +140,55 @@ func TestIdentityFixturePipeline(t *testing.T) {
 	}
 }
 
+func TestEdgeFixturePipeline(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "edge-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "edge", "small.json")
+
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "edge-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "varnish-haproxy-coraza"},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	for _, rel := range []string{
+		"inventory/openexit.inventory.yaml",
+		"assessment/openexit.assessment.yaml",
+		"assessment/cache-parity-report.md",
+		"assessment/waf-enforcement-risk-report.md",
+		"generated-config/edge/varnish/default.candidate.vcl",
+		"generated-config/edge/haproxy/haproxy.candidate.cfg",
+		"generated-config/edge/coraza/coraza-rules.candidate.conf",
+		"evidence/edge/waf-rules/waf-sqli.json",
+		"evidence/edge/cache-rules/cache-static.json",
+		"validation/openexit.validation.yaml",
+	} {
+		path := filepath.Join(projectDir, filepath.FromSlash(rel))
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("expected edge generated file %s: %v", rel, err)
+		}
+	}
+	assessmentData, err := os.ReadFile(filepath.Join(projectDir, "assessment", "openexit.assessment.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{
+		"edge.waf.managed-rule.001",
+		"edge.waf.observe-only.001",
+		"edge.origin.tls-verify-disabled.001",
+		"edge.tls.minimum-version-low.001",
+	} {
+		if !strings.Contains(string(assessmentData), id) {
+			t.Fatalf("expected assessment finding %s", id)
+		}
+	}
+}
+
 func TestExportRefusesInvalidProjectWithoutForce(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "broken")
 	if err := executeForTest("init", projectDir); err != nil {

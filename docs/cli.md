@@ -34,3 +34,13 @@ openexit assess --project ./identity-demo --target keycloak-zitadel
 openexit generate --project ./identity-demo --all
 openexit validate --project ./identity-demo
 ```
+
+The Cloudflare/Akamai to Varnish/HAProxy/Coraza preview uses fixture metadata too:
+
+```bash
+openexit init ./edge-demo
+openexit collect edge-fixture --project ./edge-demo --input ./testdata/edge/small.json
+openexit assess --project ./edge-demo --target varnish-haproxy-coraza
+openexit generate --project ./edge-demo --all
+openexit validate --project ./edge-demo
+```

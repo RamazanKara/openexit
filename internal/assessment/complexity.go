@@ -41,6 +41,18 @@ func ScoreInventory(inv *inventory.Inventory, findings []Finding) Score {
 		value += 10
 		drivers = append(drivers, "break-glass account metadata missing")
 	}
+	if inv.Summary.WAFRules > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d WAF rules require Coraza mapping", inv.Summary.WAFRules))
+	}
+	if inv.Summary.CacheRules > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d cache rules require VCL parity review", inv.Summary.CacheRules))
+	}
+	if inv.Summary.Origins > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d origins require HAProxy routing review", inv.Summary.Origins))
+	}
 	unsupported := 0
 	for _, dashboard := range inv.Assets.Dashboards {
 		unsupported += dashboard.Widgets.Unsupported

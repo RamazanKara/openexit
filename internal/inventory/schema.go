@@ -84,6 +84,70 @@ func Validate(inv *Inventory) error {
 			problems = append(problems, "each break-glass account requires evidenceRef")
 		}
 	}
+	for _, record := range inv.Assets.DNSRecords {
+		if strings.TrimSpace(record.ID) == "" || strings.TrimSpace(record.Name) == "" || strings.TrimSpace(record.Type) == "" {
+			problems = append(problems, "each DNS record requires id, name, and type")
+		}
+		if strings.TrimSpace(record.EvidenceRef) == "" {
+			problems = append(problems, "each DNS record requires evidenceRef")
+		}
+	}
+	for _, rule := range inv.Assets.WAFRules {
+		if strings.TrimSpace(rule.ID) == "" || strings.TrimSpace(rule.Name) == "" {
+			problems = append(problems, "each WAF rule requires id and name")
+		}
+		if strings.TrimSpace(rule.EvidenceRef) == "" {
+			problems = append(problems, "each WAF rule requires evidenceRef")
+		}
+	}
+	for _, rule := range inv.Assets.CacheRules {
+		if strings.TrimSpace(rule.ID) == "" || strings.TrimSpace(rule.Name) == "" {
+			problems = append(problems, "each cache rule requires id and name")
+		}
+		if strings.TrimSpace(rule.EvidenceRef) == "" {
+			problems = append(problems, "each cache rule requires evidenceRef")
+		}
+	}
+	for _, redirect := range inv.Assets.Redirects {
+		if strings.TrimSpace(redirect.ID) == "" || strings.TrimSpace(redirect.Source) == "" || strings.TrimSpace(redirect.Target) == "" {
+			problems = append(problems, "each redirect requires id, source, and target")
+		}
+		if strings.TrimSpace(redirect.EvidenceRef) == "" {
+			problems = append(problems, "each redirect requires evidenceRef")
+		}
+	}
+	for _, origin := range inv.Assets.Origins {
+		if strings.TrimSpace(origin.ID) == "" || strings.TrimSpace(origin.Hostname) == "" {
+			problems = append(problems, "each origin requires id and hostname")
+		}
+		if strings.TrimSpace(origin.EvidenceRef) == "" {
+			problems = append(problems, "each origin requires evidenceRef")
+		}
+	}
+	for _, setting := range inv.Assets.TLSSettings {
+		if strings.TrimSpace(setting.ID) == "" || strings.TrimSpace(setting.Hostname) == "" {
+			problems = append(problems, "each TLS setting requires id and hostname")
+		}
+		if strings.TrimSpace(setting.EvidenceRef) == "" {
+			problems = append(problems, "each TLS setting requires evidenceRef")
+		}
+	}
+	for _, rule := range inv.Assets.BotRules {
+		if strings.TrimSpace(rule.ID) == "" || strings.TrimSpace(rule.Name) == "" {
+			problems = append(problems, "each bot rule requires id and name")
+		}
+		if strings.TrimSpace(rule.EvidenceRef) == "" {
+			problems = append(problems, "each bot rule requires evidenceRef")
+		}
+	}
+	for _, rule := range inv.Assets.PageRules {
+		if strings.TrimSpace(rule.ID) == "" || strings.TrimSpace(rule.Target) == "" {
+			problems = append(problems, "each page rule requires id and target")
+		}
+		if strings.TrimSpace(rule.EvidenceRef) == "" {
+			problems = append(problems, "each page rule requires evidenceRef")
+		}
+	}
 	if len(problems) > 0 {
 		return errors.New(strings.Join(problems, "; "))
 	}

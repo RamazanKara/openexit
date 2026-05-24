@@ -33,12 +33,24 @@ func Generate(projectDir string, artifacts []string) error {
 			if err := GenerateAll(projectDir); err != nil {
 				return err
 			}
-		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report", "identity-migration-risk-register", "break-glass-checklist", "identity-cutover-plan", "identity-rollback-plan":
+		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report", "identity-migration-risk-register", "break-glass-checklist", "identity-cutover-plan", "identity-rollback-plan", "cache-parity-report", "waf-enforcement-risk-report":
 			if err := writeMarkdown(ctx, artifact); err != nil {
 				return err
 			}
 		case "realm-client-candidate":
 			if err := writeIdentityRealmClientCandidate(ctx); err != nil {
+				return err
+			}
+		case "vcl-candidates":
+			if err := writeEdgeVCLCandidates(ctx); err != nil {
+				return err
+			}
+		case "haproxy-candidates":
+			if err := writeEdgeHAProxyCandidates(ctx); err != nil {
+				return err
+			}
+		case "coraza-rule-candidates":
+			if err := writeEdgeCorazaCandidates(ctx); err != nil {
 				return err
 			}
 		case "prometheus-rules":
@@ -76,6 +88,9 @@ func GenerateAll(projectDir string) error {
 	if ctx.Inventory.Source.Type == "identity" {
 		artifacts = []string{"assessment", "risk-register", "manual-review"}
 	}
+	if ctx.Inventory.Source.Type == "edge" {
+		artifacts = []string{"assessment", "risk-register", "manual-review"}
+	}
 	for _, artifact := range artifacts {
 		if err := writeMarkdown(ctx, artifact); err != nil {
 			return err
@@ -96,6 +111,14 @@ func GenerateAll(projectDir string) error {
 			}
 		}
 		return writeIdentityRealmClientCandidate(ctx)
+	}
+	if ctx.Inventory.Source.Type == "edge" {
+		for _, artifact := range edgeMarkdownArtifacts {
+			if err := writeMarkdown(ctx, artifact); err != nil {
+				return err
+			}
+		}
+		return writeEdgeCandidateConfigs(ctx)
 	}
 	if err := Grafana(ctx); err != nil {
 		return err
@@ -179,6 +202,10 @@ func writeMarkdown(ctx *Context, artifact string) error {
 		writeIdentityCutoverPlan(&b, ctx)
 	case "identity-rollback-plan":
 		writeIdentityRollbackPlan(&b, ctx)
+	case "cache-parity-report":
+		writeCacheParityReport(&b, ctx)
+	case "waf-enforcement-risk-report":
+		writeWAFEnforcementRiskReport(&b, ctx)
 	}
 	writeGeneratedBy(&b)
 	path := filepath.Join(ctx.ProjectDir, "assessment", artifact+".md")
@@ -214,6 +241,15 @@ func writeAssessmentBody(b *bytes.Buffer, ctx *Context) {
 		fmt.Fprintf(b, "- Identity policies: %d\n", ctx.Inventory.Summary.IdentityPolicies)
 		fmt.Fprintf(b, "- MFA settings: %d\n", ctx.Inventory.Summary.MFASettings)
 		fmt.Fprintf(b, "- Break-glass accounts: %d\n\n", ctx.Inventory.Summary.BreakGlassAccounts)
+	case "edge":
+		fmt.Fprintf(b, "- DNS records: %d\n", ctx.Inventory.Summary.DNSRecords)
+		fmt.Fprintf(b, "- WAF rules: %d\n", ctx.Inventory.Summary.WAFRules)
+		fmt.Fprintf(b, "- Cache rules: %d\n", ctx.Inventory.Summary.CacheRules)
+		fmt.Fprintf(b, "- Redirects: %d\n", ctx.Inventory.Summary.Redirects)
+		fmt.Fprintf(b, "- Origins: %d\n", ctx.Inventory.Summary.Origins)
+		fmt.Fprintf(b, "- TLS settings: %d\n", ctx.Inventory.Summary.TLSSettings)
+		fmt.Fprintf(b, "- Bot rules: %d\n", ctx.Inventory.Summary.BotRules)
+		fmt.Fprintf(b, "- Page rules: %d\n\n", ctx.Inventory.Summary.PageRules)
 	default:
 		fmt.Fprintf(b, "- Dashboards: %d\n", ctx.Inventory.Summary.Dashboards)
 		fmt.Fprintf(b, "- Monitors: %d\n", ctx.Inventory.Summary.Monitors)
@@ -546,6 +582,258 @@ func identityBreakGlassCandidates(accounts []inventory.BreakGlassAccount) []map[
 		})
 	}
 	return out
+}
+
+func writeCacheParityReport(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Cache Parity")
+	if len(ctx.Inventory.Assets.CacheRules) == 0 && len(ctx.Inventory.Assets.PageRules) == 0 {
+		fmt.Fprintln(b, "- No cache or page-rule metadata was captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	for _, rule := range ctx.Inventory.Assets.CacheRules {
+		fmt.Fprintf(b, "- %s: pattern=%s action=%s edge-ttl=%ds browser-ttl=%ds cache-key=%s evidence=%s\n", rule.Name, rule.Pattern, rule.Action, rule.EdgeTTL, rule.BrowserTTL, strings.Join(rule.CacheKey, ", "), rule.EvidenceRef)
+	}
+	for _, rule := range ctx.Inventory.Assets.PageRules {
+		fmt.Fprintf(b, "- page-rule %s: target=%s actions=%s evidence=%s\n", rule.ID, rule.Target, strings.Join(rule.Actions, ", "), rule.EvidenceRef)
+	}
+	writeFilteredFindings(b, ctx, "edge.cache.", "edge.page-rule.")
+}
+
+func writeWAFEnforcementRiskReport(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## WAF Enforcement Risk")
+	if len(ctx.Inventory.Assets.WAFRules) == 0 && len(ctx.Inventory.Assets.BotRules) == 0 {
+		fmt.Fprintln(b, "- No WAF or bot rule metadata was captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	for _, rule := range ctx.Inventory.Assets.WAFRules {
+		fmt.Fprintf(b, "- WAF %s: enabled=%t action=%s managed=%t evidence=%s\n", rule.Name, rule.Enabled, rule.Action, rule.Managed, rule.EvidenceRef)
+	}
+	for _, rule := range ctx.Inventory.Assets.BotRules {
+		fmt.Fprintf(b, "- Bot %s: enabled=%t action=%s evidence=%s\n", rule.Name, rule.Enabled, rule.Action, rule.EvidenceRef)
+	}
+	writeFilteredFindings(b, ctx, "edge.waf.", "edge.bot.", "edge.tls.", "edge.origin.")
+}
+
+func writeFilteredFindings(b *bytes.Buffer, ctx *Context, prefixes ...string) {
+	var findings []assessment.Finding
+	for _, finding := range ctx.Assessment.Findings {
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(finding.ID, prefix) {
+				findings = append(findings, finding)
+				break
+			}
+		}
+	}
+	writeRiskRegister(b, ctx, findings)
+}
+
+func writeEdgeCandidateConfigs(ctx *Context) error {
+	if err := writeEdgeVCLCandidates(ctx); err != nil {
+		return err
+	}
+	if err := writeEdgeHAProxyCandidates(ctx); err != nil {
+		return err
+	}
+	return writeEdgeCorazaCandidates(ctx)
+}
+
+func writeEdgeVCLCandidates(ctx *Context) error {
+	dir := filepath.Join(ctx.ProjectDir, "generated-config", "edge", "varnish")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	var b strings.Builder
+	fmt.Fprintln(&b, "vcl 4.1;")
+	fmt.Fprintln(&b)
+	fmt.Fprintln(&b, "# Candidate VCL generated by OpenExit. Review before use.")
+	writeVCLBackends(&b, ctx.Inventory.Assets.Origins)
+	fmt.Fprintln(&b, "sub vcl_recv {")
+	for _, rule := range ctx.Inventory.Assets.CacheRules {
+		pattern := vclRegex(rule.Pattern)
+		if strings.EqualFold(rule.Action, "bypass") {
+			fmt.Fprintf(&b, "    if (req.url ~ %q) { return (pass); }\n", pattern)
+			continue
+		}
+		if strings.EqualFold(rule.Action, "cache") {
+			fmt.Fprintf(&b, "    if (req.url ~ %q) { unset req.http.Cookie; }\n", pattern)
+		}
+	}
+	for _, rule := range ctx.Inventory.Assets.PageRules {
+		if rule.Enabled && containsString(rule.Actions, "cache_everything") {
+			fmt.Fprintf(&b, "    if (req.http.host + req.url ~ %q) { unset req.http.Cookie; }\n", vclRegex(rule.Target))
+		}
+	}
+	fmt.Fprintln(&b, "}")
+	fmt.Fprintln(&b)
+	fmt.Fprintln(&b, "sub vcl_backend_response {")
+	for _, rule := range ctx.Inventory.Assets.CacheRules {
+		if strings.EqualFold(rule.Action, "cache") && rule.EdgeTTL > 0 {
+			fmt.Fprintf(&b, "    if (bereq.url ~ %q) { set beresp.ttl = %ds; }\n", vclRegex(rule.Pattern), rule.EdgeTTL)
+		}
+	}
+	fmt.Fprintln(&b, "}")
+	if err := os.WriteFile(filepath.Join(dir, "default.candidate.vcl"), []byte(b.String()), 0o644); err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(dir, "README.md"), []byte("# Varnish VCL Candidates\n\nCandidate VCL translated from edge cache and page-rule metadata. Review cache keys, cookies, and origin behavior before use.\n"), 0o644)
+}
+
+func writeVCLBackends(b *strings.Builder, origins []inventory.OriginConfig) {
+	if len(origins) == 0 {
+		fmt.Fprintln(b, "backend default {")
+		fmt.Fprintln(b, "    .host = \"127.0.0.1\";")
+		fmt.Fprintln(b, "    .port = \"8080\";")
+		fmt.Fprintln(b, "}")
+		fmt.Fprintln(b)
+		return
+	}
+	for i, origin := range origins {
+		name := "origin_" + configIdentifier(origin.ID)
+		if i == 0 {
+			name = "default"
+		}
+		fmt.Fprintf(b, "backend %s {\n", name)
+		fmt.Fprintf(b, "    .host = %q;\n", origin.Hostname)
+		fmt.Fprintf(b, "    .port = %q;\n", fmt.Sprintf("%d", origin.Port))
+		fmt.Fprintln(b, "}")
+		fmt.Fprintln(b)
+	}
+}
+
+func writeEdgeHAProxyCandidates(ctx *Context) error {
+	dir := filepath.Join(ctx.ProjectDir, "generated-config", "edge", "haproxy")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	var b strings.Builder
+	fmt.Fprintln(&b, "# Candidate HAProxy config generated by OpenExit. Review before use.")
+	fmt.Fprintln(&b, "global")
+	fmt.Fprintln(&b, "    log stdout format raw local0")
+	fmt.Fprintln(&b, "defaults")
+	fmt.Fprintln(&b, "    mode http")
+	fmt.Fprintln(&b, "    timeout connect 5s")
+	fmt.Fprintln(&b, "    timeout client 30s")
+	fmt.Fprintln(&b, "    timeout server 30s")
+	fmt.Fprintln(&b, "frontend edge_https")
+	fmt.Fprintln(&b, "    bind *:443 ssl crt /etc/haproxy/certs/site.pem")
+	for _, redirect := range ctx.Inventory.Assets.Redirects {
+		fmt.Fprintf(&b, "    # %s evidence=%s\n", sanitizeConfigValue(redirect.Name), redirect.EvidenceRef)
+		fmt.Fprintf(&b, "    http-request redirect code %d location %s if { hdr(host) -m str %s }\n", redirect.StatusCode, sanitizeConfigValue(redirect.Target), redirectHost(redirect.Source))
+	}
+	for _, origin := range ctx.Inventory.Assets.Origins {
+		name := configIdentifier(origin.ID)
+		fmt.Fprintf(&b, "    acl host_%s hdr(host) -i %s\n", name, sanitizeConfigValue(origin.HostHeader))
+		fmt.Fprintf(&b, "    use_backend be_%s if host_%s\n", name, name)
+	}
+	if len(ctx.Inventory.Assets.Origins) > 0 {
+		fmt.Fprintf(&b, "    default_backend be_%s\n", configIdentifier(ctx.Inventory.Assets.Origins[0].ID))
+	}
+	for _, origin := range ctx.Inventory.Assets.Origins {
+		name := configIdentifier(origin.ID)
+		verify := "required"
+		if !origin.TLSVerify {
+			verify = "none"
+		}
+		ssl := ""
+		if strings.EqualFold(origin.Scheme, "https") {
+			ssl = " ssl verify " + verify + " sni str(" + sanitizeConfigValue(origin.Hostname) + ")"
+		}
+		check := ""
+		if origin.HealthCheck {
+			check = " check"
+		}
+		fmt.Fprintf(&b, "backend be_%s\n", name)
+		fmt.Fprintf(&b, "    server %s %s:%d%s%s\n", name, sanitizeConfigValue(origin.Hostname), origin.Port, ssl, check)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "haproxy.candidate.cfg"), []byte(b.String()), 0o644); err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(dir, "README.md"), []byte("# HAProxy Candidates\n\nCandidate HAProxy routing, redirect, TLS, and origin definitions derived from edge metadata. Review certificates, ACLs, redirects, and health checks before use.\n"), 0o644)
+}
+
+func writeEdgeCorazaCandidates(ctx *Context) error {
+	dir := filepath.Join(ctx.ProjectDir, "generated-config", "edge", "coraza")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	var b strings.Builder
+	fmt.Fprintln(&b, "# Candidate Coraza rules generated by OpenExit. Review before use.")
+	fmt.Fprintln(&b, "SecRuleEngine On")
+	for i, rule := range ctx.Inventory.Assets.WAFRules {
+		action := "deny,status:403"
+		if isObserveOnlyEdgeAction(rule.Action) {
+			action = "pass,log"
+		}
+		if !rule.Enabled {
+			action = "pass,nolog"
+		}
+		fmt.Fprintf(&b, "SecRule REQUEST_URI \"@contains %s\" \"id:%d,phase:2,%s,msg:'%s'\"\n", corazaMatchValue(rule.Expression), 100000+i, action, sanitizeConfigValue(rule.Name))
+	}
+	for i, rule := range ctx.Inventory.Assets.BotRules {
+		action := "deny,status:403"
+		if isObserveOnlyEdgeAction(rule.Action) || strings.Contains(strings.ToLower(rule.Action), "challenge") {
+			action = "pass,log"
+		}
+		if !rule.Enabled {
+			action = "pass,nolog"
+		}
+		fmt.Fprintf(&b, "SecRule REQUEST_HEADERS:User-Agent \"@rx .+\" \"id:%d,phase:1,%s,msg:'%s'\"\n", 110000+i, action, sanitizeConfigValue(rule.Name))
+	}
+	if err := os.WriteFile(filepath.Join(dir, "coraza-rules.candidate.conf"), []byte(b.String()), 0o644); err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(dir, "README.md"), []byte("# Coraza Rule Candidates\n\nCandidate Coraza rules are conservative placeholders derived from WAF and bot metadata. Map provider-managed rules to OWASP CRS or custom SecRule definitions before use.\n"), 0o644)
+}
+
+func vclRegex(pattern string) string {
+	pattern = strings.TrimSpace(pattern)
+	pattern = strings.TrimPrefix(pattern, "https://")
+	pattern = strings.TrimPrefix(pattern, "http://")
+	pattern = strings.ReplaceAll(pattern, ".", "\\.")
+	pattern = strings.ReplaceAll(pattern, "*", ".*")
+	return pattern
+}
+
+func redirectHost(source string) string {
+	source = strings.TrimPrefix(source, "https://")
+	source = strings.TrimPrefix(source, "http://")
+	host, _, _ := strings.Cut(source, "/")
+	return sanitizeConfigValue(strings.TrimSuffix(host, "*"))
+}
+
+func corazaMatchValue(expression string) string {
+	if _, after, ok := strings.Cut(expression, "contains"); ok {
+		return strings.Trim(strings.TrimSpace(after), "\"'")
+	}
+	return "/"
+}
+
+func sanitizeConfigValue(value string) string {
+	value = strings.ReplaceAll(value, "\n", " ")
+	value = strings.ReplaceAll(value, "\r", " ")
+	value = strings.ReplaceAll(value, "'", "")
+	value = strings.ReplaceAll(value, "\"", "")
+	return strings.TrimSpace(value)
+}
+
+func configIdentifier(value string) string {
+	return strings.ReplaceAll(inventory.Slug(value), "-", "_")
+}
+
+func containsString(values []string, needle string) bool {
+	for _, value := range values {
+		if value == needle {
+			return true
+		}
+	}
+	return false
+}
+
+func isObserveOnlyEdgeAction(action string) bool {
+	action = strings.ToLower(strings.TrimSpace(action))
+	return action == "log" || action == "count" || action == "simulate"
 }
 
 func writeGeneratedBy(b *bytes.Buffer) {

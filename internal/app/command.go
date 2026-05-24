@@ -13,6 +13,7 @@ import (
 	"github.com/RamazanKara/openexit/internal/assist"
 	"github.com/RamazanKara/openexit/internal/collector"
 	"github.com/RamazanKara/openexit/internal/collector/datadog"
+	"github.com/RamazanKara/openexit/internal/collector/edge"
 	"github.com/RamazanKara/openexit/internal/collector/githubenterprise"
 	"github.com/RamazanKara/openexit/internal/collector/identity"
 	openexport "github.com/RamazanKara/openexit/internal/export"
@@ -98,6 +99,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectDatadogCommand())
 	collectCmd.AddCommand(newCollectGitHubFixtureCommand())
 	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
+	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
 	return collectCmd
 }
 
@@ -166,6 +168,21 @@ func newCollectIdentityFixtureCommand() *cobra.Command {
 	return cmd
 }
 
+func newCollectEdgeFixtureCommand() *cobra.Command {
+	var project, input string
+	cmd := &cobra.Command{
+		Use:   "edge-fixture",
+		Short: "Collect Cloudflare/Akamai-like fixture inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, edge.FixtureCollector{}, map[string]string{"input": input})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&input, "input", "", "Cloudflare/Akamai edge fixture JSON file")
+	_ = cmd.MarkFlagRequired("input")
+	return cmd
+}
+
 func runCollector(ctx context.Context, cmd *cobra.Command, projectDir string, c collector.Collector, options map[string]string) error {
 	cfg, err := LoadProjectConfig(projectDir)
 	if err != nil {
@@ -190,6 +207,8 @@ func inventorySummary(inv *inventory.Inventory) string {
 		return fmt.Sprintf("%d repositories, %d teams, %d workflows", inv.Summary.Repositories, inv.Summary.Teams, inv.Summary.ActionsWorkflows)
 	case "identity":
 		return fmt.Sprintf("%d applications, %d groups, %d policies", inv.Summary.IdentityApps, inv.Summary.IdentityGroups, inv.Summary.IdentityPolicies)
+	case "edge":
+		return fmt.Sprintf("%d DNS records, %d WAF rules, %d cache rules", inv.Summary.DNSRecords, inv.Summary.WAFRules, inv.Summary.CacheRules)
 	default:
 		return fmt.Sprintf("%d dashboards, %d monitors, %d SLOs", inv.Summary.Dashboards, inv.Summary.Monitors, inv.Summary.SLOs)
 	}

@@ -34,6 +34,7 @@ make build
 - `openexit collect fixture --project <project-dir> --input <file>`
 - `openexit collect github-fixture --project <project-dir> --input <file>`
 - `openexit collect identity-fixture --project <project-dir> --input <file>`
+- `openexit collect edge-fixture --project <project-dir> --input <file>`
 - `openexit collect datadog --project <project-dir> --site datadoghq.eu --api-key-env DATADOG_API_KEY --app-key-env DATADOG_APP_KEY`
 - `openexit assess --project <project-dir> --target grafana-lgtm`
 - `openexit generate --project <project-dir> --all`
@@ -62,6 +63,7 @@ Included in this first implementation:
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - Fixture-based GitHub Enterprise to Forgejo assessment preview.
 - Fixture-based Okta/Auth0 to Keycloak/Zitadel assessment preview.
+- Fixture-based Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment preview.
 
 Not included in v0.1:
 
@@ -97,6 +99,10 @@ The first v0.2 scaffold supports GitHub Enterprise fixture inventory for Forgejo
 ## v0.3 Preview
 
 The v0.3 scaffold supports Okta/Auth0-like identity fixture inventory for Keycloak/Zitadel assessment. It collects applications, SAML/OIDC client metadata, groups, policies, MFA settings, redirect URIs, owners, and break-glass account metadata from local fixtures, then generates identity migration reports and a candidate realm/client YAML without calling a live API.
+
+## v0.4 Preview
+
+The v0.4 scaffold supports Cloudflare/Akamai-like edge fixture inventory for Varnish, HAProxy, and Coraza assessment. It collects DNS records, WAF rules, cache rules, redirects, origins, TLS settings, bot rules, and page rules from local fixtures, then generates VCL, HAProxy, Coraza, cache parity, and WAF enforcement review artifacts without calling a live API.
 
 ## License
 
