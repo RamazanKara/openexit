@@ -1,0 +1,19 @@
+{
+  "site": "datadoghq.com",
+  "dashboards": [
+    {
+      "id": "dash-unsupported",
+      "title": "Unsupported Widgets",
+      "tags": ["team:observability"],
+      "widgets": [
+        { "id": "w1", "type": "change", "title": "Change" },
+        { "id": "w2", "type": "manage_status", "title": "Managed status" },
+        { "id": "w3", "type": "timeseries", "title": "Good", "query": "avg:service.latency{env:prod}" }
+      ]
+    }
+  ],
+  "monitors": [],
+  "slos": [],
+  "integrations": [],
+  "metrics": []
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openexit.dev/schemas/openexit.mapping.schema.json",
+  "title": "OpenExit Mapping",
+  "type": "object",
+  "required": ["targetType", "dashboardDrafts", "alertRuleDrafts", "unsupportedItems", "manualReview"],
+  "properties": {
+    "targetType": { "type": "string" },
+    "dashboardDrafts": { "type": "array" },
+    "alertRuleDrafts": { "type": "array" },
+    "unsupportedItems": { "type": "array" },
+    "manualReview": { "type": "array" }
+  }
+}

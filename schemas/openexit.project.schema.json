@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openexit.dev/schemas/openexit.project.schema.json",
+  "title": "OpenExit Project",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "source", "target", "policy"],
+  "properties": {
+    "apiVersion": { "const": "openexit.dev/v1alpha1" },
+    "kind": { "const": "Project" },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": { "name": { "type": "string", "minLength": 1 } }
+    },
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "properties": { "type": { "type": "string" }, "site": { "type": "string" } }
+    },
+    "target": {
+      "type": "object",
+      "required": ["type"],
+      "properties": { "type": { "type": "string" } }
+    },
+    "policy": {
+      "type": "object",
+      "required": ["allowNetworkWrites", "allowProductionWrites", "allowAI"],
+      "properties": {
+        "allowNetworkWrites": { "type": "boolean" },
+        "allowProductionWrites": { "type": "boolean" },
+        "allowAI": { "type": "boolean" }
+      }
+    }
+  }
+}

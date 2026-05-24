@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openexit.dev/schemas/openexit.artifact.schema.json",
+  "title": "OpenExit Artifact",
+  "type": "object",
+  "required": ["path", "kind", "candidate"],
+  "properties": {
+    "path": { "type": "string" },
+    "kind": { "type": "string" },
+    "candidate": { "type": "boolean" },
+    "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+  }
+}

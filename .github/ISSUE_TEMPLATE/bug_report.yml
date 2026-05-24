@@ -1,0 +1,19 @@
+name: Bug report
+description: Report something that is broken or unsafe.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Commands, fixture, or redacted inventory needed to reproduce.
+    validations:
+      required: true

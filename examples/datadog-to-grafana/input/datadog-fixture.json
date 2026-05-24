@@ -1,0 +1,26 @@
+{
+  "site": "datadoghq.eu",
+  "dashboards": [
+    {
+      "id": "example-dashboard",
+      "title": "Example API Overview",
+      "tags": ["team:example"],
+      "widgets": [
+        { "id": "w1", "type": "timeseries", "title": "Requests", "query": "sum:example.requests{env:prod}.as_count()" }
+      ]
+    }
+  ],
+  "monitors": [
+    {
+      "id": "example-monitor",
+      "name": "Example request errors",
+      "type": "query alert",
+      "query": "sum(last_5m):sum:example.errors{env:prod}.as_count() > 1",
+      "notificationTargets": ["slack-example"],
+      "tags": ["team:example"]
+    }
+  ],
+  "slos": [],
+  "integrations": [],
+  "metrics": []
+}

@@ -1,0 +1,42 @@
+{
+  "site": "datadoghq.com",
+  "dashboards": [
+    {
+      "id": "dash-monitors",
+      "title": "Monitor Overview",
+      "tags": ["team:sre"],
+      "widgets": [
+        { "id": "w1", "type": "timeseries", "title": "Errors", "query": "sum:app.errors{env:prod}.as_count()" }
+      ]
+    }
+  ],
+  "monitors": [
+    {
+      "id": "m-1",
+      "name": "Checkout errors",
+      "type": "query alert",
+      "query": "sum(last_5m):sum:checkout.errors{env:prod}.as_count() > 5",
+      "notificationTargets": ["pagerduty-checkout"],
+      "tags": ["env:prod", "team:checkout"]
+    },
+    {
+      "id": "m-2",
+      "name": "Outlier workers",
+      "type": "query alert",
+      "query": "avg(last_10m):outliers(avg:worker.queue.depth{env:prod} by {host}, 'dbscan', 7) > 0",
+      "notificationTargets": ["webhook-workers"],
+      "tags": ["env:prod"]
+    },
+    {
+      "id": "m-3",
+      "name": "Forecast storage",
+      "type": "query alert",
+      "query": "avg(last_4h):forecast(avg:disk.used{env:prod} by {host}, 'linear', 1, interval='60m') > 90",
+      "notificationTargets": ["slack-storage"],
+      "tags": ["env:prod", "owner:storage"]
+    }
+  ],
+  "slos": [],
+  "integrations": [],
+  "metrics": []
+}

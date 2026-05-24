@@ -1,0 +1,22 @@
+name: Migration path request
+description: Request a new source-to-target assessment path.
+title: "[migration-path] "
+labels: ["migration-path"]
+body:
+  - type: input
+    id: source
+    attributes:
+      label: Source
+    validations:
+      required: true
+  - type: input
+    id: target
+    attributes:
+      label: Target
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Known risks
+      description: What makes this migration hard?

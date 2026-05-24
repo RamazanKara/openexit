@@ -1,0 +1,44 @@
+package app
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+func TestInitProjectIdempotentAndStatus(t *testing.T) {
+	dir := t.TempDir()
+	if err := InitProject(dir); err != nil {
+		t.Fatal(err)
+	}
+	marker := filepath.Join(dir, "inventory", "keep.txt")
+	if err := os.WriteFile(marker, []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := InitProject(dir); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(marker); err != nil {
+		t.Fatalf("init removed existing file: %v", err)
+	}
+	status, err := CheckProject(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !status.ConfigOK || len(status.Missing) != 0 {
+		t.Fatalf("unexpected status: %+v", status)
+	}
+}
+
+func TestInvalidProjectConfig(t *testing.T) {
+	dir := t.TempDir()
+	if err := InitProject(dir); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, projectFileName), []byte("kind: Wrong\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CheckProject(dir); err == nil {
+		t.Fatal("expected invalid project config error")
+	}
+}

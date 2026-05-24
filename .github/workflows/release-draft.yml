@@ -1,0 +1,15 @@
+name: Release Draft
+
+on:
+  workflow_dispatch:
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: go build ./cmd/openexit
+      - name: Draft notes
+        run: |
+          printf 'OpenExit release draft\n\nReview CHANGELOG.md before publishing.\n' > RELEASE_NOTES.md

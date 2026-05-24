@@ -1,0 +1,23 @@
+{
+  "site": "datadoghq.eu",
+  "dashboards": [
+    {
+      "id": "dash-heavy",
+      "title": "Platform Mega Dashboard",
+      "tags": ["env:prod"],
+      "widgets": [
+        { "id": "w1", "type": "timeseries", "title": "CPU", "query": "avg:system.cpu.user{env:prod} by {host}" },
+        { "id": "w2", "type": "timeseries", "title": "Memory", "query": "avg:system.mem.used{env:prod} by {host}" },
+        { "id": "w3", "type": "query_value", "title": "Requests", "query": "sum:trace.http.request.hits{env:prod}.as_count()" },
+        { "id": "w4", "type": "note", "title": "Notes" },
+        { "id": "w5", "type": "alert_graph", "title": "Alert graph" },
+        { "id": "w6", "type": "timeseries", "title": "Queue", "query": "avg:worker.queue.depth{env:prod} by {pod}" }
+      ],
+      "queries": []
+    }
+  ],
+  "monitors": [],
+  "slos": [],
+  "integrations": [{ "name": "aws", "enabled": true }],
+  "metrics": []
+}

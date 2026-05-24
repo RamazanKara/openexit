@@ -1,0 +1,18 @@
+name: Connector request
+description: Request a new read-only source collector.
+title: "[connector] "
+labels: ["connector"]
+body:
+  - type: input
+    id: source
+    attributes:
+      label: Source platform
+    validations:
+      required: true
+  - type: textarea
+    id: assets
+    attributes:
+      label: Assets to collect
+      description: List the read-only objects needed for assessment.
+    validations:
+      required: true

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openexit.dev/schemas/openexit.assessment.schema.json",
+  "title": "OpenExit Assessment",
+  "type": "object",
+  "required": ["apiVersion", "kind", "metadata", "source", "target", "score", "findings"],
+  "properties": {
+    "apiVersion": { "const": "openexit.dev/v1alpha1" },
+    "kind": { "const": "Assessment" },
+    "metadata": {
+      "type": "object",
+      "required": ["project", "generatedAt"]
+    },
+    "source": { "type": "object", "required": ["type"] },
+    "target": { "type": "object", "required": ["type"] },
+    "score": { "type": "object", "required": ["value", "level"] },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "title", "affectedAssets", "evidenceRefs", "recommendation"]
+      }
+    }
+  }
+}

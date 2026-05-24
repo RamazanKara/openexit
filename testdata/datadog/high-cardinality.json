@@ -1,0 +1,26 @@
+{
+  "site": "datadoghq.eu",
+  "dashboards": [
+    {
+      "id": "dash-cardinality",
+      "title": "Cardinality Review",
+      "tags": ["team:platform"],
+      "widgets": [
+        { "id": "w1", "type": "timeseries", "title": "By user", "query": "avg:api.request.duration{env:prod} by {user_id}" }
+      ]
+    }
+  ],
+  "monitors": [
+    {
+      "id": "m-cardinality",
+      "name": "Per pod errors",
+      "type": "query alert",
+      "query": "sum(last_5m):sum:kubernetes.pod.errors{env:prod} by {pod} > 10",
+      "notificationTargets": ["slack-platform"],
+      "tags": ["team:platform"]
+    }
+  ],
+  "slos": [],
+  "integrations": [],
+  "metrics": []
+}

@@ -1,0 +1,6 @@
+bin/
+demo/
+*.zip
+coverage.out
+dist/
+.DS_Store
