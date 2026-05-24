@@ -82,6 +82,10 @@ OpenExit is intentionally conservative:
 - Every generated alert remains labeled `openexit_candidate=true` and `production_ready=false`.
 - Human review and shadowing are required before operational use.
 
+## Risk Coverage
+
+The v0.1 assessment engine includes dashboard, monitor, SLO, cost, scale, and migration risk rules from the implementation plan. Findings have stable IDs, severity, affected assets, evidence refs, and recommendations.
+
 ## License
 
 Apache-2.0.

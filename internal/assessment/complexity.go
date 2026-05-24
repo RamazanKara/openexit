@@ -51,6 +51,22 @@ func ScoreInventory(inv *inventory.Inventory, findings []Finding) Score {
 		value += 10
 		drivers = append(drivers, fmt.Sprintf("%d SLOs require migration review", inv.Summary.SLOs))
 	}
+	if hasFinding(findings, "dd.cost.retention-unknown.001") {
+		value += 10
+		drivers = append(drivers, "retention requirements unknown")
+	}
+	if hasFinding(findings, "dd.cost.log-volume-unknown.001") || hasFinding(findings, "dd.cost.trace-volume-unknown.001") {
+		value += 10
+		drivers = append(drivers, "logs or traces volume requirements unknown")
+	}
+	if hasFinding(findings, "dd.dashboard.unknown-data-source.001") || hasFinding(findings, "dd.dashboard.template-variable-complexity.001") {
+		value += 10
+		drivers = append(drivers, "dashboard data source or variable mapping requires review")
+	}
+	if hasFinding(findings, "migration.notification-routing-review-required.001") {
+		value += 5
+		drivers = append(drivers, "notification routing requires review")
+	}
 	if value > 100 {
 		value = 100
 	}
@@ -80,4 +96,13 @@ func ScoreInventory(inv *inventory.Inventory, findings []Finding) Score {
 		ManualReview:        manualReview,
 		Drivers:             drivers,
 	}
+}
+
+func hasFinding(findings []Finding, id string) bool {
+	for _, finding := range findings {
+		if finding.ID == id {
+			return true
+		}
+	}
+	return false
 }

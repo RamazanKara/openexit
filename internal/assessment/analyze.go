@@ -16,6 +16,7 @@ func Run(ctx context.Context, inv *inventory.Inventory, target string, now time.
 		CardinalityAnalyzer{},
 		SLOAnalyzer{},
 		CostDriverAnalyzer{},
+		MigrationAnalyzer{},
 	}
 	var findings []Finding
 	for _, analyzer := range analyzers {

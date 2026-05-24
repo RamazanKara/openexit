@@ -37,6 +37,31 @@ func (DashboardAnalyzer) Analyze(_ context.Context, inv *inventory.Inventory) ([
 				Recommendation: "Review layout and ownership before importing a large generated dashboard candidate.",
 			})
 		}
+		for _, source := range dashboard.DataSources {
+			if unknownDashboardDataSource(source) {
+				findings = append(findings, Finding{
+					ID:             "dd.dashboard.unknown-data-source.001",
+					Severity:       "medium",
+					Title:          "Dashboard data source requires target mapping",
+					Description:    fmt.Sprintf("%s references data source %q, which OpenExit cannot map automatically.", dashboard.Title, source),
+					AffectedAssets: []string{"dashboard:" + dashboard.ID},
+					EvidenceRefs:   []string{dashboard.EvidenceRef},
+					Recommendation: "Map the data source to Grafana LGTM manually and validate dashboard panel behavior.",
+				})
+				break
+			}
+		}
+		if complexTemplateVariables(dashboard.TemplateVariables) {
+			findings = append(findings, Finding{
+				ID:             "dd.dashboard.template-variable-complexity.001",
+				Severity:       "medium",
+				Title:          "Dashboard template variables require review",
+				Description:    fmt.Sprintf("%s uses template variables that may need manual Grafana variable mapping.", dashboard.Title),
+				AffectedAssets: []string{"dashboard:" + dashboard.ID},
+				EvidenceRefs:   []string{dashboard.EvidenceRef},
+				Recommendation: "Review template variable queries, defaults, and refresh behavior before dashboard import.",
+			})
+		}
 	}
 	return findings, nil
 }
@@ -67,11 +92,39 @@ func (MonitorAnalyzer) Analyze(_ context.Context, inv *inventory.Inventory) ([]F
 		for _, target := range monitor.NotificationTargets {
 			if unknownNotificationTarget(target) {
 				findings = append(findings, monitorFinding(monitor, "dd.monitor.unknown-notification-target.001", "medium", "Notification target requires routing review", fmt.Sprintf("Notification target %q is not recognized as a safe automatic route.", target), "Map notification routing manually and test paging behavior during shadowing."))
+				findings = append(findings, monitorFinding(monitor, "dd.monitor.manual-routing-needed.001", "medium", "Manual alert routing review is needed", "OpenExit does not automatically map Datadog notification handles to target alert routes.", "Create explicit target contact points and routing policies, then test them without production paging."))
 				break
 			}
 		}
 	}
 	return findings, nil
+}
+
+func unknownDashboardDataSource(source string) bool {
+	source = strings.ToLower(strings.TrimSpace(source))
+	if source == "" {
+		return false
+	}
+	known := []string{"datadog", "metrics", "logs", "traces", "rum", "apm", "synthetics"}
+	for _, value := range known {
+		if source == value || strings.Contains(source, value) {
+			return false
+		}
+	}
+	return true
+}
+
+func complexTemplateVariables(variables []inventory.TemplateVariable) bool {
+	if len(variables) > 5 {
+		return true
+	}
+	for _, variable := range variables {
+		query := strings.ToLower(variable.Query)
+		if strings.Contains(query, "*") || strings.Contains(query, " by ") || strings.Contains(query, "rollup(") || strings.Contains(query, "tags(") || strings.Contains(query, "hosts(") {
+			return true
+		}
+	}
+	return false
 }
 
 func monitorFinding(m inventory.Monitor, id, severity, title, description, recommendation string) Finding {

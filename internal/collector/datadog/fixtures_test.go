@@ -19,6 +19,7 @@ func TestFixtureCollectorProfiles(t *testing.T) {
 		"unsupported-widgets.json",
 		"high-cardinality.json",
 		"prompt-injection.json",
+		"risk-rules.json",
 	}
 	for _, fixture := range fixtures {
 		t.Run(fixture, func(t *testing.T) {

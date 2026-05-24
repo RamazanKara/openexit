@@ -16,6 +16,13 @@
       "required": ["type"]
     },
     "assets": { "type": "object" },
-    "summary": { "type": "object" }
+    "summary": { "type": "object" },
+    "volumes": {
+      "type": "object",
+      "properties": {
+        "logVolumeKnown": { "type": "boolean" },
+        "traceVolumeKnown": { "type": "boolean" }
+      }
+    }
   }
 }

@@ -49,6 +49,10 @@ func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Invent
 	if err := writeEvidence(projectDir, "datadog/raw-fixture.json", raw); err != nil {
 		return err
 	}
+	inv.Volumes = inventory.Volumes{
+		LogVolumeKnown:   fixture.Volumes.LogVolumeKnown,
+		TraceVolumeKnown: fixture.Volumes.TraceVolumeKnown,
+	}
 	metricNames := map[string]inventory.MetricRef{}
 	for _, dashboard := range fixture.Dashboards {
 		dashBytes, err := json.MarshalIndent(dashboard, "", "  ")
@@ -66,11 +70,15 @@ func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Invent
 			}
 		}
 		widgetTypes := dashboard.WidgetTypes()
+		dataSources := dashboardDataSources(dashboard)
+		templateVariables := dashboardTemplateVariables(dashboard)
 		inv.Assets.Dashboards = append(inv.Assets.Dashboards, inventory.Dashboard{
-			ID:    dashboard.ID,
-			Title: dashboard.Title,
-			URL:   inventory.RedactString(dashboard.URL),
-			Tags:  append([]string{}, dashboard.Tags...),
+			ID:                dashboard.ID,
+			Title:             dashboard.Title,
+			URL:               inventory.RedactString(dashboard.URL),
+			Tags:              append([]string{}, dashboard.Tags...),
+			DataSources:       dataSources,
+			TemplateVariables: templateVariables,
 			Widgets: inventory.WidgetSummary{
 				Total:       len(dashboard.Widgets),
 				Unsupported: countUnsupportedWidgets(dashboard.Widgets),
@@ -113,11 +121,14 @@ func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Invent
 			return err
 		}
 		inv.Assets.SLOs = append(inv.Assets.SLOs, inventory.SLO{
-			ID:          slo.ID,
-			Name:        slo.Name,
-			Target:      slo.Target,
-			Timeframe:   slo.Timeframe,
-			EvidenceRef: "evidence://datadog/slo/" + slo.ID,
+			ID:                 slo.ID,
+			Name:               slo.Name,
+			Target:             slo.Target,
+			Timeframe:          slo.Timeframe,
+			SLI:                slo.SLI,
+			BurnRateMonitorIDs: append([]string{}, slo.BurnRateMonitorIDs...),
+			DashboardRefs:      append([]string{}, slo.DashboardRefs...),
+			EvidenceRef:        "evidence://datadog/slo/" + slo.ID,
 		})
 	}
 	for _, integration := range fixture.Integrations {
@@ -199,6 +210,42 @@ func dashboardQueries(d FixtureDashboard) []inventory.Query {
 			out = append(out, inventory.Query{ID: queryID(d.ID, len(out)+i), Language: "datadog", Raw: inventory.RedactString(widget.Query)})
 		}
 	}
+	return out
+}
+
+func dashboardDataSources(d FixtureDashboard) []string {
+	seen := map[string]struct{}{}
+	for _, source := range d.DataSources {
+		source = strings.TrimSpace(source)
+		if source != "" {
+			seen[source] = struct{}{}
+		}
+	}
+	for _, widget := range d.Widgets {
+		source := strings.TrimSpace(widget.DataSource)
+		if source != "" {
+			seen[source] = struct{}{}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for source := range seen {
+		out = append(out, source)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func dashboardTemplateVariables(d FixtureDashboard) []inventory.TemplateVariable {
+	out := make([]inventory.TemplateVariable, 0, len(d.TemplateVariables))
+	for _, variable := range d.TemplateVariables {
+		name := strings.TrimSpace(variable.Name)
+		query := strings.TrimSpace(variable.Query)
+		if name == "" && query == "" {
+			continue
+		}
+		out = append(out, inventory.TemplateVariable{Name: name, Query: inventory.RedactString(query)})
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out
 }
 

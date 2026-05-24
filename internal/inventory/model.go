@@ -14,6 +14,7 @@ type Inventory struct {
 	Source     Source   `json:"source" yaml:"source"`
 	Assets     Assets   `json:"assets" yaml:"assets"`
 	Summary    Summary  `json:"summary" yaml:"summary"`
+	Volumes    Volumes  `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 	Warnings   []string `json:"warnings,omitempty" yaml:"warnings,omitempty"`
 }
 
@@ -38,13 +39,15 @@ type Assets struct {
 }
 
 type Dashboard struct {
-	ID          string        `json:"id" yaml:"id"`
-	Title       string        `json:"title" yaml:"title"`
-	URL         string        `json:"url,omitempty" yaml:"url,omitempty"`
-	Tags        []string      `json:"tags,omitempty" yaml:"tags,omitempty"`
-	Widgets     WidgetSummary `json:"widgets" yaml:"widgets"`
-	Queries     []Query       `json:"queries,omitempty" yaml:"queries,omitempty"`
-	EvidenceRef string        `json:"evidenceRef" yaml:"evidenceRef"`
+	ID                string             `json:"id" yaml:"id"`
+	Title             string             `json:"title" yaml:"title"`
+	URL               string             `json:"url,omitempty" yaml:"url,omitempty"`
+	Tags              []string           `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Widgets           WidgetSummary      `json:"widgets" yaml:"widgets"`
+	Queries           []Query            `json:"queries,omitempty" yaml:"queries,omitempty"`
+	DataSources       []string           `json:"dataSources,omitempty" yaml:"dataSources,omitempty"`
+	TemplateVariables []TemplateVariable `json:"templateVariables,omitempty" yaml:"templateVariables,omitempty"`
+	EvidenceRef       string             `json:"evidenceRef" yaml:"evidenceRef"`
 }
 
 type WidgetSummary struct {
@@ -59,6 +62,11 @@ type Query struct {
 	Raw      string `json:"raw" yaml:"raw"`
 }
 
+type TemplateVariable struct {
+	Name  string `json:"name" yaml:"name"`
+	Query string `json:"query,omitempty" yaml:"query,omitempty"`
+}
+
 type Monitor struct {
 	ID                  string   `json:"id" yaml:"id"`
 	Name                string   `json:"name" yaml:"name"`
@@ -71,11 +79,14 @@ type Monitor struct {
 }
 
 type SLO struct {
-	ID          string  `json:"id" yaml:"id"`
-	Name        string  `json:"name" yaml:"name"`
-	Target      float64 `json:"target" yaml:"target"`
-	Timeframe   string  `json:"timeframe" yaml:"timeframe"`
-	EvidenceRef string  `json:"evidenceRef" yaml:"evidenceRef"`
+	ID                 string   `json:"id" yaml:"id"`
+	Name               string   `json:"name" yaml:"name"`
+	Target             float64  `json:"target" yaml:"target"`
+	Timeframe          string   `json:"timeframe" yaml:"timeframe"`
+	SLI                string   `json:"sli,omitempty" yaml:"sli,omitempty"`
+	BurnRateMonitorIDs []string `json:"burnRateMonitorIds,omitempty" yaml:"burnRateMonitorIds,omitempty"`
+	DashboardRefs      []string `json:"dashboardRefs,omitempty" yaml:"dashboardRefs,omitempty"`
+	EvidenceRef        string   `json:"evidenceRef" yaml:"evidenceRef"`
 }
 
 type Integration struct {
@@ -97,6 +108,11 @@ type Summary struct {
 	Integrations        int `json:"integrations" yaml:"integrations"`
 	UniqueMetrics       int `json:"uniqueMetrics" yaml:"uniqueMetrics"`
 	NotificationTargets int `json:"notificationTargets" yaml:"notificationTargets"`
+}
+
+type Volumes struct {
+	LogVolumeKnown   bool `json:"logVolumeKnown,omitempty" yaml:"logVolumeKnown,omitempty"`
+	TraceVolumeKnown bool `json:"traceVolumeKnown,omitempty" yaml:"traceVolumeKnown,omitempty"`
 }
 
 func New(project, source, site, collectorVersion string, collectedAt time.Time) *Inventory {

@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/RamazanKara/openexit/internal/collector"
@@ -83,6 +85,8 @@ func dashboardFromRaw(id, title, dashboardURL string, raw map[string]any) invent
 		}
 	}
 	tags := stringSlice(raw["tags"])
+	dataSources := dashboardRawDataSources(raw)
+	templateVariables := dashboardRawTemplateVariables(raw)
 	widgetsRaw, _ := raw["widgets"].([]any)
 	var widgets []FixtureWidget
 	var queries []inventory.Query
@@ -90,16 +94,23 @@ func dashboardFromRaw(id, title, dashboardURL string, raw map[string]any) invent
 		m, _ := widget.(map[string]any)
 		def, _ := m["definition"].(map[string]any)
 		kind, _ := def["type"].(string)
-		widgets = append(widgets, FixtureWidget{Type: kind})
+		source := rawString(def["data_source"])
+		if source == "" {
+			source = rawString(def["dataSource"])
+		}
+		widgets = append(widgets, FixtureWidget{Type: kind, DataSource: source})
 		for _, q := range extractRawQueries(def) {
 			queries = append(queries, inventory.Query{ID: queryID(id, len(queries)+i), Language: "datadog", Raw: inventory.RedactString(q)})
 		}
 	}
+	dataSources = append(dataSources, dashboardDataSources(FixtureDashboard{Widgets: widgets})...)
 	return inventory.Dashboard{
-		ID:    id,
-		Title: title,
-		URL:   inventory.RedactString(dashboardURL),
-		Tags:  tags,
+		ID:                id,
+		Title:             title,
+		URL:               inventory.RedactString(dashboardURL),
+		Tags:              tags,
+		DataSources:       uniqueSorted(dataSources),
+		TemplateVariables: templateVariables,
 		Widgets: inventory.WidgetSummary{
 			Total:       len(widgets),
 			Unsupported: countUnsupportedWidgets(widgets),
@@ -126,6 +137,33 @@ func extractRawQueries(def map[string]any) []string {
 			if q, ok := qm["query"].(string); ok && q != "" {
 				out = append(out, q)
 			}
+		}
+	}
+	return out
+}
+
+func dashboardRawDataSources(raw map[string]any) []string {
+	var out []string
+	for _, key := range []string{"data_sources", "dataSources"} {
+		for _, source := range stringSlice(raw[key]) {
+			out = append(out, source)
+		}
+	}
+	return out
+}
+
+func dashboardRawTemplateVariables(raw map[string]any) []inventory.TemplateVariable {
+	var out []inventory.TemplateVariable
+	for _, key := range []string{"template_variables", "templateVariables"} {
+		variables, _ := raw[key].([]any)
+		for _, item := range variables {
+			variable, _ := item.(map[string]any)
+			name := rawString(variable["name"])
+			query := rawString(variable["query"])
+			if name == "" && query == "" {
+				continue
+			}
+			out = append(out, inventory.TemplateVariable{Name: name, Query: inventory.RedactString(query)})
 		}
 	}
 	return out
@@ -213,6 +251,27 @@ func stringSlice(value any) []string {
 			out = append(out, text)
 		}
 	}
+	return out
+}
+
+func rawString(value any) string {
+	text, _ := value.(string)
+	return text
+}
+
+func uniqueSorted(values []string) []string {
+	seen := map[string]struct{}{}
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value != "" {
+			seen[value] = struct{}{}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for value := range seen {
+		out = append(out, value)
+	}
+	sort.Strings(out)
 	return out
 }
 

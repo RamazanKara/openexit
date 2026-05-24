@@ -9,21 +9,30 @@ type Fixture struct {
 	SLOs         []FixtureSLO         `json:"slos"`
 	Integrations []FixtureIntegration `json:"integrations"`
 	Metrics      []FixtureMetric      `json:"metrics"`
+	Volumes      FixtureVolumes       `json:"volumes"`
 }
 
 type FixtureDashboard struct {
-	ID      string          `json:"id"`
-	Title   string          `json:"title"`
-	URL     string          `json:"url"`
-	Tags    []string        `json:"tags"`
-	Widgets []FixtureWidget `json:"widgets"`
-	Queries []string        `json:"queries"`
+	ID                string                    `json:"id"`
+	Title             string                    `json:"title"`
+	URL               string                    `json:"url"`
+	Tags              []string                  `json:"tags"`
+	Widgets           []FixtureWidget           `json:"widgets"`
+	Queries           []string                  `json:"queries"`
+	DataSources       []string                  `json:"dataSources"`
+	TemplateVariables []FixtureTemplateVariable `json:"templateVariables"`
 }
 
 type FixtureWidget struct {
-	ID    string `json:"id"`
-	Type  string `json:"type"`
-	Title string `json:"title"`
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Title      string `json:"title"`
+	Query      string `json:"query"`
+	DataSource string `json:"dataSource"`
+}
+
+type FixtureTemplateVariable struct {
+	Name  string `json:"name"`
 	Query string `json:"query"`
 }
 

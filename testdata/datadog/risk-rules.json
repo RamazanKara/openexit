@@ -1,0 +1,52 @@
+{
+  "site": "datadoghq.eu",
+  "dashboards": [
+    {
+      "id": "dash-risk-rules",
+      "title": "Risk Rule Coverage",
+      "tags": ["env:prod"],
+      "dataSources": ["custom-events-api"],
+      "templateVariables": [
+        { "name": "pod", "query": "tags(kube.pod.name{env:prod} by {pod})" },
+        { "name": "service", "query": "service:*" }
+      ],
+      "widgets": [
+        {
+          "id": "w1",
+          "type": "timeseries",
+          "title": "By user",
+          "query": "avg:api.request.duration{env:prod} by {user_id}",
+          "dataSource": "custom-events-api"
+        }
+      ]
+    }
+  ],
+  "monitors": [
+    {
+      "id": "risk-monitor",
+      "name": "Risk monitor",
+      "type": "query alert",
+      "query": "sum(last_5m):sum:trace.http.request.errors{env:prod}.as_count() > 10",
+      "message": "Route this @unknown-webhook",
+      "notificationTargets": ["unknown-webhook"],
+      "tags": ["env:prod"]
+    }
+  ],
+  "slos": [
+    {
+      "id": "slo-risk",
+      "name": "Checkout availability",
+      "target": 99.9,
+      "timeframe": "30d"
+    }
+  ],
+  "integrations": [],
+  "metrics": [
+    { "name": "trace.http.request.errors", "tags": ["env", "service"] },
+    { "name": "logs.ingested.bytes", "tags": ["env"] }
+  ],
+  "volumes": {
+    "logVolumeKnown": false,
+    "traceVolumeKnown": false
+  }
+}
