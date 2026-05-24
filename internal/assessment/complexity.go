@@ -17,6 +17,18 @@ func ScoreInventory(inv *inventory.Inventory, findings []Finding) Score {
 		value += 15
 		drivers = append(drivers, fmt.Sprintf("%d monitors", inv.Summary.Monitors))
 	}
+	if inv.Summary.Repositories > 100 {
+		value += 15
+		drivers = append(drivers, fmt.Sprintf("%d repositories", inv.Summary.Repositories))
+	}
+	if inv.Summary.ActionsWorkflows > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d Actions workflows require compatibility review", inv.Summary.ActionsWorkflows))
+	}
+	if inv.Summary.Secrets > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d secret metadata entries require migration", inv.Summary.Secrets))
+	}
 	unsupported := 0
 	for _, dashboard := range inv.Assets.Dashboards {
 		unsupported += dashboard.Widgets.Unsupported

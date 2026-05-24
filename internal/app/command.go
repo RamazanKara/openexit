@@ -13,6 +13,7 @@ import (
 	"github.com/RamazanKara/openexit/internal/assist"
 	"github.com/RamazanKara/openexit/internal/collector"
 	"github.com/RamazanKara/openexit/internal/collector/datadog"
+	"github.com/RamazanKara/openexit/internal/collector/githubenterprise"
 	openexport "github.com/RamazanKara/openexit/internal/export"
 	"github.com/RamazanKara/openexit/internal/generate"
 	"github.com/RamazanKara/openexit/internal/inventory"
@@ -94,6 +95,7 @@ func newCollectCommand() *cobra.Command {
 	}
 	collectCmd.AddCommand(newCollectFixtureCommand())
 	collectCmd.AddCommand(newCollectDatadogCommand())
+	collectCmd.AddCommand(newCollectGitHubFixtureCommand())
 	return collectCmd
 }
 
@@ -132,6 +134,21 @@ func newCollectDatadogCommand() *cobra.Command {
 	return cmd
 }
 
+func newCollectGitHubFixtureCommand() *cobra.Command {
+	var project, input string
+	cmd := &cobra.Command{
+		Use:   "github-fixture",
+		Short: "Collect GitHub Enterprise-like fixture inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, githubenterprise.FixtureCollector{}, map[string]string{"input": input})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&input, "input", "", "GitHub Enterprise fixture JSON file")
+	_ = cmd.MarkFlagRequired("input")
+	return cmd
+}
+
 func runCollector(ctx context.Context, cmd *cobra.Command, projectDir string, c collector.Collector, options map[string]string) error {
 	cfg, err := LoadProjectConfig(projectDir)
 	if err != nil {
@@ -146,8 +163,17 @@ func runCollector(ctx context.Context, cmd *cobra.Command, projectDir string, c 
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "collected %s inventory: %d dashboards, %d monitors, %d SLOs\n", c.Name(), inv.Summary.Dashboards, inv.Summary.Monitors, inv.Summary.SLOs)
+	fmt.Fprintf(cmd.OutOrStdout(), "collected %s inventory: %s\n", c.Name(), inventorySummary(inv))
 	return nil
+}
+
+func inventorySummary(inv *inventory.Inventory) string {
+	switch inv.Source.Type {
+	case "github-enterprise":
+		return fmt.Sprintf("%d repositories, %d teams, %d workflows", inv.Summary.Repositories, inv.Summary.Teams, inv.Summary.ActionsWorkflows)
+	default:
+		return fmt.Sprintf("%d dashboards, %d monitors, %d SLOs", inv.Summary.Dashboards, inv.Summary.Monitors, inv.Summary.SLOs)
+	}
 }
 
 func newAssessCommand() *cobra.Command {

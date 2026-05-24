@@ -42,6 +42,55 @@ func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
 	}
 }
 
+func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "ghe-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
+
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "github-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "forgejo"},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	for _, rel := range []string{
+		"inventory/openexit.inventory.yaml",
+		"assessment/openexit.assessment.yaml",
+		"assessment/forgejo-migration-assessment.md",
+		"assessment/ci-compatibility-report.md",
+		"assessment/branch-protection-mapping.md",
+		"assessment/runner-migration-plan.md",
+		"assessment/repository-ownership-report.md",
+		"evidence/github-enterprise/repositories/platform-api.json",
+		"evidence/github-enterprise/actions-workflows/platform-api-github-workflows-ci-yml.json",
+		"validation/openexit.validation.yaml",
+	} {
+		path := filepath.Join(projectDir, filepath.FromSlash(rel))
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("expected GitHub generated file %s: %v", rel, err)
+		}
+	}
+	assessmentData, err := os.ReadFile(filepath.Join(projectDir, "assessment", "openexit.assessment.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{
+		"ghe.actions.github-hosted-runner.001",
+		"ghe.branch-protection.force-push.001",
+		"ghe.deploy-key.write-access.001",
+		"ghe.github-app.webhook-review.001",
+	} {
+		if !strings.Contains(string(assessmentData), id) {
+			t.Fatalf("expected assessment finding %s", id)
+		}
+	}
+}
+
 func TestExportRefusesInvalidProjectWithoutForce(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "broken")
 	if err := executeForTest("init", projectDir); err != nil {

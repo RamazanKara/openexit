@@ -33,7 +33,7 @@ func Generate(projectDir string, artifacts []string) error {
 			if err := GenerateAll(projectDir); err != nil {
 				return err
 			}
-		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan":
+		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report":
 			if err := writeMarkdown(ctx, artifact); err != nil {
 				return err
 			}
@@ -65,10 +65,22 @@ func GenerateAll(projectDir string) error {
 	if err != nil {
 		return err
 	}
-	for _, artifact := range markdownArtifacts {
+	artifacts := markdownArtifacts
+	if ctx.Inventory.Source.Type == "github-enterprise" {
+		artifacts = []string{"assessment", "risk-register", "manual-review"}
+	}
+	for _, artifact := range artifacts {
 		if err := writeMarkdown(ctx, artifact); err != nil {
 			return err
 		}
+	}
+	if ctx.Inventory.Source.Type == "github-enterprise" {
+		for _, artifact := range githubMarkdownArtifacts {
+			if err := writeMarkdown(ctx, artifact); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 	if err := Grafana(ctx); err != nil {
 		return err
@@ -134,6 +146,16 @@ func writeMarkdown(ctx *Context, artifact string) error {
 		writeRestoreDrill(&b, ctx)
 	case "alert-shadowing-plan":
 		writeAlertShadowing(&b, ctx)
+	case "forgejo-migration-assessment":
+		writeForgejoMigrationAssessment(&b, ctx)
+	case "ci-compatibility-report":
+		writeCICompatibilityReport(&b, ctx)
+	case "branch-protection-mapping":
+		writeBranchProtectionMapping(&b, ctx)
+	case "runner-migration-plan":
+		writeRunnerMigrationPlan(&b, ctx)
+	case "repository-ownership-report":
+		writeRepositoryOwnershipReport(&b, ctx)
 	}
 	writeGeneratedBy(&b)
 	path := filepath.Join(ctx.ProjectDir, "assessment", artifact+".md")
@@ -160,6 +182,14 @@ func writeAssessmentBody(b *bytes.Buffer, ctx *Context) {
 	fmt.Fprintf(b, "- SLOs: %d\n", ctx.Inventory.Summary.SLOs)
 	fmt.Fprintf(b, "- Integrations: %d\n", ctx.Inventory.Summary.Integrations)
 	fmt.Fprintf(b, "- Unique metrics: %d\n\n", ctx.Inventory.Summary.UniqueMetrics)
+	if ctx.Inventory.Source.Type == "github-enterprise" {
+		fmt.Fprintf(b, "- Repositories: %d\n", ctx.Inventory.Summary.Repositories)
+		fmt.Fprintf(b, "- Teams: %d\n", ctx.Inventory.Summary.Teams)
+		fmt.Fprintf(b, "- Branch protections: %d\n", ctx.Inventory.Summary.BranchProtections)
+		fmt.Fprintf(b, "- Actions workflows: %d\n", ctx.Inventory.Summary.ActionsWorkflows)
+		fmt.Fprintf(b, "- Secrets metadata entries: %d\n", ctx.Inventory.Summary.Secrets)
+		fmt.Fprintf(b, "- Runners: %d\n\n", ctx.Inventory.Summary.Runners)
+	}
 	fmt.Fprintln(b, "## Complexity Drivers")
 	for _, driver := range ctx.Assessment.Score.Drivers {
 		fmt.Fprintf(b, "- %s\n", driver)
@@ -267,6 +297,68 @@ func writeAlertShadowing(b *bytes.Buffer, ctx *Context) {
 	fmt.Fprintln(b, "- Compare Datadog and target alert state over at least one representative period.")
 	fmt.Fprintln(b, "- Investigate every high-severity finding before enabling notifications.")
 	fmt.Fprintln(b, "- Document acceptable differences and owner sign-off.")
+	fmt.Fprintln(b)
+}
+
+func writeForgejoMigrationAssessment(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Forgejo Migration Assessment")
+	fmt.Fprintf(b, "- Repositories: %d\n", ctx.Inventory.Summary.Repositories)
+	fmt.Fprintf(b, "- Teams: %d\n", ctx.Inventory.Summary.Teams)
+	fmt.Fprintf(b, "- Branch protections: %d\n", ctx.Inventory.Summary.BranchProtections)
+	fmt.Fprintf(b, "- Actions workflows: %d\n", ctx.Inventory.Summary.ActionsWorkflows)
+	fmt.Fprintf(b, "- GitHub Apps: %d\n\n", ctx.Inventory.Summary.GitHubApps)
+	writeRiskRegister(b, ctx, firstN(ctx.Assessment.Findings, 12))
+}
+
+func writeCICompatibilityReport(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## CI Compatibility")
+	if len(ctx.Inventory.Assets.ActionsWorkflows) == 0 {
+		fmt.Fprintln(b, "- No Actions workflow metadata was captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	for _, workflow := range ctx.Inventory.Assets.ActionsWorkflows {
+		fmt.Fprintf(b, "- %s %s: github-hosted=%t self-hosted=%t actions=%s evidence=%s\n", workflow.Repository, workflow.Path, workflow.UsesGitHubHosted, workflow.UsesSelfHosted, strings.Join(workflow.Actions, ", "), workflow.EvidenceRef)
+	}
+	fmt.Fprintln(b)
+}
+
+func writeBranchProtectionMapping(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Branch Protection Mapping")
+	if len(ctx.Inventory.Assets.BranchProtections) == 0 {
+		fmt.Fprintln(b, "- No branch protection metadata was captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	for _, protection := range ctx.Inventory.Assets.BranchProtections {
+		fmt.Fprintf(b, "- %s/%s: reviews=%d code-owner-review=%t force-push=%t checks=%s evidence=%s\n", protection.Repository, protection.Branch, protection.RequiredReviews, protection.RequireCodeOwnerReview, protection.AllowsForcePushes, strings.Join(protection.RequiredStatusChecks, ", "), protection.EvidenceRef)
+	}
+	fmt.Fprintln(b)
+}
+
+func writeRunnerMigrationPlan(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Runner Migration Plan")
+	if len(ctx.Inventory.Assets.Runners) == 0 {
+		fmt.Fprintln(b, "- No runner metadata was captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	for _, runner := range ctx.Inventory.Assets.Runners {
+		fmt.Fprintf(b, "- %s (%s): online=%t labels=%s evidence=%s\n", runner.Name, runner.Scope, runner.Online, strings.Join(runner.Labels, ", "), runner.EvidenceRef)
+	}
+	fmt.Fprintln(b)
+}
+
+func writeRepositoryOwnershipReport(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Repository Ownership")
+	if len(ctx.Inventory.Assets.Repositories) == 0 {
+		fmt.Fprintln(b, "- No repository metadata was captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	for _, repo := range ctx.Inventory.Assets.Repositories {
+		fmt.Fprintf(b, "- %s: teams=%s codeowners=%t visibility=%s evidence=%s\n", repo.Name, strings.Join(repo.Teams, ", "), repo.HasCODEOWNERS, repo.Visibility, repo.EvidenceRef)
+	}
 	fmt.Fprintln(b)
 }
 

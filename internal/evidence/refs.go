@@ -25,6 +25,22 @@ func PathForRef(projectDir, ref string) (string, error) {
 		dir = "monitors"
 	case "slo":
 		dir = "slos"
+	case "repository":
+		dir = "repositories"
+	case "team":
+		dir = "teams"
+	case "branch-protection":
+		dir = "branch-protections"
+	case "actions-workflow":
+		dir = "actions-workflows"
+	case "secret":
+		dir = "secrets"
+	case "runner":
+		dir = "runners"
+	case "deploy-key":
+		dir = "deploy-keys"
+	case "github-app":
+		dir = "github-apps"
 	default:
 		dir = kind
 	}

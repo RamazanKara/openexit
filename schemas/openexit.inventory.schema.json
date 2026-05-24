@@ -15,7 +15,19 @@
       "type": "object",
       "required": ["type"]
     },
-    "assets": { "type": "object" },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "repositories": { "type": "array" },
+        "teams": { "type": "array" },
+        "branchProtections": { "type": "array" },
+        "actionsWorkflows": { "type": "array" },
+        "secrets": { "type": "array" },
+        "runners": { "type": "array" },
+        "deployKeys": { "type": "array" },
+        "githubApps": { "type": "array" }
+      }
+    },
     "summary": { "type": "object" },
     "volumes": {
       "type": "object",

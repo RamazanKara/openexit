@@ -251,6 +251,30 @@ func addEvidenceChecks(projectDir string, inv *inventory.Inventory, a *assessmen
 	for _, slo := range inv.Assets.SLOs {
 		refs[slo.EvidenceRef] = struct{}{}
 	}
+	for _, repo := range inv.Assets.Repositories {
+		refs[repo.EvidenceRef] = struct{}{}
+	}
+	for _, team := range inv.Assets.Teams {
+		refs[team.EvidenceRef] = struct{}{}
+	}
+	for _, protection := range inv.Assets.BranchProtections {
+		refs[protection.EvidenceRef] = struct{}{}
+	}
+	for _, workflow := range inv.Assets.ActionsWorkflows {
+		refs[workflow.EvidenceRef] = struct{}{}
+	}
+	for _, secret := range inv.Assets.Secrets {
+		refs[secret.EvidenceRef] = struct{}{}
+	}
+	for _, runner := range inv.Assets.Runners {
+		refs[runner.EvidenceRef] = struct{}{}
+	}
+	for _, key := range inv.Assets.DeployKeys {
+		refs[key.EvidenceRef] = struct{}{}
+	}
+	for _, app := range inv.Assets.GitHubApps {
+		refs[app.EvidenceRef] = struct{}{}
+	}
 	for _, finding := range a.Findings {
 		for _, ref := range finding.EvidenceRefs {
 			refs[ref] = struct{}{}

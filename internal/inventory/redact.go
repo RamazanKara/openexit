@@ -3,7 +3,7 @@ package inventory
 import "regexp"
 
 var (
-	keyValueSecretPattern = regexp.MustCompile(`(?i)(api[_-]?key|app[_-]?key|token|password|secret)(["'\s:=]+)([A-Za-z0-9_\-./+=]{8,})`)
+	keyValueSecretPattern = regexp.MustCompile(`(?i)(api[_-]?key|app[_-]?key|token|password|secret)(["']?\s*[:=]\s*["']?)([A-Za-z0-9_\-./+=]{8,})`)
 	bearerSecretPattern   = regexp.MustCompile(`(?i)(bearer\s+)[A-Za-z0-9_\-./+=]{16,}`)
 	datadogKeyPattern     = regexp.MustCompile(`(?i)dd[a-z0-9]{30,}`)
 	privateKeyPattern     = regexp.MustCompile(`-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----`)

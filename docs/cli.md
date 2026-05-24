@@ -14,3 +14,13 @@ openexit export --project ./demo --format zip --out ./openexit-demo.zip
 ```
 
 The CI test suite also runs this definition-of-done pipeline against the fixture inventory and checks that the generated project layout and export bundle contain the expected artifacts. Bundle checksums are verified against the archived file bytes.
+
+The GitHub Enterprise to Forgejo preview uses a fixture-first path:
+
+```bash
+openexit init ./ghe-demo
+openexit collect github-fixture --project ./ghe-demo --input ./testdata/github-enterprise/small.json
+openexit assess --project ./ghe-demo --target forgejo
+openexit generate --project ./ghe-demo --all
+openexit validate --project ./ghe-demo
+```

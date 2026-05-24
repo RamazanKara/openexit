@@ -32,6 +32,7 @@ make build
 - `openexit init <project-dir>`
 - `openexit status --project <project-dir>`
 - `openexit collect fixture --project <project-dir> --input <file>`
+- `openexit collect github-fixture --project <project-dir> --input <file>`
 - `openexit collect datadog --project <project-dir> --site datadoghq.eu --api-key-env DATADOG_API_KEY --app-key-env DATADOG_APP_KEY`
 - `openexit assess --project <project-dir> --target grafana-lgtm`
 - `openexit generate --project <project-dir> --all`
@@ -58,6 +59,7 @@ Included in this first implementation:
 - Validation report with YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export.
 - No-op assist provider and explicit opt-in LiteLLM assist.
+- Fixture-based GitHub Enterprise to Forgejo assessment preview.
 
 Not included in v0.1:
 
@@ -85,6 +87,10 @@ OpenExit is intentionally conservative:
 ## Risk Coverage
 
 The v0.1 assessment engine includes dashboard, monitor, SLO, cost, scale, and migration risk rules from the implementation plan. Findings have stable IDs, severity, affected assets, evidence refs, and recommendations.
+
+## v0.2 Preview
+
+The first v0.2 scaffold supports GitHub Enterprise fixture inventory for Forgejo migration assessment. It collects repository, team, branch protection, Actions workflow, secret metadata, runner, deploy key, and GitHub App metadata from local fixtures, then generates Forgejo migration reports without calling a live API.
 
 ## License
 

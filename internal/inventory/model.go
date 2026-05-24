@@ -31,11 +31,19 @@ type Source struct {
 }
 
 type Assets struct {
-	Dashboards   []Dashboard   `json:"dashboards,omitempty" yaml:"dashboards,omitempty"`
-	Monitors     []Monitor     `json:"monitors,omitempty" yaml:"monitors,omitempty"`
-	SLOs         []SLO         `json:"slos,omitempty" yaml:"slos,omitempty"`
-	Integrations []Integration `json:"integrations,omitempty" yaml:"integrations,omitempty"`
-	Metrics      []MetricRef   `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+	Dashboards        []Dashboard        `json:"dashboards,omitempty" yaml:"dashboards,omitempty"`
+	Monitors          []Monitor          `json:"monitors,omitempty" yaml:"monitors,omitempty"`
+	SLOs              []SLO              `json:"slos,omitempty" yaml:"slos,omitempty"`
+	Integrations      []Integration      `json:"integrations,omitempty" yaml:"integrations,omitempty"`
+	Metrics           []MetricRef        `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+	Repositories      []Repository       `json:"repositories,omitempty" yaml:"repositories,omitempty"`
+	Teams             []Team             `json:"teams,omitempty" yaml:"teams,omitempty"`
+	BranchProtections []BranchProtection `json:"branchProtections,omitempty" yaml:"branchProtections,omitempty"`
+	ActionsWorkflows  []ActionsWorkflow  `json:"actionsWorkflows,omitempty" yaml:"actionsWorkflows,omitempty"`
+	Secrets           []SecretMetadata   `json:"secrets,omitempty" yaml:"secrets,omitempty"`
+	Runners           []Runner           `json:"runners,omitempty" yaml:"runners,omitempty"`
+	DeployKeys        []DeployKey        `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
+	GitHubApps        []GitHubApp        `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
 }
 
 type Dashboard struct {
@@ -108,11 +116,96 @@ type Summary struct {
 	Integrations        int `json:"integrations" yaml:"integrations"`
 	UniqueMetrics       int `json:"uniqueMetrics" yaml:"uniqueMetrics"`
 	NotificationTargets int `json:"notificationTargets" yaml:"notificationTargets"`
+	Repositories        int `json:"repositories,omitempty" yaml:"repositories,omitempty"`
+	Teams               int `json:"teams,omitempty" yaml:"teams,omitempty"`
+	BranchProtections   int `json:"branchProtections,omitempty" yaml:"branchProtections,omitempty"`
+	ActionsWorkflows    int `json:"actionsWorkflows,omitempty" yaml:"actionsWorkflows,omitempty"`
+	Secrets             int `json:"secrets,omitempty" yaml:"secrets,omitempty"`
+	Runners             int `json:"runners,omitempty" yaml:"runners,omitempty"`
+	DeployKeys          int `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
+	GitHubApps          int `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
 }
 
 type Volumes struct {
 	LogVolumeKnown   bool `json:"logVolumeKnown,omitempty" yaml:"logVolumeKnown,omitempty"`
 	TraceVolumeKnown bool `json:"traceVolumeKnown,omitempty" yaml:"traceVolumeKnown,omitempty"`
+}
+
+type Repository struct {
+	Name                  string   `json:"name" yaml:"name"`
+	Visibility            string   `json:"visibility" yaml:"visibility"`
+	DefaultBranch         string   `json:"defaultBranch" yaml:"defaultBranch"`
+	Archived              bool     `json:"archived" yaml:"archived"`
+	Topics                []string `json:"topics,omitempty" yaml:"topics,omitempty"`
+	Teams                 []string `json:"teams,omitempty" yaml:"teams,omitempty"`
+	ActionsEnabled        bool     `json:"actionsEnabled" yaml:"actionsEnabled"`
+	HasCODEOWNERS         bool     `json:"hasCodeowners" yaml:"hasCodeowners"`
+	UsesGitHubPages       bool     `json:"usesGitHubPages,omitempty" yaml:"usesGitHubPages,omitempty"`
+	UsesGitHubPackages    bool     `json:"usesGitHubPackages,omitempty" yaml:"usesGitHubPackages,omitempty"`
+	UsesGitHubDiscussions bool     `json:"usesGitHubDiscussions,omitempty" yaml:"usesGitHubDiscussions,omitempty"`
+	EvidenceRef           string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type Team struct {
+	Slug        string   `json:"slug" yaml:"slug"`
+	Name        string   `json:"name" yaml:"name"`
+	Members     int      `json:"members" yaml:"members"`
+	Maintainers int      `json:"maintainers" yaml:"maintainers"`
+	Repos       []string `json:"repos,omitempty" yaml:"repos,omitempty"`
+	EvidenceRef string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type BranchProtection struct {
+	Repository             string   `json:"repository" yaml:"repository"`
+	Branch                 string   `json:"branch" yaml:"branch"`
+	RequiredStatusChecks   []string `json:"requiredStatusChecks,omitempty" yaml:"requiredStatusChecks,omitempty"`
+	RequiredReviews        int      `json:"requiredReviews" yaml:"requiredReviews"`
+	RequireCodeOwnerReview bool     `json:"requireCodeOwnerReview" yaml:"requireCodeOwnerReview"`
+	RestrictPushes         bool     `json:"restrictPushes" yaml:"restrictPushes"`
+	AllowsForcePushes      bool     `json:"allowsForcePushes" yaml:"allowsForcePushes"`
+	EvidenceRef            string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type ActionsWorkflow struct {
+	Repository       string   `json:"repository" yaml:"repository"`
+	Path             string   `json:"path" yaml:"path"`
+	Name             string   `json:"name" yaml:"name"`
+	UsesGitHubHosted bool     `json:"usesGitHubHosted" yaml:"usesGitHubHosted"`
+	UsesSelfHosted   bool     `json:"usesSelfHosted" yaml:"usesSelfHosted"`
+	Actions          []string `json:"actions,omitempty" yaml:"actions,omitempty"`
+	Secrets          []string `json:"secrets,omitempty" yaml:"secrets,omitempty"`
+	EvidenceRef      string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type SecretMetadata struct {
+	Name        string   `json:"name" yaml:"name"`
+	Scope       string   `json:"scope" yaml:"scope"`
+	Repository  string   `json:"repository,omitempty" yaml:"repository,omitempty"`
+	Consumers   []string `json:"consumers,omitempty" yaml:"consumers,omitempty"`
+	EvidenceRef string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type Runner struct {
+	Name        string   `json:"name" yaml:"name"`
+	Scope       string   `json:"scope" yaml:"scope"`
+	Labels      []string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Online      bool     `json:"online" yaml:"online"`
+	EvidenceRef string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type DeployKey struct {
+	Repository  string `json:"repository" yaml:"repository"`
+	Title       string `json:"title" yaml:"title"`
+	ReadOnly    bool   `json:"readOnly" yaml:"readOnly"`
+	EvidenceRef string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type GitHubApp struct {
+	Name           string   `json:"name" yaml:"name"`
+	Repositories   []string `json:"repositories,omitempty" yaml:"repositories,omitempty"`
+	Permissions    []string `json:"permissions,omitempty" yaml:"permissions,omitempty"`
+	WebhookEnabled bool     `json:"webhookEnabled" yaml:"webhookEnabled"`
+	EvidenceRef    string   `json:"evidenceRef" yaml:"evidenceRef"`
 }
 
 func New(project, source, site, collectorVersion string, collectedAt time.Time) *Inventory {
@@ -160,5 +253,13 @@ func (inv *Inventory) RecomputeSummary() {
 		Integrations:        len(inv.Assets.Integrations),
 		UniqueMetrics:       len(metricNames),
 		NotificationTargets: len(targets),
+		Repositories:        len(inv.Assets.Repositories),
+		Teams:               len(inv.Assets.Teams),
+		BranchProtections:   len(inv.Assets.BranchProtections),
+		ActionsWorkflows:    len(inv.Assets.ActionsWorkflows),
+		Secrets:             len(inv.Assets.Secrets),
+		Runners:             len(inv.Assets.Runners),
+		DeployKeys:          len(inv.Assets.DeployKeys),
+		GitHubApps:          len(inv.Assets.GitHubApps),
 	}
 }

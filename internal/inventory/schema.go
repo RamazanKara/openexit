@@ -36,6 +36,14 @@ func Validate(inv *Inventory) error {
 			problems = append(problems, "each monitor requires evidenceRef")
 		}
 	}
+	for _, repo := range inv.Assets.Repositories {
+		if strings.TrimSpace(repo.Name) == "" {
+			problems = append(problems, "each repository requires name")
+		}
+		if strings.TrimSpace(repo.EvidenceRef) == "" {
+			problems = append(problems, "each repository requires evidenceRef")
+		}
+	}
 	if len(problems) > 0 {
 		return errors.New(strings.Join(problems, "; "))
 	}
