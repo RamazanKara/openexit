@@ -52,7 +52,7 @@ Included in this first implementation:
 - Deterministic risk assessment.
 - Markdown handover artifacts.
 - Grafana dashboard candidate JSON.
-- Prometheus alert rule candidate YAML.
+- Prometheus alert rule candidate YAML with simple Datadog threshold conversion hints.
 - OpenTelemetry Collector sketch.
 - ArgoCD starter manifest.
 - Validation report with YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
@@ -66,6 +66,15 @@ Not included in v0.1:
 - Hosted portal.
 - Perfect Datadog to Grafana parity.
 - AI-required decision making.
+
+## Candidate Conversion Policy
+
+OpenExit is intentionally conservative:
+
+- Simple Datadog metric thresholds can be translated into PromQL candidates.
+- Complex functions such as anomaly, outlier, forecast, timeshift, or composite behavior stay as `vector(0)` placeholders with source queries preserved.
+- Every generated alert remains labeled `openexit_candidate=true` and `production_ready=false`.
+- Human review and shadowing are required before operational use.
 
 ## License
 

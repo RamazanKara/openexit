@@ -134,7 +134,7 @@ func extractRawQueries(def map[string]any) []string {
 func collectMonitors(ctx context.Context, client *Client, projectDir string, inv *inventory.Inventory) error {
 	pageSize := 100
 	for page := 0; ; page++ {
-		var monitors []FixtureMonitor
+		var monitors []liveMonitor
 		query := url.Values{"page": {strconv.Itoa(page)}, "page_size": {strconv.Itoa(pageSize)}}
 		body, err := client.get(ctx, "/api/v1/monitor", query, &monitors)
 		if err != nil {
@@ -147,15 +147,19 @@ func collectMonitors(ctx context.Context, client *Client, projectDir string, inv
 			return err
 		}
 		for _, monitor := range monitors {
+			monitorID := monitor.ID.String()
+			if err := writeEvidence(projectDir, "datadog/monitors/"+safeID(monitorID)+".json", inventory.RedactBytes(prettyJSON(monitor))); err != nil {
+				return err
+			}
 			inv.Assets.Monitors = append(inv.Assets.Monitors, inventory.Monitor{
-				ID:                  monitor.ID,
+				ID:                  monitorID,
 				Name:                monitor.Name,
 				Type:                monitor.Type,
 				Query:               inventory.RedactString(monitor.Query),
-				NotificationTargets: extractTargets(monitor),
+				NotificationTargets: extractTargets(monitor.fixtureMonitor()),
 				Tags:                monitor.Tags,
 				RunbookURL:          monitor.RunbookURL,
-				EvidenceRef:         "evidence://datadog/monitor/" + monitor.ID,
+				EvidenceRef:         "evidence://datadog/monitor/" + monitorID,
 			})
 		}
 		if len(monitors) < pageSize {
@@ -184,6 +188,9 @@ func collectSLOs(ctx context.Context, client *Client, projectDir string, inv *in
 		return err
 	}
 	for _, slo := range out.Data {
+		if err := writeEvidence(projectDir, "datadog/slos/"+safeID(slo.ID)+".json", inventory.RedactBytes(prettyJSON(slo))); err != nil {
+			return err
+		}
 		inv.Assets.SLOs = append(inv.Assets.SLOs, inventory.SLO{
 			ID:          slo.ID,
 			Name:        slo.Attributes.Name,
@@ -212,4 +219,48 @@ func stringSlice(value any) []string {
 func prettyJSON(value any) []byte {
 	data, _ := json.MarshalIndent(value, "", "  ")
 	return data
+}
+
+type liveMonitor struct {
+	ID                  stringID `json:"id"`
+	Name                string   `json:"name"`
+	Type                string   `json:"type"`
+	Query               string   `json:"query"`
+	Message             string   `json:"message"`
+	NotificationTargets []string `json:"notificationTargets"`
+	Tags                []string `json:"tags"`
+	RunbookURL          string   `json:"runbookUrl"`
+}
+
+func (m liveMonitor) fixtureMonitor() FixtureMonitor {
+	return FixtureMonitor{
+		ID:                  m.ID.String(),
+		Name:                m.Name,
+		Type:                m.Type,
+		Query:               m.Query,
+		Message:             m.Message,
+		NotificationTargets: m.NotificationTargets,
+		Tags:                m.Tags,
+		RunbookURL:          m.RunbookURL,
+	}
+}
+
+type stringID string
+
+func (id *stringID) UnmarshalJSON(data []byte) error {
+	var text string
+	if err := json.Unmarshal(data, &text); err == nil {
+		*id = stringID(text)
+		return nil
+	}
+	var number json.Number
+	if err := json.Unmarshal(data, &number); err == nil {
+		*id = stringID(number.String())
+		return nil
+	}
+	return fmt.Errorf("invalid id %s", string(data))
+}
+
+func (id stringID) String() string {
+	return string(id)
 }
