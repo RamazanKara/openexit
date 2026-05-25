@@ -58,6 +58,7 @@ func Run(projectDir string, strict bool) (*Report, error) {
 	} else {
 		add("project-config", "passed", "", true)
 	}
+	cfg, cfgErr := loadProjectManifest(projectDir)
 	inv, err := loadInventory(projectDir)
 	if err != nil {
 		add("inventory-schema", "failed", err.Error(), true)
@@ -74,6 +75,9 @@ func Run(projectDir string, strict bool) (*Report, error) {
 	addJSONChecks(projectDir, add)
 	addExternalChecks(projectDir, add)
 	if inv != nil && a != nil {
+		if cfgErr == nil {
+			addProjectConsistencyChecks(cfg, inv, a, add)
+		}
 		addEvidenceChecks(projectDir, inv, a, add)
 	}
 	addSecretScan(projectDir, add)
@@ -106,12 +110,8 @@ type projectManifest struct {
 }
 
 func checkProject(projectDir string) error {
-	data, err := os.ReadFile(filepath.Join(projectDir, "openexit.yaml"))
+	cfg, err := loadProjectManifest(projectDir)
 	if err != nil {
-		return err
-	}
-	var cfg projectManifest
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return err
 	}
 	var problems []string
@@ -143,6 +143,18 @@ func checkProject(projectDir string) error {
 		return errors.New(strings.Join(problems, "; "))
 	}
 	return nil
+}
+
+func loadProjectManifest(projectDir string) (*projectManifest, error) {
+	data, err := os.ReadFile(filepath.Join(projectDir, "openexit.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	var cfg projectManifest
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
 }
 
 func loadInventory(projectDir string) (*inventory.Inventory, error) {
@@ -238,6 +250,24 @@ func addExternalChecks(projectDir string, add func(string, string, string, bool)
 			add("argocd-kubeconform", "warning", "kubeconform not found; YAML parse still ran", false)
 		}
 	}
+}
+
+func addProjectConsistencyChecks(cfg *projectManifest, inv *inventory.Inventory, a *assessment.Assessment, add func(string, string, string, bool)) {
+	var problems []string
+	if cfg.Source.Type != inv.Source.Type {
+		problems = append(problems, fmt.Sprintf("project source %q does not match inventory source %q", cfg.Source.Type, inv.Source.Type))
+	}
+	if inv.Source.Type != a.Source.Type {
+		problems = append(problems, fmt.Sprintf("inventory source %q does not match assessment source %q", inv.Source.Type, a.Source.Type))
+	}
+	if cfg.Target.Type != a.Target.Type {
+		problems = append(problems, fmt.Sprintf("project target %q does not match assessment target %q", cfg.Target.Type, a.Target.Type))
+	}
+	if len(problems) > 0 {
+		add("project-manifest-consistency", "failed", strings.Join(problems, "; "), true)
+		return
+	}
+	add("project-manifest-consistency", "passed", "", true)
 }
 
 func addEvidenceChecks(projectDir string, inv *inventory.Inventory, a *assessment.Assessment, add func(string, string, string, bool)) {

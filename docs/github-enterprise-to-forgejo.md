@@ -1,6 +1,6 @@
 # GitHub Enterprise To Forgejo
 
-This is the v0.2 preview path. It is fixture-first and makes no live API calls.
+This is a fixture-complete assessment path. It makes no live API calls.
 
 Collected fixture metadata:
 

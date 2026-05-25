@@ -101,12 +101,31 @@ func TestValidationScansGeneratedTextArtifacts(t *testing.T) {
 	}
 }
 
+func TestValidationRejectsMismatchedProjectManifest(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "mismatch-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "github-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "forgejo"},
+		{"generate", "--project", projectDir, "--all"},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when project source/target do not match inventory and assessment")
+	}
+}
+
 func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "ghe-demo")
 	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
 
 	commands := [][]string{
-		{"init", projectDir},
+		{"init", projectDir, "--source", "github-enterprise", "--target", "forgejo"},
 		{"collect", "github-fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "forgejo"},
 		{"generate", "--project", projectDir, "--all"},
@@ -155,7 +174,7 @@ func TestIdentityFixturePipeline(t *testing.T) {
 	fixturePath := filepath.Join("..", "..", "testdata", "identity", "small.json")
 
 	commands := [][]string{
-		{"init", projectDir},
+		{"init", projectDir, "--source", "identity", "--target", "keycloak-zitadel"},
 		{"collect", "identity-fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "keycloak-zitadel"},
 		{"generate", "--project", projectDir, "--all"},
@@ -204,7 +223,7 @@ func TestEdgeFixturePipeline(t *testing.T) {
 	fixturePath := filepath.Join("..", "..", "testdata", "edge", "small.json")
 
 	commands := [][]string{
-		{"init", projectDir},
+		{"init", projectDir, "--source", "edge", "--target", "varnish-haproxy-coraza"},
 		{"collect", "edge-fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "varnish-haproxy-coraza"},
 		{"generate", "--project", projectDir, "--all"},
@@ -253,7 +272,7 @@ func TestAIProviderFixturePipeline(t *testing.T) {
 	fixturePath := filepath.Join("..", "..", "testdata", "ai-provider", "small.json")
 
 	commands := [][]string{
-		{"init", projectDir},
+		{"init", projectDir, "--source", "ai-provider", "--target", "vllm-litellm"},
 		{"collect", "ai-fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "vllm-litellm"},
 		{"generate", "--project", projectDir, "--all"},

@@ -1,6 +1,6 @@
 # Cloudflare/Akamai To Varnish/HAProxy/Coraza
 
-This is the v0.4 preview path. It is fixture-first and makes no live API calls.
+This is a fixture-complete assessment path. It makes no live API calls.
 
 Collected fixture metadata:
 

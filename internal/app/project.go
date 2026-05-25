@@ -21,6 +21,10 @@ type ProjectStatus struct {
 }
 
 func InitProject(projectDir string) error {
+	return InitProjectWithEndpoints(projectDir, defaultSource, defaultTarget)
+}
+
+func InitProjectWithEndpoints(projectDir, source, target string) error {
 	if err := os.MkdirAll(projectDir, 0o755); err != nil {
 		return fmt.Errorf("create project directory: %w", err)
 	}
@@ -35,7 +39,14 @@ func InitProject(projectDir string) error {
 	} else if !os.IsNotExist(err) {
 		return fmt.Errorf("inspect %s: %w", configPath, err)
 	}
-	return WriteProjectConfig(projectDir, DefaultProjectConfig(projectDir))
+	cfg := DefaultProjectConfig(projectDir)
+	if source != "" {
+		cfg.Source.Type = source
+	}
+	if target != "" {
+		cfg.Target.Type = target
+	}
+	return WriteProjectConfig(projectDir, cfg)
 }
 
 func CheckProject(projectDir string) (*ProjectStatus, error) {

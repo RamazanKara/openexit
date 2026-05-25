@@ -19,14 +19,14 @@ Release-blocking v0.1 requirements:
 - No-op AI assist and optional external assist behind explicit opt-in.
 - Documentation, examples, CI, release draft workflow, and reproducible release artifacts.
 
-Preview paths present in this repository:
+Fixture-only paths present in this repository:
 
 - GitHub Enterprise to Forgejo.
 - Okta/Auth0 to Keycloak/Zitadel.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza.
 - OpenAI/Anthropic to vLLM/LiteLLM.
 
-These previews are fixture-first only and are not part of the stable v0.1 Datadog guarantee.
+These paths are complete for local fixture assessment workflows. Only the Datadog path currently includes a read-only live SaaS collector.
 
 ## Release Checklist
 
@@ -36,7 +36,7 @@ These previews are fixture-first only and are not part of the stable v0.1 Datado
 - [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `generate --all`, `validate`, `export`.
-- [ ] Preview fixture pipelines validate for GitHub, identity, edge, and AI provider paths.
+- [ ] Fixture-only pipelines validate for GitHub, identity, edge, and AI provider paths.
 - [ ] `openexit version` prints name, version, commit, and date from release build flags.
 - [ ] `README.md`, `docs/cli.md`, `docs/security.md`, and this checklist reflect current behavior.
 - [ ] `examples/datadog-to-grafana/README.md` reproduces the primary local demo.
@@ -53,7 +53,7 @@ Primary supported path:
 
 - Datadog to Grafana LGTM, Prometheus-compatible alerting, and OpenTelemetry Collector/Alloy candidate artifacts.
 
-Fixture-first previews:
+Fixture-only assessment paths:
 
 - GitHub Enterprise to Forgejo.
 - Okta/Auth0 to Keycloak/Zitadel.

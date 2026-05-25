@@ -30,6 +30,20 @@ func TestInitProjectIdempotentAndStatus(t *testing.T) {
 	}
 }
 
+func TestInitProjectWithEndpoints(t *testing.T) {
+	dir := t.TempDir()
+	if err := InitProjectWithEndpoints(dir, "github-enterprise", "forgejo"); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := LoadProjectConfig(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Source.Type != "github-enterprise" || cfg.Target.Type != "forgejo" {
+		t.Fatalf("unexpected endpoints: source=%s target=%s", cfg.Source.Type, cfg.Target.Type)
+	}
+}
+
 func TestInvalidProjectConfig(t *testing.T) {
 	dir := t.TempDir()
 	if err := InitProject(dir); err != nil {

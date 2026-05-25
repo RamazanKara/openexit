@@ -40,22 +40,22 @@ smoke:
 	$(BINARY) generate --project "$$tmp/datadog-demo" --all; \
 	$(BINARY) validate --project "$$tmp/datadog-demo"; \
 	$(BINARY) export --project "$$tmp/datadog-demo" --format zip --out "$$tmp/openexit-demo.zip"; \
-	$(BINARY) init "$$tmp/ghe-demo"; \
+	$(BINARY) init "$$tmp/ghe-demo" --source github-enterprise --target forgejo; \
 	$(BINARY) collect github-fixture --project "$$tmp/ghe-demo" --input ./testdata/github-enterprise/small.json; \
 	$(BINARY) assess --project "$$tmp/ghe-demo" --target forgejo; \
 	$(BINARY) generate --project "$$tmp/ghe-demo" --all; \
 	$(BINARY) validate --project "$$tmp/ghe-demo"; \
-	$(BINARY) init "$$tmp/identity-demo"; \
+	$(BINARY) init "$$tmp/identity-demo" --source identity --target keycloak-zitadel; \
 	$(BINARY) collect identity-fixture --project "$$tmp/identity-demo" --input ./testdata/identity/small.json; \
 	$(BINARY) assess --project "$$tmp/identity-demo" --target keycloak-zitadel; \
 	$(BINARY) generate --project "$$tmp/identity-demo" --all; \
 	$(BINARY) validate --project "$$tmp/identity-demo"; \
-	$(BINARY) init "$$tmp/edge-demo"; \
+	$(BINARY) init "$$tmp/edge-demo" --source edge --target varnish-haproxy-coraza; \
 	$(BINARY) collect edge-fixture --project "$$tmp/edge-demo" --input ./testdata/edge/small.json; \
 	$(BINARY) assess --project "$$tmp/edge-demo" --target varnish-haproxy-coraza; \
 	$(BINARY) generate --project "$$tmp/edge-demo" --all; \
 	$(BINARY) validate --project "$$tmp/edge-demo"; \
-	$(BINARY) init "$$tmp/ai-demo"; \
+	$(BINARY) init "$$tmp/ai-demo" --source ai-provider --target vllm-litellm; \
 	$(BINARY) collect ai-fixture --project "$$tmp/ai-demo" --input ./testdata/ai-provider/small.json; \
 	$(BINARY) assess --project "$$tmp/ai-demo" --target vllm-litellm; \
 	$(BINARY) generate --project "$$tmp/ai-demo" --all; \

@@ -56,18 +56,22 @@ func newVersionCommand() *cobra.Command {
 }
 
 func newInitCommand() *cobra.Command {
-	return &cobra.Command{
+	var source, target string
+	cmd := &cobra.Command{
 		Use:   "init <project-dir>",
 		Short: "Initialize an OpenExit project directory",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := InitProject(args[0]); err != nil {
+			if err := InitProjectWithEndpoints(args[0], source, target); err != nil {
 				return err
 			}
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "initialized %s\n", args[0])
 			return nil
 		},
 	}
+	cmd.Flags().StringVar(&source, "source", defaultSource, "Source platform type")
+	cmd.Flags().StringVar(&target, "target", defaultTarget, "Target platform type")
+	return cmd
 }
 
 func newStatusCommand() *cobra.Command {

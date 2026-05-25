@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added preview support for fixture-based OpenAI/Anthropic to vLLM/LiteLLM assessment.
+- Added explicit source/target project initialization and validation consistency checks for all assessment paths.
+- Clarified fixture-only paths as feature-complete local assessment workflows instead of unfinished versioned scaffolds.
 
 ## 0.1.0 - 2026-05-24
 

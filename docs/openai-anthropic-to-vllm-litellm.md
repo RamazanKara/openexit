@@ -1,6 +1,6 @@
-# OpenAI/Anthropic to vLLM/LiteLLM Preview
+# OpenAI/Anthropic to vLLM/LiteLLM
 
-This preview assesses AI provider usage from local fixture data and generates conservative migration artifacts for a self-hosted vLLM runtime behind LiteLLM routing.
+This fixture-complete assessment path evaluates AI provider usage from local fixture data and generates conservative migration artifacts for a self-hosted vLLM runtime behind LiteLLM routing. It makes no live API calls.
 
 ## Fixture Scope
 
@@ -18,7 +18,7 @@ OpenExit does not collect provider credentials or raw prompts.
 ## Demo
 
 ```bash
-openexit init ./ai-demo
+openexit init ./ai-demo --source ai-provider --target vllm-litellm
 openexit collect ai-fixture --project ./ai-demo --input ./testdata/ai-provider/small.json
 openexit assess --project ./ai-demo --target vllm-litellm
 openexit generate --project ./ai-demo --all
