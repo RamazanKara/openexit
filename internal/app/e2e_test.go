@@ -248,6 +248,55 @@ func TestEdgeFixturePipeline(t *testing.T) {
 	}
 }
 
+func TestAIProviderFixturePipeline(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "ai-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "ai-provider", "small.json")
+
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "ai-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "vllm-litellm"},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	for _, rel := range []string{
+		"inventory/openexit.inventory.yaml",
+		"assessment/openexit.assessment.yaml",
+		"assessment/self-hosted-llm-readiness-report.md",
+		"assessment/vllm-sizing-assumptions.md",
+		"assessment/evaluation-plan.md",
+		"assessment/data-sensitivity-report.md",
+		"generated-config/ai/litellm/config.candidate.yaml",
+		"evidence/ai-provider/model-usage-classes/support-chat.json",
+		"evidence/ai-provider/tool-usages/ticket-update.json",
+		"validation/openexit.validation.yaml",
+	} {
+		path := filepath.Join(projectDir, filepath.FromSlash(rel))
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("expected AI generated file %s: %v", rel, err)
+		}
+	}
+	assessmentData, err := os.ReadFile(filepath.Join(projectDir, "assessment", "openexit.assessment.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{
+		"ai.capacity.peak-throughput.001",
+		"ai.data.sensitive-prompts.001",
+		"ai.latency.tight-slo.001",
+		"ai.tool.external-write.001",
+	} {
+		if !strings.Contains(string(assessmentData), id) {
+			t.Fatalf("expected assessment finding %s", id)
+		}
+	}
+}
+
 func TestExportRefusesInvalidProjectWithoutForce(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "broken")
 	if err := executeForTest("init", projectDir); err != nil {

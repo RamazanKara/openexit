@@ -53,6 +53,26 @@ func ScoreInventory(inv *inventory.Inventory, findings []Finding) Score {
 		value += 10
 		drivers = append(drivers, fmt.Sprintf("%d origins require HAProxy routing review", inv.Summary.Origins))
 	}
+	if inv.Summary.AIModelUsageClasses > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d AI model usage classes require evaluation", inv.Summary.AIModelUsageClasses))
+	}
+	if inv.Summary.AITokenVolumes > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d AI token volume profiles require vLLM sizing", inv.Summary.AITokenVolumes))
+	}
+	if inv.Summary.AISensitivePromptCategories > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d sensitive prompt categories require controls review", inv.Summary.AISensitivePromptCategories))
+	}
+	if inv.Summary.AIToolUsages > 0 {
+		value += 10
+		drivers = append(drivers, fmt.Sprintf("%d AI tool usages require gateway policy review", inv.Summary.AIToolUsages))
+	}
+	if inv.Summary.AIFallbackBehaviors == 0 && inv.Source.Type == "ai-provider" {
+		value += 10
+		drivers = append(drivers, "AI fallback behavior metadata missing")
+	}
 	unsupported := 0
 	for _, dashboard := range inv.Assets.Dashboards {
 		unsupported += dashboard.Widgets.Unsupported
@@ -68,7 +88,7 @@ func ScoreInventory(inv *inventory.Inventory, findings []Finding) Score {
 	}
 	missingOwner := 0
 	for _, finding := range findings {
-		if finding.ID == "dd.ownership.missing.001" || finding.ID == "dd.monitor.missing-owner.001" || finding.ID == "identity.application.owner-missing.001" || finding.ID == "identity.group.owner-missing.001" {
+		if finding.ID == "dd.ownership.missing.001" || finding.ID == "dd.monitor.missing-owner.001" || finding.ID == "identity.application.owner-missing.001" || finding.ID == "identity.group.owner-missing.001" || finding.ID == "ai.ownership.missing.001" {
 			missingOwner++
 		}
 	}

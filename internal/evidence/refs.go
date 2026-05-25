@@ -67,6 +67,18 @@ func PathForRef(projectDir, ref string) (string, error) {
 		dir = "bot-rules"
 	case "page-rule":
 		dir = "page-rules"
+	case "model-usage-class":
+		dir = "model-usage-classes"
+	case "token-volume":
+		dir = "token-volumes"
+	case "latency-expectation":
+		dir = "latency-expectations"
+	case "sensitive-prompt-category":
+		dir = "sensitive-prompt-categories"
+	case "ai-tool-usage":
+		dir = "tool-usages"
+	case "fallback-behavior":
+		dir = "fallback-behaviors"
 	default:
 		dir = kind
 	}

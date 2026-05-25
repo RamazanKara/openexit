@@ -38,7 +38,13 @@
         "origins": { "type": "array" },
         "tlsSettings": { "type": "array" },
         "botRules": { "type": "array" },
-        "pageRules": { "type": "array" }
+        "pageRules": { "type": "array" },
+        "aiModelUsageClasses": { "type": "array" },
+        "aiTokenVolumes": { "type": "array" },
+        "aiLatencyExpectations": { "type": "array" },
+        "aiSensitivePromptCategories": { "type": "array" },
+        "aiToolUsages": { "type": "array" },
+        "aiFallbackBehaviors": { "type": "array" }
       }
     },
     "summary": { "type": "object" },

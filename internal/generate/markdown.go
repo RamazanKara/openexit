@@ -33,7 +33,7 @@ func Generate(projectDir string, artifacts []string) error {
 			if err := GenerateAll(projectDir); err != nil {
 				return err
 			}
-		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report", "identity-migration-risk-register", "break-glass-checklist", "identity-cutover-plan", "identity-rollback-plan", "cache-parity-report", "waf-enforcement-risk-report":
+		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report", "identity-migration-risk-register", "break-glass-checklist", "identity-cutover-plan", "identity-rollback-plan", "cache-parity-report", "waf-enforcement-risk-report", "self-hosted-llm-readiness-report", "vllm-sizing-assumptions", "evaluation-plan", "data-sensitivity-report":
 			if err := writeMarkdown(ctx, artifact); err != nil {
 				return err
 			}
@@ -51,6 +51,10 @@ func Generate(projectDir string, artifacts []string) error {
 			}
 		case "coraza-rule-candidates":
 			if err := writeEdgeCorazaCandidates(ctx); err != nil {
+				return err
+			}
+		case "litellm-config-candidate":
+			if err := writeAILiteLLMConfigCandidate(ctx); err != nil {
 				return err
 			}
 		case "prometheus-rules":
@@ -91,6 +95,9 @@ func GenerateAll(projectDir string) error {
 	if ctx.Inventory.Source.Type == "edge" {
 		artifacts = []string{"assessment", "risk-register", "manual-review"}
 	}
+	if ctx.Inventory.Source.Type == "ai-provider" {
+		artifacts = []string{"assessment", "risk-register", "manual-review"}
+	}
 	for _, artifact := range artifacts {
 		if err := writeMarkdown(ctx, artifact); err != nil {
 			return err
@@ -119,6 +126,14 @@ func GenerateAll(projectDir string) error {
 			}
 		}
 		return writeEdgeCandidateConfigs(ctx)
+	}
+	if ctx.Inventory.Source.Type == "ai-provider" {
+		for _, artifact := range aiMarkdownArtifacts {
+			if err := writeMarkdown(ctx, artifact); err != nil {
+				return err
+			}
+		}
+		return writeAILiteLLMConfigCandidate(ctx)
 	}
 	if err := Grafana(ctx); err != nil {
 		return err
@@ -206,6 +221,14 @@ func writeMarkdown(ctx *Context, artifact string) error {
 		writeCacheParityReport(&b, ctx)
 	case "waf-enforcement-risk-report":
 		writeWAFEnforcementRiskReport(&b, ctx)
+	case "self-hosted-llm-readiness-report":
+		writeSelfHostedLLMReadinessReport(&b, ctx)
+	case "vllm-sizing-assumptions":
+		writeVLLMSizingAssumptions(&b, ctx)
+	case "evaluation-plan":
+		writeAIEvaluationPlan(&b, ctx)
+	case "data-sensitivity-report":
+		writeAIDataSensitivityReport(&b, ctx)
 	}
 	writeGeneratedBy(&b)
 	path := filepath.Join(ctx.ProjectDir, "assessment", artifact+".md")
@@ -250,6 +273,13 @@ func writeAssessmentBody(b *bytes.Buffer, ctx *Context) {
 		fmt.Fprintf(b, "- TLS settings: %d\n", ctx.Inventory.Summary.TLSSettings)
 		fmt.Fprintf(b, "- Bot rules: %d\n", ctx.Inventory.Summary.BotRules)
 		fmt.Fprintf(b, "- Page rules: %d\n\n", ctx.Inventory.Summary.PageRules)
+	case "ai-provider":
+		fmt.Fprintf(b, "- Model usage classes: %d\n", ctx.Inventory.Summary.AIModelUsageClasses)
+		fmt.Fprintf(b, "- Token volume profiles: %d\n", ctx.Inventory.Summary.AITokenVolumes)
+		fmt.Fprintf(b, "- Latency expectations: %d\n", ctx.Inventory.Summary.AILatencyExpectations)
+		fmt.Fprintf(b, "- Sensitive prompt categories: %d\n", ctx.Inventory.Summary.AISensitivePromptCategories)
+		fmt.Fprintf(b, "- Tool usages: %d\n", ctx.Inventory.Summary.AIToolUsages)
+		fmt.Fprintf(b, "- Fallback behaviors: %d\n\n", ctx.Inventory.Summary.AIFallbackBehaviors)
 	default:
 		fmt.Fprintf(b, "- Dashboards: %d\n", ctx.Inventory.Summary.Dashboards)
 		fmt.Fprintf(b, "- Monitors: %d\n", ctx.Inventory.Summary.Monitors)
@@ -614,6 +644,242 @@ func writeWAFEnforcementRiskReport(b *bytes.Buffer, ctx *Context) {
 		fmt.Fprintf(b, "- Bot %s: enabled=%t action=%s evidence=%s\n", rule.Name, rule.Enabled, rule.Action, rule.EvidenceRef)
 	}
 	writeFilteredFindings(b, ctx, "edge.waf.", "edge.bot.", "edge.tls.", "edge.origin.")
+}
+
+func writeSelfHostedLLMReadinessReport(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Self-Hosted LLM Readiness")
+	fmt.Fprintf(b, "- Model usage classes: %d\n", ctx.Inventory.Summary.AIModelUsageClasses)
+	fmt.Fprintf(b, "- Token volume profiles: %d\n", ctx.Inventory.Summary.AITokenVolumes)
+	fmt.Fprintf(b, "- Latency expectations: %d\n", ctx.Inventory.Summary.AILatencyExpectations)
+	fmt.Fprintf(b, "- Sensitive prompt categories: %d\n", ctx.Inventory.Summary.AISensitivePromptCategories)
+	fmt.Fprintf(b, "- Tool usages: %d\n", ctx.Inventory.Summary.AIToolUsages)
+	fmt.Fprintf(b, "- Fallback behaviors: %d\n\n", ctx.Inventory.Summary.AIFallbackBehaviors)
+	if len(ctx.Inventory.Assets.AIModelUsageClasses) == 0 {
+		fmt.Fprintln(b, "- No AI provider usage metadata was captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	volumes := tokenVolumeByUsageClass(ctx.Inventory.Assets.AITokenVolumes)
+	latencies := latencyByUsageClass(ctx.Inventory.Assets.AILatencyExpectations)
+	for _, usageClass := range ctx.Inventory.Assets.AIModelUsageClasses {
+		fmt.Fprintf(b, "### %s\n", usageClass.Name)
+		fmt.Fprintf(b, "- Source provider: %s\n", usageClass.Provider)
+		fmt.Fprintf(b, "- Source models: %s\n", modelList(usageClass.Models))
+		fmt.Fprintf(b, "- Owners: %s\n", modelList(usageClass.Owners))
+		if volume, ok := volumes[usageClass.ID]; ok {
+			fmt.Fprintf(b, "- Monthly model tokens: %d\n", volume.MonthlyInputTokens+volume.MonthlyOutputTokens)
+			fmt.Fprintf(b, "- Peak tokens per minute: %d\n", volume.PeakTokensPerMinute)
+		}
+		if latency, ok := latencies[usageClass.ID]; ok {
+			fmt.Fprintf(b, "- p95 latency expectation: %d ms\n", latency.P95Ms)
+			fmt.Fprintf(b, "- Streaming required: %t\n", latency.StreamingRequired)
+		}
+		fmt.Fprintf(b, "- Evidence: %s\n\n", usageClass.EvidenceRef)
+	}
+	writeFilteredFindings(b, ctx, "ai.")
+}
+
+func writeVLLMSizingAssumptions(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## vLLM Sizing Assumptions")
+	fmt.Fprintln(b, "- Capacity estimates are placeholders based on captured peak tokens per minute.")
+	fmt.Fprintln(b, "- Final sizing requires benchmark data for the selected open-weight model, context length, batching policy, and hardware.")
+	fmt.Fprintln(b)
+	volumes := tokenVolumeByUsageClass(ctx.Inventory.Assets.AITokenVolumes)
+	if len(volumes) == 0 {
+		fmt.Fprintln(b, "- No token volume profiles were captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	for _, usageClass := range ctx.Inventory.Assets.AIModelUsageClasses {
+		volume, ok := volumes[usageClass.ID]
+		if !ok {
+			continue
+		}
+		fmt.Fprintf(b, "- %s: peak=%d tokens/minute, baseline-vllm-replicas=%d, monthly-total=%d, evidence=%s\n", usageClass.Name, volume.PeakTokensPerMinute, recommendedVLLMReplicas(volume.PeakTokensPerMinute), volume.MonthlyInputTokens+volume.MonthlyOutputTokens, volume.EvidenceRef)
+	}
+	fmt.Fprintln(b)
+}
+
+func writeAIEvaluationPlan(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Evaluation Plan")
+	if len(ctx.Inventory.Assets.AIModelUsageClasses) == 0 {
+		fmt.Fprintln(b, "- No model usage classes were captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	latencies := latencyByUsageClass(ctx.Inventory.Assets.AILatencyExpectations)
+	for _, usageClass := range ctx.Inventory.Assets.AIModelUsageClasses {
+		fmt.Fprintf(b, "### %s\n", usageClass.Name)
+		fmt.Fprintln(b, "1. Build a redacted golden prompt set for this usage class.")
+		fmt.Fprintln(b, "2. Compare source outputs against at least two candidate self-hosted models.")
+		fmt.Fprintln(b, "3. Score quality, latency, refusal behavior, tool-call behavior, and fallback behavior.")
+		if latency, ok := latencies[usageClass.ID]; ok {
+			fmt.Fprintf(b, "4. Run load tests against p95=%d ms and timeout=%d ms expectations.\n", latency.P95Ms, latency.TimeoutMs)
+		} else {
+			fmt.Fprintln(b, "4. Capture latency expectations before declaring evaluation complete.")
+		}
+		fmt.Fprintf(b, "- Sensitive categories: %s\n", modelList(usageClass.SensitivePromptCategories))
+		fmt.Fprintf(b, "- Tools: %s\n", modelList(usageClass.ToolRefs))
+		fmt.Fprintf(b, "- Evidence: %s\n\n", usageClass.EvidenceRef)
+	}
+}
+
+func writeAIDataSensitivityReport(b *bytes.Buffer, ctx *Context) {
+	fmt.Fprintln(b, "## Data Sensitivity")
+	if len(ctx.Inventory.Assets.AISensitivePromptCategories) == 0 {
+		fmt.Fprintln(b, "- No sensitive prompt categories were captured.")
+		fmt.Fprintln(b)
+		return
+	}
+	for _, category := range ctx.Inventory.Assets.AISensitivePromptCategories {
+		fmt.Fprintf(b, "- %s (%s): usage-class=%s pii=%t residency=%t retention=%s evidence=%s\n", category.Category, category.DataClass, category.UsageClassID, category.ContainsPII, category.RequiresDataResidency, category.Retention, category.EvidenceRef)
+	}
+	fmt.Fprintln(b)
+	writeFilteredFindings(b, ctx, "ai.data.")
+}
+
+func writeAILiteLLMConfigCandidate(ctx *Context) error {
+	dir := filepath.Join(ctx.ProjectDir, "generated-config", "ai", "litellm")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	candidate := map[string]any{
+		"apiVersion": "openexit.dev/v1alpha1",
+		"kind":       "LiteLLMConfigCandidate",
+		"metadata": map[string]any{
+			"project": ctx.Assessment.Metadata.Project,
+			"source":  ctx.Inventory.Source.Type,
+			"target":  ctx.Assessment.Target.Type,
+		},
+		"model_list":             aiModelRouteCandidates(ctx),
+		"router":                 aiRouterCandidate(ctx),
+		"vllmSizingAssumptions":  aiVLLMSizingCandidates(ctx),
+		"humanReviewRequired":    true,
+		"credentialsIncluded":    false,
+		"productionReady":        false,
+		"candidateGeneratedFrom": "redacted-openexit-inventory",
+	}
+	data, err := yaml.Marshal(candidate)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.candidate.yaml"), data, 0o644); err != nil {
+		return err
+	}
+	readme := "# LiteLLM Config Candidate\n\nThis directory contains a deterministic LiteLLM routing candidate for vLLM-backed models. It intentionally contains no provider credentials and is not production-ready until model quality, latency, capacity, and tool controls are reviewed.\n"
+	return os.WriteFile(filepath.Join(dir, "README.md"), []byte(readme), 0o644)
+}
+
+func aiModelRouteCandidates(ctx *Context) []map[string]any {
+	volumes := tokenVolumeByUsageClass(ctx.Inventory.Assets.AITokenVolumes)
+	latencies := latencyByUsageClass(ctx.Inventory.Assets.AILatencyExpectations)
+	fallbacks := fallbackByUsageClass(ctx.Inventory.Assets.AIFallbackBehaviors)
+	out := make([]map[string]any, 0, len(ctx.Inventory.Assets.AIModelUsageClasses))
+	for _, usageClass := range ctx.Inventory.Assets.AIModelUsageClasses {
+		route := map[string]any{
+			"model_name":   inventory.Slug(usageClass.Name),
+			"sourceModels": sortedStrings(usageClass.Models),
+			"owners":       sortedStrings(usageClass.Owners),
+			"litellm_params": map[string]any{
+				"model":         "vllm/" + targetModelPlaceholder(usageClass),
+				"apiBaseRef":    "vllm-service-" + inventory.Slug(usageClass.ID),
+				"credentialRef": "runtime-managed-credential",
+			},
+			"evidenceRef": usageClass.EvidenceRef,
+		}
+		if volume, ok := volumes[usageClass.ID]; ok {
+			route["peakTokensPerMinute"] = volume.PeakTokensPerMinute
+		}
+		if latency, ok := latencies[usageClass.ID]; ok {
+			route["p95Ms"] = latency.P95Ms
+			route["streamingRequired"] = latency.StreamingRequired
+		}
+		if fallback, ok := fallbacks[usageClass.ID]; ok {
+			route["fallbackStrategy"] = fallback.Strategy
+			route["manualQueue"] = fallback.ManualQueue
+		}
+		out = append(out, route)
+	}
+	return out
+}
+
+func aiRouterCandidate(ctx *Context) map[string]any {
+	return map[string]any{
+		"routingStrategy": "explicit-model-aliases",
+		"gateway":         "litellm",
+		"targetRuntime":   "vllm",
+		"toolPolicy":      "deny-write-tools-until-reviewed",
+		"evidenceBacked":  ctx.Inventory.Summary.AIModelUsageClasses > 0,
+	}
+}
+
+func aiVLLMSizingCandidates(ctx *Context) []map[string]any {
+	volumes := tokenVolumeByUsageClass(ctx.Inventory.Assets.AITokenVolumes)
+	out := make([]map[string]any, 0, len(ctx.Inventory.Assets.AIModelUsageClasses))
+	for _, usageClass := range ctx.Inventory.Assets.AIModelUsageClasses {
+		volume, ok := volumes[usageClass.ID]
+		if !ok {
+			continue
+		}
+		out = append(out, map[string]any{
+			"usageClassId":        usageClass.ID,
+			"route":               inventory.Slug(usageClass.Name),
+			"monthlyModelTokens":  volume.MonthlyInputTokens + volume.MonthlyOutputTokens,
+			"peakTokensPerMinute": volume.PeakTokensPerMinute,
+			"baselineReplicas":    recommendedVLLMReplicas(volume.PeakTokensPerMinute),
+			"evidenceRef":         volume.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func tokenVolumeByUsageClass(volumes []inventory.AITokenVolume) map[string]inventory.AITokenVolume {
+	out := map[string]inventory.AITokenVolume{}
+	for _, volume := range volumes {
+		out[volume.UsageClassID] = volume
+	}
+	return out
+}
+
+func latencyByUsageClass(latencies []inventory.AILatencyExpectation) map[string]inventory.AILatencyExpectation {
+	out := map[string]inventory.AILatencyExpectation{}
+	for _, latency := range latencies {
+		out[latency.UsageClassID] = latency
+	}
+	return out
+}
+
+func fallbackByUsageClass(fallbacks []inventory.AIFallbackBehavior) map[string]inventory.AIFallbackBehavior {
+	out := map[string]inventory.AIFallbackBehavior{}
+	for _, fallback := range fallbacks {
+		out[fallback.UsageClassID] = fallback
+	}
+	return out
+}
+
+func modelList(values []string) string {
+	if len(values) == 0 {
+		return "none captured"
+	}
+	return strings.Join(sortedStrings(values), ", ")
+}
+
+func recommendedVLLMReplicas(peakTokensPerMinute int) int {
+	if peakTokensPerMinute <= 0 {
+		return 1
+	}
+	replicas := (peakTokensPerMinute + 11999) / 12000
+	if replicas < 1 {
+		return 1
+	}
+	return replicas
+}
+
+func targetModelPlaceholder(usageClass inventory.AIModelUsageClass) string {
+	if len(usageClass.Models) == 0 {
+		return inventory.Slug(usageClass.ID) + "-candidate"
+	}
+	return inventory.Slug(usageClass.ID) + "-replacement-for-" + inventory.Slug(usageClass.Models[0])
 }
 
 func writeFilteredFindings(b *bytes.Buffer, ctx *Context, prefixes ...string) {

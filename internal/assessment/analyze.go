@@ -20,6 +20,7 @@ func Run(ctx context.Context, inv *inventory.Inventory, target string, now time.
 		GitHubEnterpriseAnalyzer{},
 		IdentityAnalyzer{},
 		EdgeAnalyzer{},
+		AIProviderAnalyzer{},
 	}
 	var findings []Finding
 	for _, analyzer := range analyzers {

@@ -314,6 +314,24 @@ func addEvidenceChecks(projectDir string, inv *inventory.Inventory, a *assessmen
 	for _, rule := range inv.Assets.PageRules {
 		refs[rule.EvidenceRef] = struct{}{}
 	}
+	for _, usageClass := range inv.Assets.AIModelUsageClasses {
+		refs[usageClass.EvidenceRef] = struct{}{}
+	}
+	for _, volume := range inv.Assets.AITokenVolumes {
+		refs[volume.EvidenceRef] = struct{}{}
+	}
+	for _, latency := range inv.Assets.AILatencyExpectations {
+		refs[latency.EvidenceRef] = struct{}{}
+	}
+	for _, category := range inv.Assets.AISensitivePromptCategories {
+		refs[category.EvidenceRef] = struct{}{}
+	}
+	for _, tool := range inv.Assets.AIToolUsages {
+		refs[tool.EvidenceRef] = struct{}{}
+	}
+	for _, fallback := range inv.Assets.AIFallbackBehaviors {
+		refs[fallback.EvidenceRef] = struct{}{}
+	}
 	for _, finding := range a.Findings {
 		for _, ref := range finding.EvidenceRefs {
 			refs[ref] = struct{}{}

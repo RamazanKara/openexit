@@ -31,32 +31,38 @@ type Source struct {
 }
 
 type Assets struct {
-	Dashboards         []Dashboard         `json:"dashboards,omitempty" yaml:"dashboards,omitempty"`
-	Monitors           []Monitor           `json:"monitors,omitempty" yaml:"monitors,omitempty"`
-	SLOs               []SLO               `json:"slos,omitempty" yaml:"slos,omitempty"`
-	Integrations       []Integration       `json:"integrations,omitempty" yaml:"integrations,omitempty"`
-	Metrics            []MetricRef         `json:"metrics,omitempty" yaml:"metrics,omitempty"`
-	Repositories       []Repository        `json:"repositories,omitempty" yaml:"repositories,omitempty"`
-	Teams              []Team              `json:"teams,omitempty" yaml:"teams,omitempty"`
-	BranchProtections  []BranchProtection  `json:"branchProtections,omitempty" yaml:"branchProtections,omitempty"`
-	ActionsWorkflows   []ActionsWorkflow   `json:"actionsWorkflows,omitempty" yaml:"actionsWorkflows,omitempty"`
-	Secrets            []SecretMetadata    `json:"secrets,omitempty" yaml:"secrets,omitempty"`
-	Runners            []Runner            `json:"runners,omitempty" yaml:"runners,omitempty"`
-	DeployKeys         []DeployKey         `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
-	GitHubApps         []GitHubApp         `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
-	IdentityApps       []IdentityApp       `json:"identityApplications,omitempty" yaml:"identityApplications,omitempty"`
-	IdentityGroups     []IdentityGroup     `json:"identityGroups,omitempty" yaml:"identityGroups,omitempty"`
-	IdentityPolicies   []IdentityPolicy    `json:"identityPolicies,omitempty" yaml:"identityPolicies,omitempty"`
-	MFASettings        []MFASetting        `json:"mfaSettings,omitempty" yaml:"mfaSettings,omitempty"`
-	BreakGlassAccounts []BreakGlassAccount `json:"breakGlassAccounts,omitempty" yaml:"breakGlassAccounts,omitempty"`
-	DNSRecords         []DNSRecord         `json:"dnsRecords,omitempty" yaml:"dnsRecords,omitempty"`
-	WAFRules           []WAFRule           `json:"wafRules,omitempty" yaml:"wafRules,omitempty"`
-	CacheRules         []CacheRule         `json:"cacheRules,omitempty" yaml:"cacheRules,omitempty"`
-	Redirects          []RedirectRule      `json:"redirects,omitempty" yaml:"redirects,omitempty"`
-	Origins            []OriginConfig      `json:"origins,omitempty" yaml:"origins,omitempty"`
-	TLSSettings        []TLSSetting        `json:"tlsSettings,omitempty" yaml:"tlsSettings,omitempty"`
-	BotRules           []BotRule           `json:"botRules,omitempty" yaml:"botRules,omitempty"`
-	PageRules          []PageRule          `json:"pageRules,omitempty" yaml:"pageRules,omitempty"`
+	Dashboards                  []Dashboard                 `json:"dashboards,omitempty" yaml:"dashboards,omitempty"`
+	Monitors                    []Monitor                   `json:"monitors,omitempty" yaml:"monitors,omitempty"`
+	SLOs                        []SLO                       `json:"slos,omitempty" yaml:"slos,omitempty"`
+	Integrations                []Integration               `json:"integrations,omitempty" yaml:"integrations,omitempty"`
+	Metrics                     []MetricRef                 `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+	Repositories                []Repository                `json:"repositories,omitempty" yaml:"repositories,omitempty"`
+	Teams                       []Team                      `json:"teams,omitempty" yaml:"teams,omitempty"`
+	BranchProtections           []BranchProtection          `json:"branchProtections,omitempty" yaml:"branchProtections,omitempty"`
+	ActionsWorkflows            []ActionsWorkflow           `json:"actionsWorkflows,omitempty" yaml:"actionsWorkflows,omitempty"`
+	Secrets                     []SecretMetadata            `json:"secrets,omitempty" yaml:"secrets,omitempty"`
+	Runners                     []Runner                    `json:"runners,omitempty" yaml:"runners,omitempty"`
+	DeployKeys                  []DeployKey                 `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
+	GitHubApps                  []GitHubApp                 `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
+	IdentityApps                []IdentityApp               `json:"identityApplications,omitempty" yaml:"identityApplications,omitempty"`
+	IdentityGroups              []IdentityGroup             `json:"identityGroups,omitempty" yaml:"identityGroups,omitempty"`
+	IdentityPolicies            []IdentityPolicy            `json:"identityPolicies,omitempty" yaml:"identityPolicies,omitempty"`
+	MFASettings                 []MFASetting                `json:"mfaSettings,omitempty" yaml:"mfaSettings,omitempty"`
+	BreakGlassAccounts          []BreakGlassAccount         `json:"breakGlassAccounts,omitempty" yaml:"breakGlassAccounts,omitempty"`
+	DNSRecords                  []DNSRecord                 `json:"dnsRecords,omitempty" yaml:"dnsRecords,omitempty"`
+	WAFRules                    []WAFRule                   `json:"wafRules,omitempty" yaml:"wafRules,omitempty"`
+	CacheRules                  []CacheRule                 `json:"cacheRules,omitempty" yaml:"cacheRules,omitempty"`
+	Redirects                   []RedirectRule              `json:"redirects,omitempty" yaml:"redirects,omitempty"`
+	Origins                     []OriginConfig              `json:"origins,omitempty" yaml:"origins,omitempty"`
+	TLSSettings                 []TLSSetting                `json:"tlsSettings,omitempty" yaml:"tlsSettings,omitempty"`
+	BotRules                    []BotRule                   `json:"botRules,omitempty" yaml:"botRules,omitempty"`
+	PageRules                   []PageRule                  `json:"pageRules,omitempty" yaml:"pageRules,omitempty"`
+	AIModelUsageClasses         []AIModelUsageClass         `json:"aiModelUsageClasses,omitempty" yaml:"aiModelUsageClasses,omitempty"`
+	AITokenVolumes              []AITokenVolume             `json:"aiTokenVolumes,omitempty" yaml:"aiTokenVolumes,omitempty"`
+	AILatencyExpectations       []AILatencyExpectation      `json:"aiLatencyExpectations,omitempty" yaml:"aiLatencyExpectations,omitempty"`
+	AISensitivePromptCategories []AISensitivePromptCategory `json:"aiSensitivePromptCategories,omitempty" yaml:"aiSensitivePromptCategories,omitempty"`
+	AIToolUsages                []AIToolUsage               `json:"aiToolUsages,omitempty" yaml:"aiToolUsages,omitempty"`
+	AIFallbackBehaviors         []AIFallbackBehavior        `json:"aiFallbackBehaviors,omitempty" yaml:"aiFallbackBehaviors,omitempty"`
 }
 
 type Dashboard struct {
@@ -123,33 +129,39 @@ type MetricRef struct {
 }
 
 type Summary struct {
-	Dashboards          int `json:"dashboards" yaml:"dashboards"`
-	Monitors            int `json:"monitors" yaml:"monitors"`
-	SLOs                int `json:"slos" yaml:"slos"`
-	Integrations        int `json:"integrations" yaml:"integrations"`
-	UniqueMetrics       int `json:"uniqueMetrics" yaml:"uniqueMetrics"`
-	NotificationTargets int `json:"notificationTargets" yaml:"notificationTargets"`
-	Repositories        int `json:"repositories,omitempty" yaml:"repositories,omitempty"`
-	Teams               int `json:"teams,omitempty" yaml:"teams,omitempty"`
-	BranchProtections   int `json:"branchProtections,omitempty" yaml:"branchProtections,omitempty"`
-	ActionsWorkflows    int `json:"actionsWorkflows,omitempty" yaml:"actionsWorkflows,omitempty"`
-	Secrets             int `json:"secrets,omitempty" yaml:"secrets,omitempty"`
-	Runners             int `json:"runners,omitempty" yaml:"runners,omitempty"`
-	DeployKeys          int `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
-	GitHubApps          int `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
-	IdentityApps        int `json:"identityApplications,omitempty" yaml:"identityApplications,omitempty"`
-	IdentityGroups      int `json:"identityGroups,omitempty" yaml:"identityGroups,omitempty"`
-	IdentityPolicies    int `json:"identityPolicies,omitempty" yaml:"identityPolicies,omitempty"`
-	MFASettings         int `json:"mfaSettings,omitempty" yaml:"mfaSettings,omitempty"`
-	BreakGlassAccounts  int `json:"breakGlassAccounts,omitempty" yaml:"breakGlassAccounts,omitempty"`
-	DNSRecords          int `json:"dnsRecords,omitempty" yaml:"dnsRecords,omitempty"`
-	WAFRules            int `json:"wafRules,omitempty" yaml:"wafRules,omitempty"`
-	CacheRules          int `json:"cacheRules,omitempty" yaml:"cacheRules,omitempty"`
-	Redirects           int `json:"redirects,omitempty" yaml:"redirects,omitempty"`
-	Origins             int `json:"origins,omitempty" yaml:"origins,omitempty"`
-	TLSSettings         int `json:"tlsSettings,omitempty" yaml:"tlsSettings,omitempty"`
-	BotRules            int `json:"botRules,omitempty" yaml:"botRules,omitempty"`
-	PageRules           int `json:"pageRules,omitempty" yaml:"pageRules,omitempty"`
+	Dashboards                  int `json:"dashboards" yaml:"dashboards"`
+	Monitors                    int `json:"monitors" yaml:"monitors"`
+	SLOs                        int `json:"slos" yaml:"slos"`
+	Integrations                int `json:"integrations" yaml:"integrations"`
+	UniqueMetrics               int `json:"uniqueMetrics" yaml:"uniqueMetrics"`
+	NotificationTargets         int `json:"notificationTargets" yaml:"notificationTargets"`
+	Repositories                int `json:"repositories,omitempty" yaml:"repositories,omitempty"`
+	Teams                       int `json:"teams,omitempty" yaml:"teams,omitempty"`
+	BranchProtections           int `json:"branchProtections,omitempty" yaml:"branchProtections,omitempty"`
+	ActionsWorkflows            int `json:"actionsWorkflows,omitempty" yaml:"actionsWorkflows,omitempty"`
+	Secrets                     int `json:"secrets,omitempty" yaml:"secrets,omitempty"`
+	Runners                     int `json:"runners,omitempty" yaml:"runners,omitempty"`
+	DeployKeys                  int `json:"deployKeys,omitempty" yaml:"deployKeys,omitempty"`
+	GitHubApps                  int `json:"githubApps,omitempty" yaml:"githubApps,omitempty"`
+	IdentityApps                int `json:"identityApplications,omitempty" yaml:"identityApplications,omitempty"`
+	IdentityGroups              int `json:"identityGroups,omitempty" yaml:"identityGroups,omitempty"`
+	IdentityPolicies            int `json:"identityPolicies,omitempty" yaml:"identityPolicies,omitempty"`
+	MFASettings                 int `json:"mfaSettings,omitempty" yaml:"mfaSettings,omitempty"`
+	BreakGlassAccounts          int `json:"breakGlassAccounts,omitempty" yaml:"breakGlassAccounts,omitempty"`
+	DNSRecords                  int `json:"dnsRecords,omitempty" yaml:"dnsRecords,omitempty"`
+	WAFRules                    int `json:"wafRules,omitempty" yaml:"wafRules,omitempty"`
+	CacheRules                  int `json:"cacheRules,omitempty" yaml:"cacheRules,omitempty"`
+	Redirects                   int `json:"redirects,omitempty" yaml:"redirects,omitempty"`
+	Origins                     int `json:"origins,omitempty" yaml:"origins,omitempty"`
+	TLSSettings                 int `json:"tlsSettings,omitempty" yaml:"tlsSettings,omitempty"`
+	BotRules                    int `json:"botRules,omitempty" yaml:"botRules,omitempty"`
+	PageRules                   int `json:"pageRules,omitempty" yaml:"pageRules,omitempty"`
+	AIModelUsageClasses         int `json:"aiModelUsageClasses,omitempty" yaml:"aiModelUsageClasses,omitempty"`
+	AITokenVolumes              int `json:"aiTokenVolumes,omitempty" yaml:"aiTokenVolumes,omitempty"`
+	AILatencyExpectations       int `json:"aiLatencyExpectations,omitempty" yaml:"aiLatencyExpectations,omitempty"`
+	AISensitivePromptCategories int `json:"aiSensitivePromptCategories,omitempty" yaml:"aiSensitivePromptCategories,omitempty"`
+	AIToolUsages                int `json:"aiToolUsages,omitempty" yaml:"aiToolUsages,omitempty"`
+	AIFallbackBehaviors         int `json:"aiFallbackBehaviors,omitempty" yaml:"aiFallbackBehaviors,omitempty"`
 }
 
 type Volumes struct {
@@ -360,6 +372,71 @@ type PageRule struct {
 	EvidenceRef string   `json:"evidenceRef" yaml:"evidenceRef"`
 }
 
+type AIModelUsageClass struct {
+	ID                        string   `json:"id" yaml:"id"`
+	Name                      string   `json:"name" yaml:"name"`
+	Provider                  string   `json:"provider" yaml:"provider"`
+	Models                    []string `json:"models,omitempty" yaml:"models,omitempty"`
+	Purpose                   string   `json:"purpose,omitempty" yaml:"purpose,omitempty"`
+	Owners                    []string `json:"owners,omitempty" yaml:"owners,omitempty"`
+	SensitivePromptCategories []string `json:"sensitivePromptCategories,omitempty" yaml:"sensitivePromptCategories,omitempty"`
+	ToolRefs                  []string `json:"toolRefs,omitempty" yaml:"toolRefs,omitempty"`
+	FallbackBehavior          string   `json:"fallbackBehavior,omitempty" yaml:"fallbackBehavior,omitempty"`
+	EvidenceRef               string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type AITokenVolume struct {
+	ID                  string `json:"id" yaml:"id"`
+	UsageClassID        string `json:"usageClassId" yaml:"usageClassId"`
+	MonthlyInputTokens  int64  `json:"monthlyInputTokens" yaml:"monthlyInputTokens"`
+	MonthlyOutputTokens int64  `json:"monthlyOutputTokens" yaml:"monthlyOutputTokens"`
+	PeakTokensPerMinute int    `json:"peakTokensPerMinute" yaml:"peakTokensPerMinute"`
+	BurstWindow         string `json:"burstWindow,omitempty" yaml:"burstWindow,omitempty"`
+	EvidenceRef         string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type AILatencyExpectation struct {
+	ID                string `json:"id" yaml:"id"`
+	UsageClassID      string `json:"usageClassId" yaml:"usageClassId"`
+	P50Ms             int    `json:"p50Ms,omitempty" yaml:"p50Ms,omitempty"`
+	P95Ms             int    `json:"p95Ms" yaml:"p95Ms"`
+	TimeoutMs         int    `json:"timeoutMs,omitempty" yaml:"timeoutMs,omitempty"`
+	StreamingRequired bool   `json:"streamingRequired,omitempty" yaml:"streamingRequired,omitempty"`
+	EvidenceRef       string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type AISensitivePromptCategory struct {
+	ID                    string `json:"id" yaml:"id"`
+	UsageClassID          string `json:"usageClassId" yaml:"usageClassId"`
+	Category              string `json:"category" yaml:"category"`
+	DataClass             string `json:"dataClass,omitempty" yaml:"dataClass,omitempty"`
+	ContainsPII           bool   `json:"containsPii,omitempty" yaml:"containsPii,omitempty"`
+	RequiresDataResidency bool   `json:"requiresDataResidency,omitempty" yaml:"requiresDataResidency,omitempty"`
+	Retention             string `json:"retention,omitempty" yaml:"retention,omitempty"`
+	EvidenceRef           string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type AIToolUsage struct {
+	ID                    string `json:"id" yaml:"id"`
+	UsageClassID          string `json:"usageClassId" yaml:"usageClassId"`
+	Name                  string `json:"name" yaml:"name"`
+	Type                  string `json:"type" yaml:"type"`
+	NetworkAccess         bool   `json:"networkAccess,omitempty" yaml:"networkAccess,omitempty"`
+	WritesExternalState   bool   `json:"writesExternalState,omitempty" yaml:"writesExternalState,omitempty"`
+	HumanApprovalRequired bool   `json:"humanApprovalRequired,omitempty" yaml:"humanApprovalRequired,omitempty"`
+	EvidenceRef           string `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
+type AIFallbackBehavior struct {
+	ID           string   `json:"id" yaml:"id"`
+	UsageClassID string   `json:"usageClassId" yaml:"usageClassId"`
+	Strategy     string   `json:"strategy" yaml:"strategy"`
+	Models       []string `json:"models,omitempty" yaml:"models,omitempty"`
+	ManualQueue  bool     `json:"manualQueue,omitempty" yaml:"manualQueue,omitempty"`
+	MaxRetries   int      `json:"maxRetries,omitempty" yaml:"maxRetries,omitempty"`
+	EvidenceRef  string   `json:"evidenceRef" yaml:"evidenceRef"`
+}
+
 func New(project, source, site, collectorVersion string, collectedAt time.Time) *Inventory {
 	return &Inventory{
 		APIVersion: APIVersion,
@@ -399,32 +476,38 @@ func (inv *Inventory) RecomputeSummary() {
 		}
 	}
 	inv.Summary = Summary{
-		Dashboards:          len(inv.Assets.Dashboards),
-		Monitors:            len(inv.Assets.Monitors),
-		SLOs:                len(inv.Assets.SLOs),
-		Integrations:        len(inv.Assets.Integrations),
-		UniqueMetrics:       len(metricNames),
-		NotificationTargets: len(targets),
-		Repositories:        len(inv.Assets.Repositories),
-		Teams:               len(inv.Assets.Teams),
-		BranchProtections:   len(inv.Assets.BranchProtections),
-		ActionsWorkflows:    len(inv.Assets.ActionsWorkflows),
-		Secrets:             len(inv.Assets.Secrets),
-		Runners:             len(inv.Assets.Runners),
-		DeployKeys:          len(inv.Assets.DeployKeys),
-		GitHubApps:          len(inv.Assets.GitHubApps),
-		IdentityApps:        len(inv.Assets.IdentityApps),
-		IdentityGroups:      len(inv.Assets.IdentityGroups),
-		IdentityPolicies:    len(inv.Assets.IdentityPolicies),
-		MFASettings:         len(inv.Assets.MFASettings),
-		BreakGlassAccounts:  len(inv.Assets.BreakGlassAccounts),
-		DNSRecords:          len(inv.Assets.DNSRecords),
-		WAFRules:            len(inv.Assets.WAFRules),
-		CacheRules:          len(inv.Assets.CacheRules),
-		Redirects:           len(inv.Assets.Redirects),
-		Origins:             len(inv.Assets.Origins),
-		TLSSettings:         len(inv.Assets.TLSSettings),
-		BotRules:            len(inv.Assets.BotRules),
-		PageRules:           len(inv.Assets.PageRules),
+		Dashboards:                  len(inv.Assets.Dashboards),
+		Monitors:                    len(inv.Assets.Monitors),
+		SLOs:                        len(inv.Assets.SLOs),
+		Integrations:                len(inv.Assets.Integrations),
+		UniqueMetrics:               len(metricNames),
+		NotificationTargets:         len(targets),
+		Repositories:                len(inv.Assets.Repositories),
+		Teams:                       len(inv.Assets.Teams),
+		BranchProtections:           len(inv.Assets.BranchProtections),
+		ActionsWorkflows:            len(inv.Assets.ActionsWorkflows),
+		Secrets:                     len(inv.Assets.Secrets),
+		Runners:                     len(inv.Assets.Runners),
+		DeployKeys:                  len(inv.Assets.DeployKeys),
+		GitHubApps:                  len(inv.Assets.GitHubApps),
+		IdentityApps:                len(inv.Assets.IdentityApps),
+		IdentityGroups:              len(inv.Assets.IdentityGroups),
+		IdentityPolicies:            len(inv.Assets.IdentityPolicies),
+		MFASettings:                 len(inv.Assets.MFASettings),
+		BreakGlassAccounts:          len(inv.Assets.BreakGlassAccounts),
+		DNSRecords:                  len(inv.Assets.DNSRecords),
+		WAFRules:                    len(inv.Assets.WAFRules),
+		CacheRules:                  len(inv.Assets.CacheRules),
+		Redirects:                   len(inv.Assets.Redirects),
+		Origins:                     len(inv.Assets.Origins),
+		TLSSettings:                 len(inv.Assets.TLSSettings),
+		BotRules:                    len(inv.Assets.BotRules),
+		PageRules:                   len(inv.Assets.PageRules),
+		AIModelUsageClasses:         len(inv.Assets.AIModelUsageClasses),
+		AITokenVolumes:              len(inv.Assets.AITokenVolumes),
+		AILatencyExpectations:       len(inv.Assets.AILatencyExpectations),
+		AISensitivePromptCategories: len(inv.Assets.AISensitivePromptCategories),
+		AIToolUsages:                len(inv.Assets.AIToolUsages),
+		AIFallbackBehaviors:         len(inv.Assets.AIFallbackBehaviors),
 	}
 }

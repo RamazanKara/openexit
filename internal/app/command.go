@@ -12,6 +12,7 @@ import (
 	"github.com/RamazanKara/openexit/internal/assessment"
 	"github.com/RamazanKara/openexit/internal/assist"
 	"github.com/RamazanKara/openexit/internal/collector"
+	"github.com/RamazanKara/openexit/internal/collector/aiprovider"
 	"github.com/RamazanKara/openexit/internal/collector/datadog"
 	"github.com/RamazanKara/openexit/internal/collector/edge"
 	"github.com/RamazanKara/openexit/internal/collector/githubenterprise"
@@ -100,6 +101,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectGitHubFixtureCommand())
 	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
 	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
+	collectCmd.AddCommand(newCollectAIFixtureCommand())
 	return collectCmd
 }
 
@@ -183,6 +185,21 @@ func newCollectEdgeFixtureCommand() *cobra.Command {
 	return cmd
 }
 
+func newCollectAIFixtureCommand() *cobra.Command {
+	var project, input string
+	cmd := &cobra.Command{
+		Use:   "ai-fixture",
+		Short: "Collect OpenAI/Anthropic-like fixture inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, aiprovider.FixtureCollector{}, map[string]string{"input": input})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&input, "input", "", "OpenAI/Anthropic AI provider fixture JSON file")
+	_ = cmd.MarkFlagRequired("input")
+	return cmd
+}
+
 func runCollector(ctx context.Context, cmd *cobra.Command, projectDir string, c collector.Collector, options map[string]string) error {
 	cfg, err := LoadProjectConfig(projectDir)
 	if err != nil {
@@ -209,6 +226,8 @@ func inventorySummary(inv *inventory.Inventory) string {
 		return fmt.Sprintf("%d applications, %d groups, %d policies", inv.Summary.IdentityApps, inv.Summary.IdentityGroups, inv.Summary.IdentityPolicies)
 	case "edge":
 		return fmt.Sprintf("%d DNS records, %d WAF rules, %d cache rules", inv.Summary.DNSRecords, inv.Summary.WAFRules, inv.Summary.CacheRules)
+	case "ai-provider":
+		return fmt.Sprintf("%d model usage classes, %d token profiles, %d tool usages", inv.Summary.AIModelUsageClasses, inv.Summary.AITokenVolumes, inv.Summary.AIToolUsages)
 	default:
 		return fmt.Sprintf("%d dashboards, %d monitors, %d SLOs", inv.Summary.Dashboards, inv.Summary.Monitors, inv.Summary.SLOs)
 	}

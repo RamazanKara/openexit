@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added preview support for fixture-based OpenAI/Anthropic to vLLM/LiteLLM assessment.
+
 ## 0.1.0 - 2026-05-24
 
 - Initial OpenExit implementation.

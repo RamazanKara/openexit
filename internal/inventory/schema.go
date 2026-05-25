@@ -148,6 +148,54 @@ func Validate(inv *Inventory) error {
 			problems = append(problems, "each page rule requires evidenceRef")
 		}
 	}
+	for _, usageClass := range inv.Assets.AIModelUsageClasses {
+		if strings.TrimSpace(usageClass.ID) == "" || strings.TrimSpace(usageClass.Name) == "" || strings.TrimSpace(usageClass.Provider) == "" {
+			problems = append(problems, "each AI model usage class requires id, name, and provider")
+		}
+		if strings.TrimSpace(usageClass.EvidenceRef) == "" {
+			problems = append(problems, "each AI model usage class requires evidenceRef")
+		}
+	}
+	for _, volume := range inv.Assets.AITokenVolumes {
+		if strings.TrimSpace(volume.ID) == "" || strings.TrimSpace(volume.UsageClassID) == "" {
+			problems = append(problems, "each AI token volume requires id and usageClassId")
+		}
+		if strings.TrimSpace(volume.EvidenceRef) == "" {
+			problems = append(problems, "each AI token volume requires evidenceRef")
+		}
+	}
+	for _, latency := range inv.Assets.AILatencyExpectations {
+		if strings.TrimSpace(latency.ID) == "" || strings.TrimSpace(latency.UsageClassID) == "" {
+			problems = append(problems, "each AI latency expectation requires id and usageClassId")
+		}
+		if strings.TrimSpace(latency.EvidenceRef) == "" {
+			problems = append(problems, "each AI latency expectation requires evidenceRef")
+		}
+	}
+	for _, category := range inv.Assets.AISensitivePromptCategories {
+		if strings.TrimSpace(category.ID) == "" || strings.TrimSpace(category.UsageClassID) == "" || strings.TrimSpace(category.Category) == "" {
+			problems = append(problems, "each AI sensitive prompt category requires id, usageClassId, and category")
+		}
+		if strings.TrimSpace(category.EvidenceRef) == "" {
+			problems = append(problems, "each AI sensitive prompt category requires evidenceRef")
+		}
+	}
+	for _, tool := range inv.Assets.AIToolUsages {
+		if strings.TrimSpace(tool.ID) == "" || strings.TrimSpace(tool.UsageClassID) == "" || strings.TrimSpace(tool.Name) == "" || strings.TrimSpace(tool.Type) == "" {
+			problems = append(problems, "each AI tool usage requires id, usageClassId, name, and type")
+		}
+		if strings.TrimSpace(tool.EvidenceRef) == "" {
+			problems = append(problems, "each AI tool usage requires evidenceRef")
+		}
+	}
+	for _, fallback := range inv.Assets.AIFallbackBehaviors {
+		if strings.TrimSpace(fallback.ID) == "" || strings.TrimSpace(fallback.UsageClassID) == "" || strings.TrimSpace(fallback.Strategy) == "" {
+			problems = append(problems, "each AI fallback behavior requires id, usageClassId, and strategy")
+		}
+		if strings.TrimSpace(fallback.EvidenceRef) == "" {
+			problems = append(problems, "each AI fallback behavior requires evidenceRef")
+		}
+	}
 	if len(problems) > 0 {
 		return errors.New(strings.Join(problems, "; "))
 	}

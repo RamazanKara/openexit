@@ -53,6 +53,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit collect github-fixture --project <project-dir> --input <file>`
 - `openexit collect identity-fixture --project <project-dir> --input <file>`
 - `openexit collect edge-fixture --project <project-dir> --input <file>`
+- `openexit collect ai-fixture --project <project-dir> --input <file>`
 - `openexit collect datadog --project <project-dir> --site datadoghq.eu --api-key-env DATADOG_API_KEY --app-key-env DATADOG_APP_KEY`
 - `openexit assess --project <project-dir> --target grafana-lgtm`
 - `openexit generate --project <project-dir> --all`
@@ -70,6 +71,7 @@ The Datadog collector is read-only. API keys are read from environment variables
 | GitHub Enterprise | Forgejo | Preview | Fixture only |
 | Okta/Auth0 | Keycloak/Zitadel | Preview | Fixture only |
 | Cloudflare/Akamai | Varnish/HAProxy/Coraza | Preview | Fixture only |
+| OpenAI/Anthropic | vLLM/LiteLLM | Preview | Fixture only |
 
 Preview paths are useful for local assessment shape, report generation, and test fixtures. They are not live collectors and are not part of the stable v0.1 Datadog migration guarantee.
 
@@ -93,6 +95,7 @@ Included in this first implementation:
 - Fixture-based GitHub Enterprise to Forgejo assessment preview.
 - Fixture-based Okta/Auth0 to Keycloak/Zitadel assessment preview.
 - Fixture-based Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment preview.
+- Fixture-based OpenAI/Anthropic to vLLM/LiteLLM assessment preview.
 
 Not included in v0.1:
 
@@ -136,6 +139,10 @@ The v0.3 scaffold supports Okta/Auth0-like identity fixture inventory for Keyclo
 ## v0.4 Preview
 
 The v0.4 scaffold supports Cloudflare/Akamai-like edge fixture inventory for Varnish, HAProxy, and Coraza assessment. It collects DNS records, WAF rules, cache rules, redirects, origins, TLS settings, bot rules, and page rules from local fixtures, then generates VCL, HAProxy, Coraza, cache parity, and WAF enforcement review artifacts without calling a live API.
+
+## v0.5 Preview
+
+The v0.5 scaffold supports OpenAI/Anthropic-like AI provider fixture inventory for vLLM and LiteLLM assessment. It collects model usage classes, token volumes, latency expectations, sensitive prompt categories, tool usage, and fallback behavior from local fixtures, then generates self-hosted LLM readiness, LiteLLM routing, vLLM sizing, evaluation, and data sensitivity artifacts without calling a live API.
 
 ## License
 

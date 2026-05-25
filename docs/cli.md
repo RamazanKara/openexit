@@ -53,3 +53,13 @@ openexit assess --project ./edge-demo --target varnish-haproxy-coraza
 openexit generate --project ./edge-demo --all
 openexit validate --project ./edge-demo
 ```
+
+The OpenAI/Anthropic to vLLM/LiteLLM preview uses local fixture metadata for AI provider assessment:
+
+```bash
+openexit init ./ai-demo
+openexit collect ai-fixture --project ./ai-demo --input ./testdata/ai-provider/small.json
+openexit assess --project ./ai-demo --target vllm-litellm
+openexit generate --project ./ai-demo --all
+openexit validate --project ./ai-demo
+```

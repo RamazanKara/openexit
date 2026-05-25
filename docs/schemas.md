@@ -9,3 +9,5 @@ For the GitHub Enterprise to Forgejo preview, inventory can include `repositorie
 For the Okta/Auth0 to Keycloak/Zitadel preview, inventory can include `identityApplications`, `identityGroups`, `identityPolicies`, `mfaSettings`, and `breakGlassAccounts`. Client entries include redirect URIs, grant types, owners, group assignments, and SAML signing metadata; they do not include client secrets.
 
 For the Cloudflare/Akamai to Varnish/HAProxy/Coraza preview, inventory can include `dnsRecords`, `wafRules`, `cacheRules`, `redirects`, `origins`, `tlsSettings`, `botRules`, and `pageRules`. WAF entries contain rule metadata and expressions only; they should not contain provider credentials.
+
+For the OpenAI/Anthropic to vLLM/LiteLLM preview, inventory can include `aiModelUsageClasses`, `aiTokenVolumes`, `aiLatencyExpectations`, `aiSensitivePromptCategories`, `aiToolUsages`, and `aiFallbackBehaviors`. Entries contain operational metadata only; OpenExit should never collect provider credentials or raw prompts.

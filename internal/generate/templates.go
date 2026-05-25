@@ -33,6 +33,13 @@ var edgeMarkdownArtifacts = []string{
 	"waf-enforcement-risk-report",
 }
 
+var aiMarkdownArtifacts = []string{
+	"self-hosted-llm-readiness-report",
+	"vllm-sizing-assumptions",
+	"evaluation-plan",
+	"data-sensitivity-report",
+}
+
 func MarkdownArtifacts() []string {
 	out := make([]string, len(markdownArtifacts))
 	copy(out, markdownArtifacts)
