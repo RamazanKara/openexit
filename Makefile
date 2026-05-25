@@ -9,7 +9,7 @@ PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 GOLANGCI_LINT_VERSION ?= v2.12.2
 GOLANGCI_LINT ?= bin/golangci-lint
 
-.PHONY: build test fmt fmt-check lint golangci-lint verify release-dist clean
+.PHONY: build test fmt fmt-check lint golangci-lint smoke verify release-dist clean
 
 build:
 	mkdir -p $(dir $(BINARY))
@@ -31,7 +31,37 @@ golangci-lint:
 	GOBIN=$(CURDIR)/bin $(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 	$(GOLANGCI_LINT) run
 
-verify: lint test build
+smoke:
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	$(BINARY) init "$$tmp/datadog-demo"; \
+	$(BINARY) collect fixture --project "$$tmp/datadog-demo" --input ./testdata/datadog/small.json; \
+	$(BINARY) assess --project "$$tmp/datadog-demo" --target grafana-lgtm; \
+	$(BINARY) generate --project "$$tmp/datadog-demo" --all; \
+	$(BINARY) validate --project "$$tmp/datadog-demo"; \
+	$(BINARY) export --project "$$tmp/datadog-demo" --format zip --out "$$tmp/openexit-demo.zip"; \
+	$(BINARY) init "$$tmp/ghe-demo"; \
+	$(BINARY) collect github-fixture --project "$$tmp/ghe-demo" --input ./testdata/github-enterprise/small.json; \
+	$(BINARY) assess --project "$$tmp/ghe-demo" --target forgejo; \
+	$(BINARY) generate --project "$$tmp/ghe-demo" --all; \
+	$(BINARY) validate --project "$$tmp/ghe-demo"; \
+	$(BINARY) init "$$tmp/identity-demo"; \
+	$(BINARY) collect identity-fixture --project "$$tmp/identity-demo" --input ./testdata/identity/small.json; \
+	$(BINARY) assess --project "$$tmp/identity-demo" --target keycloak-zitadel; \
+	$(BINARY) generate --project "$$tmp/identity-demo" --all; \
+	$(BINARY) validate --project "$$tmp/identity-demo"; \
+	$(BINARY) init "$$tmp/edge-demo"; \
+	$(BINARY) collect edge-fixture --project "$$tmp/edge-demo" --input ./testdata/edge/small.json; \
+	$(BINARY) assess --project "$$tmp/edge-demo" --target varnish-haproxy-coraza; \
+	$(BINARY) generate --project "$$tmp/edge-demo" --all; \
+	$(BINARY) validate --project "$$tmp/edge-demo"; \
+	$(BINARY) init "$$tmp/ai-demo"; \
+	$(BINARY) collect ai-fixture --project "$$tmp/ai-demo" --input ./testdata/ai-provider/small.json; \
+	$(BINARY) assess --project "$$tmp/ai-demo" --target vllm-litellm; \
+	$(BINARY) generate --project "$$tmp/ai-demo" --all; \
+	$(BINARY) validate --project "$$tmp/ai-demo"
+
+verify: lint test build smoke
 
 release-dist:
 	rm -rf dist

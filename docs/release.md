@@ -24,18 +24,19 @@ Preview paths present in this repository:
 - GitHub Enterprise to Forgejo.
 - Okta/Auth0 to Keycloak/Zitadel.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza.
+- OpenAI/Anthropic to vLLM/LiteLLM.
 
 These previews are fixture-first only and are not part of the stable v0.1 Datadog guarantee.
 
 ## Release Checklist
 
 - [ ] `git status --short --branch` is clean and on the intended release branch.
-- [ ] `make verify VERSION=0.1.0` passes.
+- [ ] `make verify VERSION=0.1.0` passes, including CLI smoke pipelines.
 - [ ] `make lint` runs `gofmt`, `golangci-lint`, and `go vet`.
 - [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `generate --all`, `validate`, `export`.
-- [ ] Preview fixture pipelines validate for GitHub, identity, and edge paths.
+- [ ] Preview fixture pipelines validate for GitHub, identity, edge, and AI provider paths.
 - [ ] `openexit version` prints name, version, commit, and date from release build flags.
 - [ ] `README.md`, `docs/cli.md`, `docs/security.md`, and this checklist reflect current behavior.
 - [ ] `examples/datadog-to-grafana/README.md` reproduces the primary local demo.
@@ -57,6 +58,7 @@ Fixture-first previews:
 - GitHub Enterprise to Forgejo.
 - Okta/Auth0 to Keycloak/Zitadel.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza.
+- OpenAI/Anthropic to vLLM/LiteLLM.
 
 Safety model:
 
