@@ -37,6 +37,10 @@ func Generate(projectDir string, artifacts []string) error {
 			if err := writeMarkdown(ctx, artifact); err != nil {
 				return err
 			}
+		case "forgejo-migration-candidate":
+			if err := writeForgejoMigrationCandidate(ctx); err != nil {
+				return err
+			}
 		case "realm-client-candidate":
 			if err := writeIdentityRealmClientCandidate(ctx); err != nil {
 				return err
@@ -109,7 +113,7 @@ func GenerateAll(projectDir string) error {
 				return err
 			}
 		}
-		return nil
+		return writeForgejoMigrationCandidate(ctx)
 	}
 	if ctx.Inventory.Source.Type == "identity" {
 		for _, artifact := range identityMarkdownArtifacts {
@@ -457,6 +461,288 @@ func writeRepositoryOwnershipReport(b *bytes.Buffer, ctx *Context) {
 		fmt.Fprintf(b, "- %s: teams=%s codeowners=%t visibility=%s evidence=%s\n", repo.Name, strings.Join(repo.Teams, ", "), repo.HasCODEOWNERS, repo.Visibility, repo.EvidenceRef)
 	}
 	fmt.Fprintln(b)
+}
+
+func writeForgejoMigrationCandidate(ctx *Context) error {
+	dir := filepath.Join(ctx.ProjectDir, "generated-config", "forgejo")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	candidate := map[string]any{
+		"apiVersion": "openexit.dev/v1alpha1",
+		"kind":       "ForgejoMigrationCandidate",
+		"metadata": map[string]any{
+			"project":    ctx.Assessment.Metadata.Project,
+			"source":     ctx.Inventory.Source.Type,
+			"sourceHost": ctx.Inventory.Source.Site,
+			"target":     ctx.Assessment.Target.Type,
+		},
+		"repositories":        forgejoRepositoryCandidates(ctx),
+		"teams":               forgejoTeamCandidates(ctx.Inventory.Assets.Teams),
+		"branchProtections":   forgejoBranchProtectionCandidates(ctx.Inventory.Assets.BranchProtections),
+		"ciWorkflows":         forgejoWorkflowCandidates(ctx.Inventory.Assets.ActionsWorkflows),
+		"secretMetadata":      forgejoSecretMetadataCandidates(ctx.Inventory.Assets.Secrets),
+		"runnerMigration":     forgejoRunnerCandidates(ctx.Inventory.Assets.Runners),
+		"deployKeyReview":     forgejoDeployKeyCandidates(ctx.Inventory.Assets.DeployKeys),
+		"integrationReview":   forgejoAppCandidates(ctx.Inventory.Assets.GitHubApps),
+		"manualReview":        forgejoManualReviewItems(ctx.Assessment.Findings),
+		"credentialsIncluded": false,
+		"productionReady":     false,
+	}
+	data, err := yaml.Marshal(candidate)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(dir, "migration-candidate.yaml"), data, 0o644); err != nil {
+		return err
+	}
+	readme := "# Forgejo Migration Candidate\n\nThis directory contains a deterministic Forgejo migration candidate derived from redacted GitHub Enterprise inventory. It contains no repository contents or secret values. Review repository ownership, branch protection behavior, CI compatibility, runners, deploy keys, and app integrations before migration.\n"
+	return os.WriteFile(filepath.Join(dir, "README.md"), []byte(readme), 0o644)
+}
+
+func forgejoRepositoryCandidates(ctx *Context) []map[string]any {
+	workflows := workflowsByRepository(ctx.Inventory.Assets.ActionsWorkflows)
+	protections := branchProtectionsByRepository(ctx.Inventory.Assets.BranchProtections)
+	secretCounts := secretCountByRepository(ctx.Inventory.Assets.Secrets)
+	out := make([]map[string]any, 0, len(ctx.Inventory.Assets.Repositories))
+	for _, repo := range ctx.Inventory.Assets.Repositories {
+		owner, name := splitRepositoryName(repo.Name)
+		item := map[string]any{
+			"name":                  repo.Name,
+			"targetOwner":           owner,
+			"targetName":            name,
+			"visibility":            repo.Visibility,
+			"defaultBranch":         repo.DefaultBranch,
+			"archived":              repo.Archived,
+			"topics":                sortedStrings(repo.Topics),
+			"teams":                 sortedStrings(repo.Teams),
+			"actionsEnabled":        repo.ActionsEnabled,
+			"hasCodeowners":         repo.HasCODEOWNERS,
+			"usesGitHubPages":       repo.UsesGitHubPages,
+			"usesGitHubPackages":    repo.UsesGitHubPackages,
+			"usesGitHubDiscussions": repo.UsesGitHubDiscussions,
+			"sourceCloneRef":        sourceCloneRef(ctx.Inventory.Source.Site, repo.Name),
+			"targetRepository":      repo.Name,
+			"branchProtections":     protections[repo.Name],
+			"ciWorkflows":           workflows[repo.Name],
+			"secretMetadataCount":   secretCounts[repo.Name],
+			"reviewRequired":        forgejoRepositoryReviewRequired(repo),
+			"evidenceRef":           repo.EvidenceRef,
+		}
+		out = append(out, item)
+	}
+	return out
+}
+
+func forgejoTeamCandidates(teams []inventory.Team) []map[string]any {
+	out := make([]map[string]any, 0, len(teams))
+	for _, team := range teams {
+		out = append(out, map[string]any{
+			"slug":         team.Slug,
+			"name":         team.Name,
+			"members":      team.Members,
+			"maintainers":  team.Maintainers,
+			"repositories": sortedStrings(team.Repos),
+			"evidenceRef":  team.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func forgejoBranchProtectionCandidates(protections []inventory.BranchProtection) []map[string]any {
+	out := make([]map[string]any, 0, len(protections))
+	for _, protection := range protections {
+		out = append(out, map[string]any{
+			"repository":             protection.Repository,
+			"branch":                 protection.Branch,
+			"requiredStatusChecks":   sortedStrings(protection.RequiredStatusChecks),
+			"requiredReviews":        protection.RequiredReviews,
+			"requireCodeOwnerReview": protection.RequireCodeOwnerReview,
+			"restrictPushes":         protection.RestrictPushes,
+			"allowsForcePushes":      protection.AllowsForcePushes,
+			"targetReview":           !protection.RequireCodeOwnerReview || protection.AllowsForcePushes || protection.RequiredReviews == 0,
+			"evidenceRef":            protection.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func forgejoWorkflowCandidates(workflows []inventory.ActionsWorkflow) []map[string]any {
+	out := make([]map[string]any, 0, len(workflows))
+	for _, workflow := range workflows {
+		out = append(out, map[string]any{
+			"repository":       workflow.Repository,
+			"path":             workflow.Path,
+			"name":             workflow.Name,
+			"usesGitHubHosted": workflow.UsesGitHubHosted,
+			"usesSelfHosted":   workflow.UsesSelfHosted,
+			"actions":          sortedStrings(workflow.Actions),
+			"secretNames":      sortedStrings(workflow.Secrets),
+			"targetRunnerPlan": forgejoRunnerPlan(workflow),
+			"evidenceRef":      workflow.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func forgejoSecretMetadataCandidates(secrets []inventory.SecretMetadata) []map[string]any {
+	out := make([]map[string]any, 0, len(secrets))
+	for _, secret := range secrets {
+		out = append(out, map[string]any{
+			"name":        secret.Name,
+			"scope":       secret.Scope,
+			"repository":  secret.Repository,
+			"consumers":   sortedStrings(secret.Consumers),
+			"valueStatus": "not-collected",
+			"evidenceRef": secret.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func forgejoRunnerCandidates(runners []inventory.Runner) []map[string]any {
+	out := make([]map[string]any, 0, len(runners))
+	for _, runner := range runners {
+		out = append(out, map[string]any{
+			"name":            runner.Name,
+			"scope":           runner.Scope,
+			"labels":          sortedStrings(runner.Labels),
+			"online":          runner.Online,
+			"targetAction":    forgejoRunnerAction(runner),
+			"registrationRef": "create-runner-registration-during-cutover",
+			"evidenceRef":     runner.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func forgejoDeployKeyCandidates(keys []inventory.DeployKey) []map[string]any {
+	out := make([]map[string]any, 0, len(keys))
+	for _, key := range keys {
+		out = append(out, map[string]any{
+			"repository":   key.Repository,
+			"title":        key.Title,
+			"readOnly":     key.ReadOnly,
+			"targetAction": forgejoDeployKeyAction(key),
+			"evidenceRef":  key.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func forgejoAppCandidates(apps []inventory.GitHubApp) []map[string]any {
+	out := make([]map[string]any, 0, len(apps))
+	for _, app := range apps {
+		out = append(out, map[string]any{
+			"name":           app.Name,
+			"repositories":   sortedStrings(app.Repositories),
+			"permissions":    sortedStrings(app.Permissions),
+			"webhookEnabled": app.WebhookEnabled,
+			"targetAction":   "map-to-forgejo-integration-or-replace",
+			"evidenceRef":    app.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func forgejoManualReviewItems(findings []assessment.Finding) []map[string]any {
+	out := []map[string]any{}
+	for _, finding := range findings {
+		if !strings.HasPrefix(finding.ID, "ghe.") || finding.Severity == "low" {
+			continue
+		}
+		out = append(out, map[string]any{
+			"id":             finding.ID,
+			"severity":       finding.Severity,
+			"title":          finding.Title,
+			"affectedAssets": sortedStrings(finding.AffectedAssets),
+			"evidenceRefs":   sortedStrings(finding.EvidenceRefs),
+			"recommendation": finding.Recommendation,
+		})
+	}
+	return out
+}
+
+func workflowsByRepository(workflows []inventory.ActionsWorkflow) map[string][]map[string]any {
+	out := map[string][]map[string]any{}
+	for _, workflow := range workflows {
+		out[workflow.Repository] = append(out[workflow.Repository], map[string]any{
+			"path":             workflow.Path,
+			"name":             workflow.Name,
+			"usesGitHubHosted": workflow.UsesGitHubHosted,
+			"usesSelfHosted":   workflow.UsesSelfHosted,
+			"actions":          sortedStrings(workflow.Actions),
+			"evidenceRef":      workflow.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func branchProtectionsByRepository(protections []inventory.BranchProtection) map[string][]map[string]any {
+	out := map[string][]map[string]any{}
+	for _, protection := range protections {
+		out[protection.Repository] = append(out[protection.Repository], map[string]any{
+			"branch":                 protection.Branch,
+			"requiredStatusChecks":   sortedStrings(protection.RequiredStatusChecks),
+			"requiredReviews":        protection.RequiredReviews,
+			"requireCodeOwnerReview": protection.RequireCodeOwnerReview,
+			"restrictPushes":         protection.RestrictPushes,
+			"allowsForcePushes":      protection.AllowsForcePushes,
+			"evidenceRef":            protection.EvidenceRef,
+		})
+	}
+	return out
+}
+
+func secretCountByRepository(secrets []inventory.SecretMetadata) map[string]int {
+	out := map[string]int{}
+	for _, secret := range secrets {
+		out[secret.Repository]++
+	}
+	return out
+}
+
+func splitRepositoryName(name string) (string, string) {
+	owner, repo, ok := strings.Cut(name, "/")
+	if !ok {
+		return "default", name
+	}
+	return owner, repo
+}
+
+func sourceCloneRef(host, repo string) string {
+	if strings.TrimSpace(host) == "" {
+		return repo
+	}
+	return strings.TrimSuffix(host, "/") + "/" + repo
+}
+
+func forgejoRepositoryReviewRequired(repo inventory.Repository) bool {
+	return !repo.HasCODEOWNERS || repo.UsesGitHubPages || repo.UsesGitHubPackages || repo.UsesGitHubDiscussions
+}
+
+func forgejoRunnerPlan(workflow inventory.ActionsWorkflow) string {
+	if workflow.UsesSelfHosted {
+		return "map-existing-self-hosted-runner-labels"
+	}
+	if workflow.UsesGitHubHosted {
+		return "provision-forgejo-runner"
+	}
+	return "review-workflow-runner-requirements"
+}
+
+func forgejoRunnerAction(runner inventory.Runner) string {
+	if !runner.Online {
+		return "replace-offline-runner"
+	}
+	return "register-forgejo-runner"
+}
+
+func forgejoDeployKeyAction(key inventory.DeployKey) string {
+	if key.ReadOnly {
+		return "recreate-read-only-key-after-approval"
+	}
+	return "replace-with-scoped-deploy-token-or-reviewed-write-key"
 }
 
 func writeIdentityMigrationRiskRegister(b *bytes.Buffer, ctx *Context) {

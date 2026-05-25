@@ -21,4 +21,8 @@ Generated reports:
 - `runner-migration-plan.md`
 - `repository-ownership-report.md`
 
+Generated target candidate:
+
+- `generated-config/forgejo/migration-candidate.yaml`
+
 The assessment flags branch protection gaps, GitHub-hosted runner dependency, GitHub-specific Actions usage, unknown secret consumers, offline runners, write-capable deploy keys, GitHub Pages/Packages/Discussions usage, and GitHub App webhook review.

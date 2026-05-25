@@ -6,6 +6,7 @@
 - Added explicit source/target project initialization and validation consistency checks for all assessment paths.
 - Clarified fixture-only paths as feature-complete local assessment workflows instead of unfinished versioned scaffolds.
 - Added early source/target guardrails for collection and assessment commands plus supported path-pair validation.
+- Added a Forgejo migration candidate config artifact for the GitHub Enterprise assessment path.
 
 ## 0.1.0 - 2026-05-24
 

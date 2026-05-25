@@ -24,7 +24,7 @@ openexit export --project ./demo --format zip --out ./openexit-demo.zip
 
 The CI test suite also runs this definition-of-done pipeline against the fixture inventory and checks that the generated project layout and export bundle contain the expected artifacts. Bundle checksums are verified against the archived file bytes.
 
-Generate individual artifacts with `openexit generate --artifact <name>`. The primary Datadog path supports `assessment`, `risk-register`, `manual-review`, `cost-drivers`, `target-architecture`, `acceptance-criteria`, `rollback-plan`, `runbook`, `restore-drill-checklist`, `alert-shadowing-plan`, `grafana-dashboards`, `prometheus-rules`, `opentelemetry`, and `argocd`.
+Generate individual artifacts with `openexit generate --artifact <name>`. The primary Datadog path supports `assessment`, `risk-register`, `manual-review`, `cost-drivers`, `target-architecture`, `acceptance-criteria`, `rollback-plan`, `runbook`, `restore-drill-checklist`, `alert-shadowing-plan`, `grafana-dashboards`, `prometheus-rules`, `opentelemetry`, and `argocd`. The GitHub Enterprise path also supports `forgejo-migration-candidate`.
 
 The GitHub Enterprise to Forgejo fixture path uses local JSON metadata:
 

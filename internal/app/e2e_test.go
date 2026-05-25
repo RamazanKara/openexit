@@ -188,6 +188,7 @@ func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
 		"assessment/branch-protection-mapping.md",
 		"assessment/runner-migration-plan.md",
 		"assessment/repository-ownership-report.md",
+		"generated-config/forgejo/migration-candidate.yaml",
 		"evidence/github-enterprise/repositories/platform-api.json",
 		"evidence/github-enterprise/actions-workflows/platform-api-github-workflows-ci-yml.json",
 		"validation/openexit.validation.yaml",
