@@ -64,6 +64,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit assist summarize --project <project-dir> --provider noop`
 
 The Datadog collector is read-only. API keys are read from environment variables, are not printed, and are not stored.
+When `--target` is omitted during `init`, OpenExit selects the standard target for the chosen source.
 
 ## Supported Paths
 

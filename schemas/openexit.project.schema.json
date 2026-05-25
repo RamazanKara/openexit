@@ -15,12 +15,23 @@
     "source": {
       "type": "object",
       "required": ["type"],
-      "properties": { "type": { "type": "string" }, "site": { "type": "string" } }
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["datadog", "github-enterprise", "identity", "edge", "ai-provider"]
+        },
+        "site": { "type": "string" }
+      }
     },
     "target": {
       "type": "object",
       "required": ["type"],
-      "properties": { "type": { "type": "string" } }
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["grafana-lgtm", "forgejo", "keycloak-zitadel", "varnish-haproxy-coraza", "vllm-litellm"]
+        }
+      }
     },
     "policy": {
       "type": "object",
@@ -31,5 +42,37 @@
         "allowAI": { "type": "boolean" }
       }
     }
-  }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "source": { "properties": { "type": { "const": "datadog" } } },
+        "target": { "properties": { "type": { "const": "grafana-lgtm" } } }
+      }
+    },
+    {
+      "properties": {
+        "source": { "properties": { "type": { "const": "github-enterprise" } } },
+        "target": { "properties": { "type": { "const": "forgejo" } } }
+      }
+    },
+    {
+      "properties": {
+        "source": { "properties": { "type": { "const": "identity" } } },
+        "target": { "properties": { "type": { "const": "keycloak-zitadel" } } }
+      }
+    },
+    {
+      "properties": {
+        "source": { "properties": { "type": { "const": "edge" } } },
+        "target": { "properties": { "type": { "const": "varnish-haproxy-coraza" } } }
+      }
+    },
+    {
+      "properties": {
+        "source": { "properties": { "type": { "const": "ai-provider" } } },
+        "target": { "properties": { "type": { "const": "vllm-litellm" } } }
+      }
+    }
+  ]
 }

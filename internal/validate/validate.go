@@ -22,6 +22,14 @@ const (
 	Kind       = "ValidationReport"
 )
 
+var supportedTargetBySource = map[string]string{
+	"datadog":           "grafana-lgtm",
+	"github-enterprise": "forgejo",
+	"identity":          "keycloak-zitadel",
+	"edge":              "varnish-haproxy-coraza",
+	"ai-provider":       "vllm-litellm",
+}
+
 type Report struct {
 	APIVersion  string    `json:"apiVersion" yaml:"apiVersion"`
 	Kind        string    `json:"kind" yaml:"kind"`
@@ -124,11 +132,21 @@ func checkProject(projectDir string) error {
 	if cfg.Metadata.Name == "" {
 		problems = append(problems, "metadata.name is required")
 	}
-	if cfg.Source.Type == "" {
+	sourceType := strings.TrimSpace(cfg.Source.Type)
+	targetType := strings.TrimSpace(cfg.Target.Type)
+	if sourceType == "" {
 		problems = append(problems, "source.type is required")
 	}
-	if cfg.Target.Type == "" {
+	if targetType == "" {
 		problems = append(problems, "target.type is required")
+	}
+	if sourceType != "" && targetType != "" {
+		expectedTarget, ok := supportedTargetBySource[sourceType]
+		if !ok {
+			problems = append(problems, fmt.Sprintf("source.type %q is not supported", sourceType))
+		} else if targetType != expectedTarget {
+			problems = append(problems, fmt.Sprintf("target.type must be %q for source.type %q", expectedTarget, sourceType))
+		}
 	}
 	if cfg.Policy.AllowNetworkWrites || cfg.Policy.AllowProductionWrites {
 		problems = append(problems, "project policy must not allow network or production writes")

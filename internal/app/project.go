@@ -21,7 +21,7 @@ type ProjectStatus struct {
 }
 
 func InitProject(projectDir string) error {
-	return InitProjectWithEndpoints(projectDir, defaultSource, defaultTarget)
+	return InitProjectWithEndpoints(projectDir, defaultSource, defaultTargetForSource(defaultSource))
 }
 
 func InitProjectWithEndpoints(projectDir, source, target string) error {
@@ -45,6 +45,11 @@ func InitProjectWithEndpoints(projectDir, source, target string) error {
 	}
 	if target != "" {
 		cfg.Target.Type = target
+	} else {
+		cfg.Target.Type = defaultTargetForSource(cfg.Source.Type)
+	}
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("invalid project options: %w", err)
 	}
 	return WriteProjectConfig(projectDir, cfg)
 }

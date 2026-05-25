@@ -105,7 +105,7 @@ func TestValidationRejectsMismatchedProjectManifest(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "mismatch-demo")
 	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
 	commands := [][]string{
-		{"init", projectDir},
+		{"init", projectDir, "--source", "github-enterprise", "--target", "forgejo"},
 		{"collect", "github-fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "forgejo"},
 		{"generate", "--project", projectDir, "--all"},
@@ -115,8 +115,52 @@ func TestValidationRejectsMismatchedProjectManifest(t *testing.T) {
 			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
 		}
 	}
+	cfg, err := LoadProjectConfig(projectDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.Source.Type = "datadog"
+	if err := WriteProjectConfig(projectDir, *cfg); err != nil {
+		t.Fatal(err)
+	}
 	if err := executeForTest("validate", "--project", projectDir); err == nil {
 		t.Fatal("expected validation to fail when project source/target do not match inventory and assessment")
+	}
+}
+
+func TestCollectRejectsMismatchedProjectSource(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "mismatch-collect")
+	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
+	if err := executeForTest("init", projectDir); err != nil {
+		t.Fatal(err)
+	}
+	err := executeForTest("collect", "github-fixture", "--project", projectDir, "--input", fixturePath)
+	if err == nil {
+		t.Fatal("expected collect to fail for a mismatched project source")
+	}
+	if !strings.Contains(err.Error(), "project source") {
+		t.Fatalf("expected project source error, got %q", err.Error())
+	}
+}
+
+func TestAssessRejectsMismatchedProjectTarget(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "mismatch-assess")
+	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	err := executeForTest("assess", "--project", projectDir, "--target", "forgejo")
+	if err == nil {
+		t.Fatal("expected assess to fail for a mismatched target")
+	}
+	if !strings.Contains(err.Error(), "assessment target") {
+		t.Fatalf("expected assessment target error, got %q", err.Error())
 	}
 }
 

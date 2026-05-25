@@ -19,6 +19,14 @@ const (
 	defaultAIProvider = "noop"
 )
 
+var supportedTargetBySource = map[string]string{
+	"datadog":           "grafana-lgtm",
+	"github-enterprise": "forgejo",
+	"identity":          "keycloak-zitadel",
+	"edge":              "varnish-haproxy-coraza",
+	"ai-provider":       "vllm-litellm",
+}
+
 type ProjectConfig struct {
 	APIVersion string          `json:"apiVersion" yaml:"apiVersion"`
 	Kind       string          `json:"kind" yaml:"kind"`
@@ -78,6 +86,14 @@ func DefaultProjectConfig(projectDir string) ProjectConfig {
 	}
 }
 
+func defaultTargetForSource(source string) string {
+	source = strings.TrimSpace(source)
+	if target, ok := supportedTargetBySource[source]; ok {
+		return target
+	}
+	return ""
+}
+
 func LoadProjectConfig(projectDir string) (*ProjectConfig, error) {
 	path := filepath.Join(projectDir, projectFileName)
 	data, err := os.ReadFile(path)
@@ -104,6 +120,8 @@ func WriteProjectConfig(projectDir string, cfg ProjectConfig) error {
 
 func (cfg ProjectConfig) Validate() error {
 	var problems []string
+	sourceType := strings.TrimSpace(cfg.Source.Type)
+	targetType := strings.TrimSpace(cfg.Target.Type)
 	if cfg.APIVersion != APIVersion {
 		problems = append(problems, fmt.Sprintf("apiVersion must be %q", APIVersion))
 	}
@@ -113,17 +131,25 @@ func (cfg ProjectConfig) Validate() error {
 	if strings.TrimSpace(cfg.Metadata.Name) == "" {
 		problems = append(problems, "metadata.name is required")
 	}
-	if strings.TrimSpace(cfg.Source.Type) == "" {
+	if sourceType == "" {
 		problems = append(problems, "source.type is required")
 	}
-	if strings.TrimSpace(cfg.Target.Type) == "" {
+	if targetType == "" {
 		problems = append(problems, "target.type is required")
 	}
+	if sourceType != "" && targetType != "" {
+		expectedTarget, ok := supportedTargetBySource[sourceType]
+		if !ok {
+			problems = append(problems, fmt.Sprintf("source.type %q is not supported", sourceType))
+		} else if targetType != expectedTarget {
+			problems = append(problems, fmt.Sprintf("target.type must be %q for source.type %q", expectedTarget, sourceType))
+		}
+	}
 	if cfg.Policy.AllowNetworkWrites {
-		problems = append(problems, "policy.allowNetworkWrites must remain false for v0.1")
+		problems = append(problems, "policy.allowNetworkWrites must remain false")
 	}
 	if cfg.Policy.AllowProductionWrites {
-		problems = append(problems, "policy.allowProductionWrites must remain false for v0.1")
+		problems = append(problems, "policy.allowProductionWrites must remain false")
 	}
 	if len(problems) > 0 {
 		return errors.New(strings.Join(problems, "; "))

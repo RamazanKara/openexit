@@ -2,6 +2,8 @@
 
 See `openexit --help` for the command tree.
 
+`openexit init` accepts `--source` and `--target`. If `--target` is omitted, the CLI uses the standard target for the selected source.
+
 Release builds stamp version metadata:
 
 ```bash

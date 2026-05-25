@@ -70,7 +70,7 @@ func newInitCommand() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&source, "source", defaultSource, "Source platform type")
-	cmd.Flags().StringVar(&target, "target", defaultTarget, "Target platform type")
+	cmd.Flags().StringVar(&target, "target", "", "Target platform type; defaults to the source's standard target")
 	return cmd
 }
 
@@ -115,7 +115,7 @@ func newCollectFixtureCommand() *cobra.Command {
 		Use:   "fixture",
 		Short: "Collect Datadog-like fixture inventory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCollector(cmd.Context(), cmd, project, datadog.FixtureCollector{}, map[string]string{"input": input})
+			return runCollector(cmd.Context(), cmd, project, "datadog", datadog.FixtureCollector{}, map[string]string{"input": input})
 		},
 	}
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
@@ -130,7 +130,7 @@ func newCollectDatadogCommand() *cobra.Command {
 		Use:   "datadog",
 		Short: "Collect read-only Datadog inventory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCollector(cmd.Context(), cmd, project, datadog.LiveCollector{}, map[string]string{
+			return runCollector(cmd.Context(), cmd, project, "datadog", datadog.LiveCollector{}, map[string]string{
 				"site":        site,
 				"api-key-env": apiKeyEnv,
 				"app-key-env": appKeyEnv,
@@ -150,7 +150,7 @@ func newCollectGitHubFixtureCommand() *cobra.Command {
 		Use:   "github-fixture",
 		Short: "Collect GitHub Enterprise-like fixture inventory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCollector(cmd.Context(), cmd, project, githubenterprise.FixtureCollector{}, map[string]string{"input": input})
+			return runCollector(cmd.Context(), cmd, project, "github-enterprise", githubenterprise.FixtureCollector{}, map[string]string{"input": input})
 		},
 	}
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
@@ -165,7 +165,7 @@ func newCollectIdentityFixtureCommand() *cobra.Command {
 		Use:   "identity-fixture",
 		Short: "Collect Okta/Auth0-like fixture inventory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCollector(cmd.Context(), cmd, project, identity.FixtureCollector{}, map[string]string{"input": input})
+			return runCollector(cmd.Context(), cmd, project, "identity", identity.FixtureCollector{}, map[string]string{"input": input})
 		},
 	}
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
@@ -180,7 +180,7 @@ func newCollectEdgeFixtureCommand() *cobra.Command {
 		Use:   "edge-fixture",
 		Short: "Collect Cloudflare/Akamai-like fixture inventory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCollector(cmd.Context(), cmd, project, edge.FixtureCollector{}, map[string]string{"input": input})
+			return runCollector(cmd.Context(), cmd, project, "edge", edge.FixtureCollector{}, map[string]string{"input": input})
 		},
 	}
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
@@ -195,7 +195,7 @@ func newCollectAIFixtureCommand() *cobra.Command {
 		Use:   "ai-fixture",
 		Short: "Collect OpenAI/Anthropic-like fixture inventory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCollector(cmd.Context(), cmd, project, aiprovider.FixtureCollector{}, map[string]string{"input": input})
+			return runCollector(cmd.Context(), cmd, project, "ai-provider", aiprovider.FixtureCollector{}, map[string]string{"input": input})
 		},
 	}
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
@@ -204,10 +204,13 @@ func newCollectAIFixtureCommand() *cobra.Command {
 	return cmd
 }
 
-func runCollector(ctx context.Context, cmd *cobra.Command, projectDir string, c collector.Collector, options map[string]string) error {
+func runCollector(ctx context.Context, cmd *cobra.Command, projectDir, expectedSource string, c collector.Collector, options map[string]string) error {
 	cfg, err := LoadProjectConfig(projectDir)
 	if err != nil {
 		return err
+	}
+	if cfg.Source.Type != expectedSource {
+		return fmt.Errorf("project source %q does not match %s collector source %q; initialize or update the project with source=%q target=%q", cfg.Source.Type, c.Name(), expectedSource, expectedSource, defaultTargetForSource(expectedSource))
 	}
 	inv, err := c.Collect(ctx, collector.CollectRequest{
 		ProjectDir: projectDir,
@@ -253,6 +256,12 @@ func newAssessCommand() *cobra.Command {
 			inv, err := loadInventoryManifest(project)
 			if err != nil {
 				return err
+			}
+			if cfg.Source.Type != inv.Source.Type {
+				return fmt.Errorf("project source %q does not match inventory source %q; collect inventory for the configured source or update openexit.yaml", cfg.Source.Type, inv.Source.Type)
+			}
+			if target != cfg.Target.Type {
+				return fmt.Errorf("assessment target %q does not match project target %q; use --target %s or update openexit.yaml", target, cfg.Target.Type, cfg.Target.Type)
 			}
 			result, err := assessment.Run(cmd.Context(), inv, target, time.Now().UTC())
 			if err != nil {

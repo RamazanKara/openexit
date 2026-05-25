@@ -2,6 +2,8 @@
 
 OpenExit schemas live under `schemas/` and mirror the typed Go manifests. The CLI performs typed validation plus YAML/JSON parse checks.
 
+Project manifests must use one of the supported source/target pairs: Datadog to Grafana LGTM, GitHub Enterprise to Forgejo, Okta/Auth0 to Keycloak/Zitadel, Cloudflare/Akamai to Varnish/HAProxy/Coraza, or OpenAI/Anthropic to vLLM/LiteLLM.
+
 Inventory dashboards can include optional `dataSources` and `templateVariables` fields so assessment can flag Grafana mapping risk. SLOs can include optional `sli`, `burnRateMonitorIds`, and `dashboardRefs` fields. The top-level inventory `volumes` section records whether log and trace volume assumptions are known.
 
 For the GitHub Enterprise to Forgejo fixture path, inventory can include `repositories`, `teams`, `branchProtections`, `actionsWorkflows`, `secrets`, `runners`, `deployKeys`, and `githubApps`. Secret entries are metadata only; OpenExit should never collect or store secret values.
