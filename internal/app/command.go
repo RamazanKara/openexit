@@ -106,6 +106,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectGitHubFixtureCommand())
 	collectCmd.AddCommand(newCollectOktaCommand())
 	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
+	collectCmd.AddCommand(newCollectCloudflareCommand())
 	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
 	collectCmd.AddCommand(newCollectAIFixtureCommand())
 	return collectCmd
@@ -223,6 +224,27 @@ func newCollectIdentityFixtureCommand() *cobra.Command {
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
 	cmd.Flags().StringVar(&input, "input", "", "Okta/Auth0 identity fixture JSON file")
 	_ = cmd.MarkFlagRequired("input")
+	return cmd
+}
+
+func newCollectCloudflareCommand() *cobra.Command {
+	var project, zoneID, tokenEnv, baseURL string
+	cmd := &cobra.Command{
+		Use:   "cloudflare",
+		Short: "Collect read-only Cloudflare edge inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, "edge", edge.LiveCollector{}, map[string]string{
+				"zone-id":   zoneID,
+				"token-env": tokenEnv,
+				"base-url":  baseURL,
+			})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&zoneID, "zone-id", "", "Cloudflare zone ID to inventory")
+	cmd.Flags().StringVar(&tokenEnv, "token-env", "CLOUDFLARE_API_TOKEN", "Environment variable containing a read-only Cloudflare API token")
+	cmd.Flags().StringVar(&baseURL, "base-url", "https://api.cloudflare.com/client/v4", "Cloudflare API base URL")
+	_ = cmd.MarkFlagRequired("zone-id")
 	return cmd
 }
 

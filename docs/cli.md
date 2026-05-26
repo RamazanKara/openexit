@@ -96,6 +96,17 @@ openexit generate --project ./edge-demo --all
 openexit validate --project ./edge-demo
 ```
 
+The same path can collect read-only live Cloudflare metadata. Set the API token in an environment variable; OpenExit reads it at runtime and does not write it into project files.
+
+```bash
+export CLOUDFLARE_API_TOKEN=<read-only-token>
+openexit init ./cloudflare-live --source edge --target varnish-haproxy-coraza
+openexit collect cloudflare --project ./cloudflare-live --zone-id <zone-id> --token-env CLOUDFLARE_API_TOKEN
+openexit assess --project ./cloudflare-live --target varnish-haproxy-coraza
+openexit generate --project ./cloudflare-live --all
+openexit validate --project ./cloudflare-live
+```
+
 The OpenAI/Anthropic to vLLM/LiteLLM fixture path uses local JSON metadata:
 
 ```bash

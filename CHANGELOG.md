@@ -9,6 +9,7 @@
 - Added a Forgejo migration candidate config artifact for the GitHub Enterprise assessment path.
 - Added a read-only GitHub/GitHub Enterprise collector for repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy-key inventory.
 - Added a read-only Okta collector for application, group, policy/rule, MFA factor, and explicit break-glass identity inventory.
+- Added a read-only Cloudflare collector for DNS, WAF/ruleset, cache, redirect, TLS, origin, bot-rule, and page-rule edge inventory.
 
 ## 0.1.0 - 2026-05-24
 

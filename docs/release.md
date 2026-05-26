@@ -23,10 +23,10 @@ Additional assessment paths present in this repository:
 
 - GitHub Enterprise to Forgejo, with fixture import and read-only live repository inventory collection.
 - Okta/Auth0 to Keycloak/Zitadel, with fixture import and read-only live Okta identity inventory collection.
-- Cloudflare/Akamai to Varnish/HAProxy/Coraza.
+- Cloudflare/Akamai to Varnish/HAProxy/Coraza, with fixture import and read-only live Cloudflare edge inventory collection.
 - OpenAI/Anthropic to vLLM/LiteLLM.
 
-The edge and AI provider paths are complete for local fixture assessment workflows. Datadog, GitHub Enterprise, and Okta currently include read-only live SaaS collectors.
+The AI provider path is complete for local fixture assessment workflows. Datadog, GitHub Enterprise, Okta, and Cloudflare currently include read-only live SaaS collectors.
 
 ## Release Checklist
 
@@ -36,7 +36,7 @@ The edge and AI provider paths are complete for local fixture assessment workflo
 - [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `generate --all`, `validate`, `export`.
-- [ ] GitHub and Okta fixture/live-collector test coverage pass, and fixture-only pipelines validate for edge and AI provider paths.
+- [ ] GitHub, Okta, and Cloudflare fixture/live-collector test coverage pass, and the fixture-only AI provider pipeline validates.
 - [ ] `openexit version` prints name, version, commit, and date from release build flags.
 - [ ] `README.md`, `docs/cli.md`, `docs/security.md`, and this checklist reflect current behavior.
 - [ ] `examples/datadog-to-grafana/README.md` reproduces the primary local demo.
@@ -57,7 +57,7 @@ Additional assessment paths:
 
 - GitHub Enterprise to Forgejo, including a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
 - Okta/Auth0 to Keycloak/Zitadel, including a read-only live Okta collector for identity migration inventory.
-- Cloudflare/Akamai to Varnish/HAProxy/Coraza.
+- Cloudflare/Akamai to Varnish/HAProxy/Coraza, including a read-only live Cloudflare collector for edge migration inventory.
 - OpenAI/Anthropic to vLLM/LiteLLM.
 
 Safety model:
