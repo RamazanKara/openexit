@@ -44,8 +44,17 @@ func (FixtureCollector) Collect(_ context.Context, req collector.CollectRequest)
 }
 
 func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Inventory, raw []byte) error {
-	if err := writeEvidence(projectDir, "ai-provider/raw-fixture.json", raw); err != nil {
-		return err
+	return normalizeFixtureWithRawPath(projectDir, fixture, inv, raw, "ai-provider/raw-fixture.json")
+}
+
+func normalizeFixtureWithRawPath(projectDir string, fixture *Fixture, inv *inventory.Inventory, raw []byte, rawPath string) error {
+	if rawPath != "" && len(raw) > 0 {
+		if err := writeEvidence(projectDir, rawPath, raw); err != nil {
+			return err
+		}
+	}
+	if rawPath == "" && len(raw) > 0 {
+		return fmt.Errorf("raw evidence path is required when raw evidence is provided")
 	}
 	for _, usageClass := range fixture.ModelUsageClasses {
 		evidenceID := safeID(usageClass.ID)

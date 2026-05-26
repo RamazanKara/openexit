@@ -3,6 +3,7 @@ package aiprovider
 type Fixture struct {
 	Provider                  string                           `json:"provider"`
 	Workspace                 string                           `json:"workspace"`
+	AvailableModels           []string                         `json:"availableModels,omitempty"`
 	ModelUsageClasses         []FixtureModelUsageClass         `json:"modelUsageClasses"`
 	TokenVolumes              []FixtureTokenVolume             `json:"tokenVolumes"`
 	LatencyExpectations       []FixtureLatencyExpectation      `json:"latencyExpectations"`

@@ -116,3 +116,22 @@ openexit assess --project ./ai-demo --target vllm-litellm
 openexit generate --project ./ai-demo --all
 openexit validate --project ./ai-demo
 ```
+
+The same path can collect read-only aggregate OpenAI usage. Set an OpenAI admin key in an environment variable; OpenExit reads it at runtime and does not write it into project files or evidence. The live collector records model-grouped token usage and available model metadata, not raw prompts or responses.
+
+```bash
+export OPENAI_ADMIN_KEY=<admin-key>
+openexit init ./openai-live --source ai-provider --target vllm-litellm
+openexit collect openai \
+  --project ./openai-live \
+  --admin-key-env OPENAI_ADMIN_KEY \
+  --workspace acme \
+  --owner platform-ai \
+  --fallback-strategy manual-queue \
+  --fallback-manual-queue
+openexit assess --project ./openai-live --target vllm-litellm
+openexit generate --project ./openai-live --all
+openexit validate --project ./openai-live
+```
+
+Use `--days` to change the aggregate usage window and `--peak-days` to change the hourly peak-estimate window. Use `--organization-id` or `--project-id` only when your OpenAI account requires those headers.

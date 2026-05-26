@@ -4,7 +4,7 @@ Local-first migration assessments from proprietary SaaS platforms to open-source
 
 OpenExit collects migration inventory, normalizes it, analyzes migration risks, generates candidate target files, validates outputs, and exports a local evidence bundle.
 
-The Datadog to Grafana LGTM path includes both fixture import and a read-only live Datadog collector. The GitHub Enterprise to Forgejo path includes fixture import and a read-only GitHub/GitHub Enterprise collector for repository migration inventory. The Okta/Auth0 to Keycloak/Zitadel path includes fixture import and a read-only Okta collector; Auth0 remains fixture-only. The Cloudflare/Akamai to Varnish/HAProxy/Coraza path includes fixture import and a read-only Cloudflare collector; Akamai remains fixture-only. The OpenAI/Anthropic path is feature-complete for local fixture assessment workflows, but does not include live SaaS collectors yet.
+The Datadog to Grafana LGTM path includes both fixture import and a read-only live Datadog collector. The GitHub Enterprise to Forgejo path includes fixture import and a read-only GitHub/GitHub Enterprise collector for repository migration inventory. The Okta/Auth0 to Keycloak/Zitadel path includes fixture import and a read-only Okta collector; Auth0 remains fixture-only. The Cloudflare/Akamai to Varnish/HAProxy/Coraza path includes fixture import and a read-only Cloudflare collector; Akamai remains fixture-only. The OpenAI/Anthropic path includes fixture import and a read-only OpenAI aggregate usage collector; Anthropic remains fixture-only.
 
 ## Safety Model
 
@@ -58,6 +58,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit collect identity-fixture --project <project-dir> --input <file>`
 - `openexit collect cloudflare --project <project-dir> --zone-id <zone-id> [--token-env CLOUDFLARE_API_TOKEN]`
 - `openexit collect edge-fixture --project <project-dir> --input <file>`
+- `openexit collect openai --project <project-dir> [--admin-key-env OPENAI_ADMIN_KEY] [--days 30] [--owner team@example.com]`
 - `openexit collect ai-fixture --project <project-dir> --input <file>`
 - `openexit collect datadog --project <project-dir> --site datadoghq.eu --api-key-env DATADOG_API_KEY --app-key-env DATADOG_APP_KEY`
 - `openexit assess --project <project-dir> --target grafana-lgtm`
@@ -66,7 +67,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit export --project <project-dir> --format zip --out <file>`
 - `openexit assist summarize --project <project-dir> --provider noop`
 
-The Datadog, GitHub, Okta, and Cloudflare collectors are read-only. API tokens are read from environment variables, are not printed, and are not stored.
+The Datadog, GitHub, Okta, Cloudflare, and OpenAI collectors are read-only. API tokens are read from environment variables, are not printed, and are not stored.
 When `--target` is omitted during `init`, OpenExit selects the standard target for the chosen source.
 
 ## Supported Paths
@@ -77,7 +78,7 @@ When `--target` is omitted during `init`, OpenExit selects the standard target f
 | GitHub Enterprise | Forgejo | Repository migration assessment path | Fixture and read-only live GitHub/GitHub Enterprise collector |
 | Okta/Auth0 | Keycloak/Zitadel | Identity migration assessment path | Fixture and read-only live Okta collector; Auth0 fixture only |
 | Cloudflare/Akamai | Varnish/HAProxy/Coraza | Edge migration assessment path | Fixture and read-only live Cloudflare collector; Akamai fixture only |
-| OpenAI/Anthropic | vLLM/LiteLLM | Fixture-complete assessment path | Fixture only |
+| OpenAI/Anthropic | vLLM/LiteLLM | AI provider migration assessment path | Fixture and read-only live OpenAI aggregate usage collector; Anthropic fixture only |
 
 Fixture-only paths run the full local OpenExit workflow with sample or customer-provided JSON fixture data. They are assessment and planning tools, not live collectors.
 
@@ -92,6 +93,7 @@ Included in the current implementation:
 - Read-only GitHub/GitHub Enterprise collection for repositories, teams, branch protection, Actions workflows, secret metadata, runners, and deploy keys.
 - Read-only Okta collection for applications, groups, policy/rule metadata, org MFA factors, and explicit break-glass user metadata.
 - Read-only Cloudflare collection for DNS records, WAF rulesets, cache rules, redirects, inferred origins, TLS settings, bot rules, and page rules.
+- Read-only OpenAI collection for model-grouped aggregate completions usage, token volumes, available model metadata, and hourly peak estimates.
 - Deterministic risk assessment.
 - Markdown handover artifacts.
 - Grafana dashboard candidate JSON.
@@ -104,7 +106,7 @@ Included in the current implementation:
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.
 - Okta/Auth0 to Keycloak/Zitadel assessment path with fixture import and live Okta identity inventory collection.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment path with fixture import and live Cloudflare edge inventory collection.
-- Fixture-complete OpenAI/Anthropic to vLLM/LiteLLM assessment path.
+- OpenAI/Anthropic to vLLM/LiteLLM assessment path with fixture import and live OpenAI aggregate usage inventory collection.
 
 Not included in the current release:
 
@@ -113,7 +115,7 @@ Not included in the current release:
 - Hosted portal.
 - Perfect Datadog to Grafana parity.
 - AI-required decision making.
-- Live collectors for Auth0, Akamai, or OpenAI/Anthropic.
+- Live collectors for Auth0, Akamai, or Anthropic.
 
 ## Optional Assist
 
@@ -146,7 +148,7 @@ Okta/Auth0 to Keycloak/Zitadel collects applications, SAML/OIDC client metadata,
 
 Cloudflare/Akamai to Varnish/HAProxy/Coraza collects DNS records, WAF rules, cache rules, redirects, origins, TLS settings, bot rules, and page rules from live Cloudflare APIs or local fixtures. Akamai is currently fixture-only. It generates VCL, HAProxy, Coraza, cache parity, and WAF enforcement review artifacts.
 
-OpenAI/Anthropic to vLLM/LiteLLM collects model usage classes, token volumes, latency expectations, sensitive prompt categories, tool usage, and fallback behavior from local fixtures. It generates self-hosted LLM readiness, LiteLLM routing, vLLM sizing, evaluation, and data sensitivity artifacts.
+OpenAI/Anthropic to vLLM/LiteLLM collects model usage classes, token volumes, latency expectations, sensitive prompt categories, tool usage, and fallback behavior from local fixtures. It can also collect model-grouped aggregate OpenAI completions usage, available model metadata, and hourly peak estimates from live OpenAI APIs without storing prompts or credentials. Anthropic is currently fixture-only. The path generates self-hosted LLM readiness, LiteLLM routing, vLLM sizing, evaluation, and data sensitivity artifacts.
 
 ## License
 

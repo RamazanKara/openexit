@@ -10,6 +10,7 @@
 - Added a read-only GitHub/GitHub Enterprise collector for repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy-key inventory.
 - Added a read-only Okta collector for application, group, policy/rule, MFA factor, and explicit break-glass identity inventory.
 - Added a read-only Cloudflare collector for DNS, WAF/ruleset, cache, redirect, TLS, origin, bot-rule, and page-rule edge inventory.
+- Added a read-only OpenAI collector for aggregate model usage, token volumes, available model metadata, and peak throughput estimates.
 
 ## 0.1.0 - 2026-05-24
 

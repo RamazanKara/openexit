@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -108,6 +109,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
 	collectCmd.AddCommand(newCollectCloudflareCommand())
 	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
+	collectCmd.AddCommand(newCollectOpenAICommand())
 	collectCmd.AddCommand(newCollectAIFixtureCommand())
 	return collectCmd
 }
@@ -275,6 +277,52 @@ func newCollectAIFixtureCommand() *cobra.Command {
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
 	cmd.Flags().StringVar(&input, "input", "", "OpenAI/Anthropic AI provider fixture JSON file")
 	_ = cmd.MarkFlagRequired("input")
+	return cmd
+}
+
+func newCollectOpenAICommand() *cobra.Command {
+	var project, adminKeyEnv, baseURL, workspace, organizationID, projectID string
+	var days, peakDays, defaultP95Ms, defaultTimeoutMs, fallbackMaxRetries int
+	var owners []string
+	var streamingRequired, fallbackManualQueue bool
+	var fallbackStrategy string
+	cmd := &cobra.Command{
+		Use:   "openai",
+		Short: "Collect read-only OpenAI aggregate usage inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, "ai-provider", aiprovider.LiveCollector{}, map[string]string{
+				"admin-key-env":         adminKeyEnv,
+				"base-url":              baseURL,
+				"days":                  strconv.Itoa(days),
+				"peak-days":             strconv.Itoa(peakDays),
+				"workspace":             workspace,
+				"organization-id":       organizationID,
+				"project-id":            projectID,
+				"owners":                strings.Join(owners, "\n"),
+				"default-p95-ms":        strconv.Itoa(defaultP95Ms),
+				"default-timeout-ms":    strconv.Itoa(defaultTimeoutMs),
+				"streaming-required":    strconv.FormatBool(streamingRequired),
+				"fallback-strategy":     fallbackStrategy,
+				"fallback-manual-queue": strconv.FormatBool(fallbackManualQueue),
+				"fallback-max-retries":  strconv.Itoa(fallbackMaxRetries),
+			})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&adminKeyEnv, "admin-key-env", "OPENAI_ADMIN_KEY", "Environment variable containing an OpenAI admin key")
+	cmd.Flags().StringVar(&baseURL, "base-url", "https://api.openai.com/v1", "OpenAI API base URL")
+	cmd.Flags().IntVar(&days, "days", 30, "Number of days of aggregate usage to collect")
+	cmd.Flags().IntVar(&peakDays, "peak-days", 7, "Number of recent days to use for hourly peak estimates")
+	cmd.Flags().StringVar(&workspace, "workspace", "organization", "Workspace label to record in inventory")
+	cmd.Flags().StringVar(&organizationID, "organization-id", "", "Optional OpenAI organization ID header")
+	cmd.Flags().StringVar(&projectID, "project-id", "", "Optional OpenAI project ID header")
+	cmd.Flags().StringArrayVar(&owners, "owner", nil, "Owner for collected AI usage classes; repeatable")
+	cmd.Flags().IntVar(&defaultP95Ms, "default-p95-ms", 0, "Optional default p95 latency expectation in milliseconds")
+	cmd.Flags().IntVar(&defaultTimeoutMs, "default-timeout-ms", 0, "Optional default timeout expectation in milliseconds")
+	cmd.Flags().BoolVar(&streamingRequired, "streaming-required", false, "Mark collected usage classes as requiring streaming")
+	cmd.Flags().StringVar(&fallbackStrategy, "fallback-strategy", "", "Optional fallback strategy to attach to collected usage classes")
+	cmd.Flags().BoolVar(&fallbackManualQueue, "fallback-manual-queue", false, "Mark fallback strategy as using a manual queue")
+	cmd.Flags().IntVar(&fallbackMaxRetries, "fallback-max-retries", 0, "Optional maximum retry count for fallback behavior")
 	return cmd
 }
 

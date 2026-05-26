@@ -14,6 +14,6 @@ Okta/Auth0 to Keycloak/Zitadel reuses the same normalized inventory and evidence
 
 Cloudflare/Akamai to Varnish/HAProxy/Coraza generates edge-specific VCL, HAProxy, and Coraza candidate files plus cache and WAF review reports. It supports fixture import and a read-only live Cloudflare collector; Akamai remains fixture-only.
 
-OpenAI/Anthropic to vLLM/LiteLLM is a fixture-complete assessment path. It generates AI provider readiness, LiteLLM routing, vLLM sizing, evaluation, and data sensitivity artifacts.
+OpenAI/Anthropic to vLLM/LiteLLM generates AI provider readiness, LiteLLM routing, vLLM sizing, evaluation, and data sensitivity artifacts. It supports fixture import plus a read-only live OpenAI aggregate usage collector; Anthropic remains fixture-only.
 
 AI assist is optional and never required for validation or export.
