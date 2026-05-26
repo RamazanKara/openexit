@@ -86,6 +86,23 @@ Use repeatable `--break-glass-user` flags to verify named emergency accounts and
 openexit collect okta --project ./okta-live --org-url https://dev-123456.okta.com --break-glass-user breakglass-admin@example.com
 ```
 
+The same identity path can collect read-only live Auth0 metadata. Set an Auth0 Management API token in an environment variable; OpenExit reads it at runtime and does not write it into project files.
+
+```bash
+export AUTH0_MANAGEMENT_TOKEN=<read-only-management-token>
+openexit init ./auth0-live --source identity --target keycloak-zitadel
+openexit collect auth0 --project ./auth0-live --domain https://example.us.auth0.com --token-env AUTH0_MANAGEMENT_TOKEN
+openexit assess --project ./auth0-live --target keycloak-zitadel
+openexit generate --project ./auth0-live --all
+openexit validate --project ./auth0-live
+```
+
+Use repeatable `--break-glass-user` flags with an email, username, or Auth0 user ID to verify emergency accounts:
+
+```bash
+openexit collect auth0 --project ./auth0-live --domain https://example.us.auth0.com --break-glass-user breakglass-admin@example.com
+```
+
 The Cloudflare/Akamai to Varnish/HAProxy/Coraza fixture path uses local JSON metadata:
 
 ```bash

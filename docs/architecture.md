@@ -10,7 +10,7 @@ The core engine is written in Go. The primary Datadog live-collector path target
 
 GitHub Enterprise to Forgejo keeps the same local-first collect, normalize, analyze, generate, validate, export pipeline. It supports fixture import and a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
 
-Okta/Auth0 to Keycloak/Zitadel reuses the same normalized inventory and evidence model, but generates identity-specific planning artifacts and a candidate realm/client YAML instead of Datadog target configs. It supports fixture import and a read-only live Okta collector; Auth0 remains fixture-only.
+Okta/Auth0 to Keycloak/Zitadel reuses the same normalized inventory and evidence model, but generates identity-specific planning artifacts and a candidate realm/client YAML instead of Datadog target configs. It supports fixture import and read-only live Okta/Auth0 collectors.
 
 Cloudflare/Akamai to Varnish/HAProxy/Coraza generates edge-specific VCL, HAProxy, and Coraza candidate files plus cache and WAF review reports. It supports fixture import and a read-only live Cloudflare collector; Akamai remains fixture-only.
 

@@ -23,10 +23,12 @@ type Client struct {
 	baseURL    string
 	token      string
 	authScheme string
+	provider   string
 	http       *http.Client
 }
 
 type apiError struct {
+	Provider   string
 	Path       string
 	Status     string
 	StatusCode int
@@ -34,14 +36,18 @@ type apiError struct {
 }
 
 func (e *apiError) Error() string {
-	return fmt.Sprintf("okta API %s returned %s: %s", e.Path, e.Status, e.Body)
+	provider := strings.TrimSpace(e.Provider)
+	if provider == "" {
+		provider = "identity"
+	}
+	return fmt.Sprintf("%s API %s returned %s: %s", provider, e.Path, e.Status, e.Body)
 }
 
 func NewClient(orgURL, token, authScheme string) (*Client, error) {
 	if strings.TrimSpace(token) == "" {
 		return nil, fmt.Errorf("okta token is required")
 	}
-	normalized, err := oktaBaseURL(orgURL)
+	normalized, err := identityBaseURL(orgURL, "--org-url", "okta org URL")
 	if err != nil {
 		return nil, err
 	}
@@ -56,24 +62,42 @@ func NewClient(orgURL, token, authScheme string) (*Client, error) {
 		baseURL:    normalized,
 		token:      token,
 		authScheme: authScheme,
+		provider:   "okta",
 		http:       &http.Client{Timeout: 30 * time.Second},
 	}, nil
 }
 
-func oktaBaseURL(raw string) (string, error) {
+func NewAuth0Client(domain, token string) (*Client, error) {
+	if strings.TrimSpace(token) == "" {
+		return nil, fmt.Errorf("auth0 management token is required")
+	}
+	normalized, err := identityBaseURL(domain, "--domain", "auth0 domain")
+	if err != nil {
+		return nil, err
+	}
+	return &Client{
+		baseURL:    normalized,
+		token:      token,
+		authScheme: "Bearer",
+		provider:   "auth0",
+		http:       &http.Client{Timeout: 30 * time.Second},
+	}, nil
+}
+
+func identityBaseURL(raw, requiredFlag, label string) (string, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
-		return "", fmt.Errorf("--org-url is required")
+		return "", fmt.Errorf("%s is required", requiredFlag)
 	}
 	u, err := url.Parse(raw)
 	if err != nil {
 		return "", err
 	}
 	if u.Scheme != "https" && (u.Scheme != "http" || !isLoopbackHost(u.Hostname())) {
-		return "", fmt.Errorf("okta org URL must use https, except loopback test URLs")
+		return "", fmt.Errorf("%s must use https, except loopback test URLs", label)
 	}
 	if u.Host == "" {
-		return "", fmt.Errorf("okta org URL requires a host")
+		return "", fmt.Errorf("%s requires a host", label)
 	}
 	return strings.TrimRight(raw, "/"), nil
 }
@@ -120,12 +144,12 @@ func (c *Client) getURL(ctx context.Context, endpoint string, out any) ([]byte, 
 			return nil, nil, readErr
 		}
 		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
-			lastErr = &apiError{Path: requestPath(endpoint), Status: resp.Status, StatusCode: resp.StatusCode, Body: sanitizeBody(body)}
+			lastErr = &apiError{Provider: c.provider, Path: requestPath(endpoint), Status: resp.Status, StatusCode: resp.StatusCode, Body: sanitizeBody(body)}
 			time.Sleep(retryAfter(resp.Header.Get("Retry-After"), attempt))
 			continue
 		}
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			return nil, nil, &apiError{Path: requestPath(endpoint), Status: resp.Status, StatusCode: resp.StatusCode, Body: sanitizeBody(body)}
+			return nil, nil, &apiError{Provider: c.provider, Path: requestPath(endpoint), Status: resp.Status, StatusCode: resp.StatusCode, Body: sanitizeBody(body)}
 		}
 		if out != nil {
 			if err := json.Unmarshal(body, out); err != nil {

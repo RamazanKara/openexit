@@ -1,6 +1,6 @@
 # Okta/Auth0 To Keycloak/Zitadel
 
-This path supports local fixture assessment and read-only live Okta inventory collection. Auth0 is currently fixture-only.
+This path supports local fixture assessment and read-only live Okta and Auth0 inventory collection.
 
 Collected metadata:
 
@@ -15,6 +15,8 @@ Collected metadata:
 
 The live Okta collector gathers applications, SAML/OIDC client settings, app group assignments, groups, group member counts, policy/rule metadata, org MFA factors, and explicitly named break-glass users. It does not collect client secrets, user passwords, factor secrets, or token values, and it does not write to Okta.
 
+The live Auth0 collector gathers clients, role metadata and member counts, action/rule metadata, Guardian MFA factors, and explicitly named break-glass users. It requests metadata fields only for clients and does not persist client secrets, action code, rule scripts, user passwords, MFA secrets, or token values. It does not write to Auth0.
+
 Live Okta collection:
 
 ```bash
@@ -28,6 +30,28 @@ To capture emergency account readiness, pass one or more break-glass users:
 ```bash
 openexit collect okta --project ./okta-live --org-url https://dev-123456.okta.com --break-glass-user breakglass-admin@example.com
 ```
+
+Live Auth0 collection:
+
+```bash
+export AUTH0_MANAGEMENT_TOKEN=<read-only-management-token>
+openexit init ./auth0-live --source identity --target keycloak-zitadel
+openexit collect auth0 --project ./auth0-live --domain https://example.us.auth0.com --token-env AUTH0_MANAGEMENT_TOKEN
+```
+
+To capture emergency account readiness, pass one or more break-glass users by email, username, or Auth0 user ID:
+
+```bash
+openexit collect auth0 --project ./auth0-live --domain https://example.us.auth0.com --break-glass-user breakglass-admin@example.com
+```
+
+Auth0 API surface used:
+
+- Management API clients: `GET /api/v2/clients`.
+- Management API roles and role users: `GET /api/v2/roles` and `GET /api/v2/roles/{id}/users`.
+- Management API actions and rules: `GET /api/v2/actions/actions` and `GET /api/v2/rules`.
+- Management API Guardian factors: `GET /api/v2/guardian/factors`.
+- Management API users and authentication methods for explicit break-glass users: `GET /api/v2/users` and `GET /api/v2/users/{id}/authentication-methods`.
 
 Generated artifacts:
 

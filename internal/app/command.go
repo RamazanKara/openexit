@@ -106,6 +106,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectGitHubCommand())
 	collectCmd.AddCommand(newCollectGitHubFixtureCommand())
 	collectCmd.AddCommand(newCollectOktaCommand())
+	collectCmd.AddCommand(newCollectAuth0Command())
 	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
 	collectCmd.AddCommand(newCollectCloudflareCommand())
 	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
@@ -226,6 +227,28 @@ func newCollectIdentityFixtureCommand() *cobra.Command {
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
 	cmd.Flags().StringVar(&input, "input", "", "Okta/Auth0 identity fixture JSON file")
 	_ = cmd.MarkFlagRequired("input")
+	return cmd
+}
+
+func newCollectAuth0Command() *cobra.Command {
+	var project, domain, tokenEnv string
+	var breakGlassUsers []string
+	cmd := &cobra.Command{
+		Use:   "auth0",
+		Short: "Collect read-only Auth0 identity inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, "identity", identity.Auth0Collector{}, map[string]string{
+				"domain":            domain,
+				"token-env":         tokenEnv,
+				"break-glass-users": strings.Join(breakGlassUsers, "\n"),
+			})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&domain, "domain", "", "Auth0 tenant domain, such as https://example.us.auth0.com")
+	cmd.Flags().StringVar(&tokenEnv, "token-env", "AUTH0_MANAGEMENT_TOKEN", "Environment variable containing an Auth0 Management API token")
+	cmd.Flags().StringArrayVar(&breakGlassUsers, "break-glass-user", nil, "Break-glass user email, username, or Auth0 user ID to inventory; repeatable")
+	_ = cmd.MarkFlagRequired("domain")
 	return cmd
 }
 

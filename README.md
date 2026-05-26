@@ -4,7 +4,7 @@ Local-first migration assessments from proprietary SaaS platforms to open-source
 
 OpenExit collects migration inventory, normalizes it, analyzes migration risks, generates candidate target files, validates outputs, and exports a local evidence bundle.
 
-The Datadog to Grafana LGTM path includes both fixture import and a read-only live Datadog collector. The GitHub Enterprise to Forgejo path includes fixture import and a read-only GitHub/GitHub Enterprise collector for repository migration inventory. The Okta/Auth0 to Keycloak/Zitadel path includes fixture import and a read-only Okta collector; Auth0 remains fixture-only. The Cloudflare/Akamai to Varnish/HAProxy/Coraza path includes fixture import and a read-only Cloudflare collector; Akamai remains fixture-only. The OpenAI/Anthropic path includes fixture import and a read-only OpenAI aggregate usage collector; Anthropic remains fixture-only.
+The Datadog to Grafana LGTM path includes both fixture import and a read-only live Datadog collector. The GitHub Enterprise to Forgejo path includes fixture import and a read-only GitHub/GitHub Enterprise collector for repository migration inventory. The Okta/Auth0 to Keycloak/Zitadel path includes fixture import and read-only live Okta and Auth0 collectors. The Cloudflare/Akamai to Varnish/HAProxy/Coraza path includes fixture import and a read-only Cloudflare collector; Akamai remains fixture-only. The OpenAI/Anthropic path includes fixture import and a read-only OpenAI aggregate usage collector; Anthropic remains fixture-only.
 
 ## Safety Model
 
@@ -55,6 +55,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit collect github --project <project-dir> --owner <org> [--base-url https://github.example.com/api/v3] [--token-env GITHUB_TOKEN] [--repo owner/name]`
 - `openexit collect github-fixture --project <project-dir> --input <file>`
 - `openexit collect okta --project <project-dir> --org-url https://dev-123456.okta.com [--token-env OKTA_API_TOKEN] [--break-glass-user admin@example.com]`
+- `openexit collect auth0 --project <project-dir> --domain https://example.us.auth0.com [--token-env AUTH0_MANAGEMENT_TOKEN] [--break-glass-user admin@example.com]`
 - `openexit collect identity-fixture --project <project-dir> --input <file>`
 - `openexit collect cloudflare --project <project-dir> --zone-id <zone-id> [--token-env CLOUDFLARE_API_TOKEN]`
 - `openexit collect edge-fixture --project <project-dir> --input <file>`
@@ -67,7 +68,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit export --project <project-dir> --format zip --out <file>`
 - `openexit assist summarize --project <project-dir> --provider noop`
 
-The Datadog, GitHub, Okta, Cloudflare, and OpenAI collectors are read-only. API tokens are read from environment variables, are not printed, and are not stored.
+The Datadog, GitHub, Okta, Auth0, Cloudflare, and OpenAI collectors are read-only. API tokens are read from environment variables, are not printed, and are not stored.
 When `--target` is omitted during `init`, OpenExit selects the standard target for the chosen source.
 
 ## Supported Paths
@@ -76,7 +77,7 @@ When `--target` is omitted during `init`, OpenExit selects the standard target f
 | --- | --- | --- | --- |
 | Datadog | Grafana LGTM, Prometheus-compatible alerting, OpenTelemetry Collector/Alloy | Primary path | Fixture and read-only live Datadog collector |
 | GitHub Enterprise | Forgejo | Repository migration assessment path | Fixture and read-only live GitHub/GitHub Enterprise collector |
-| Okta/Auth0 | Keycloak/Zitadel | Identity migration assessment path | Fixture and read-only live Okta collector; Auth0 fixture only |
+| Okta/Auth0 | Keycloak/Zitadel | Identity migration assessment path | Fixture and read-only live Okta/Auth0 collectors |
 | Cloudflare/Akamai | Varnish/HAProxy/Coraza | Edge migration assessment path | Fixture and read-only live Cloudflare collector; Akamai fixture only |
 | OpenAI/Anthropic | vLLM/LiteLLM | AI provider migration assessment path | Fixture and read-only live OpenAI aggregate usage collector; Anthropic fixture only |
 
@@ -92,6 +93,7 @@ Included in the current implementation:
 - Read-only Datadog collection for dashboards, monitors, and SLOs.
 - Read-only GitHub/GitHub Enterprise collection for repositories, teams, branch protection, Actions workflows, secret metadata, runners, and deploy keys.
 - Read-only Okta collection for applications, groups, policy/rule metadata, org MFA factors, and explicit break-glass user metadata.
+- Read-only Auth0 collection for clients, roles, action/rule metadata, Guardian MFA factors, and explicit break-glass user metadata.
 - Read-only Cloudflare collection for DNS records, WAF rulesets, cache rules, redirects, inferred origins, TLS settings, bot rules, and page rules.
 - Read-only OpenAI collection for model-grouped aggregate completions usage, token volumes, available model metadata, and hourly peak estimates.
 - Deterministic risk assessment.
@@ -104,7 +106,7 @@ Included in the current implementation:
 - Evidence bundle export.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.
-- Okta/Auth0 to Keycloak/Zitadel assessment path with fixture import and live Okta identity inventory collection.
+- Okta/Auth0 to Keycloak/Zitadel assessment path with fixture import and live Okta/Auth0 identity inventory collection.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment path with fixture import and live Cloudflare edge inventory collection.
 - OpenAI/Anthropic to vLLM/LiteLLM assessment path with fixture import and live OpenAI aggregate usage inventory collection.
 
@@ -115,7 +117,7 @@ Not included in the current release:
 - Hosted portal.
 - Perfect Datadog to Grafana parity.
 - AI-required decision making.
-- Live collectors for Auth0, Akamai, or Anthropic.
+- Live collectors for Akamai or Anthropic.
 
 ## Optional Assist
 
@@ -144,7 +146,7 @@ The release checklist lives in `docs/release.md`. A release build should pass `m
 
 GitHub Enterprise to Forgejo collects repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy key metadata from live GitHub/GitHub Enterprise APIs or local fixtures. GitHub App metadata is currently fixture-only. It generates Forgejo migration assessment, CI compatibility, branch protection mapping, runner migration, repository ownership reports, and a Forgejo migration candidate YAML.
 
-Okta/Auth0 to Keycloak/Zitadel collects applications, SAML/OIDC client metadata, groups, policies, MFA settings, redirect URIs, owners, and break-glass account metadata from live Okta APIs or local fixtures. Auth0 is currently fixture-only. It generates identity migration risk, realm/client candidate config, break-glass, cutover, and rollback artifacts.
+Okta/Auth0 to Keycloak/Zitadel collects applications, SAML/OIDC client metadata, groups, policies, MFA settings, redirect URIs, owners, and break-glass account metadata from live Okta/Auth0 APIs or local fixtures. It generates identity migration risk, realm/client candidate config, break-glass, cutover, and rollback artifacts.
 
 Cloudflare/Akamai to Varnish/HAProxy/Coraza collects DNS records, WAF rules, cache rules, redirects, origins, TLS settings, bot rules, and page rules from live Cloudflare APIs or local fixtures. Akamai is currently fixture-only. It generates VCL, HAProxy, Coraza, cache parity, and WAF enforcement review artifacts.
 
