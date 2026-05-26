@@ -69,6 +69,23 @@ openexit generate --project ./identity-demo --all
 openexit validate --project ./identity-demo
 ```
 
+The same path can collect read-only live Okta metadata. Set the token in an environment variable; OpenExit reads it at runtime and does not write it into project files.
+
+```bash
+export OKTA_API_TOKEN=<read-only-token>
+openexit init ./okta-live --source identity --target keycloak-zitadel
+openexit collect okta --project ./okta-live --org-url https://dev-123456.okta.com --token-env OKTA_API_TOKEN
+openexit assess --project ./okta-live --target keycloak-zitadel
+openexit generate --project ./okta-live --all
+openexit validate --project ./okta-live
+```
+
+Use repeatable `--break-glass-user` flags to verify named emergency accounts and capture whether they have active factors:
+
+```bash
+openexit collect okta --project ./okta-live --org-url https://dev-123456.okta.com --break-glass-user breakglass-admin@example.com
+```
+
 The Cloudflare/Akamai to Varnish/HAProxy/Coraza fixture path uses local JSON metadata:
 
 ```bash

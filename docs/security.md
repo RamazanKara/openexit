@@ -3,8 +3,9 @@
 OpenExit is designed for local-first assessment work.
 
 - Collectors must not make production writes.
-- Live Datadog and GitHub credentials are read from environment variables and are never written to project files.
+- Live Datadog, GitHub, and Okta credentials are read from environment variables and are never written to project files.
 - The GitHub collector records secret names and consumers only; it never requests or stores secret values.
+- The Okta collector records client and policy metadata only; it never requests or stores client secrets, passwords, factor secrets, or token values.
 - Raw source evidence is redacted before it is written locally.
 - Validation scans JSON, YAML, Markdown, text, VCL, HAProxy, and Coraza-style generated artifacts for secret-like values.
 - Exported bundles contain local manifests, generated candidates, validation output, checksums, and redacted evidence.

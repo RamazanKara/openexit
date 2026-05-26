@@ -8,6 +8,7 @@
 - Added early source/target guardrails for collection and assessment commands plus supported path-pair validation.
 - Added a Forgejo migration candidate config artifact for the GitHub Enterprise assessment path.
 - Added a read-only GitHub/GitHub Enterprise collector for repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy-key inventory.
+- Added a read-only Okta collector for application, group, policy/rule, MFA factor, and explicit break-glass identity inventory.
 
 ## 0.1.0 - 2026-05-24
 

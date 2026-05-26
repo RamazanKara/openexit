@@ -22,11 +22,11 @@ Release-blocking v0.1 requirements:
 Additional assessment paths present in this repository:
 
 - GitHub Enterprise to Forgejo, with fixture import and read-only live repository inventory collection.
-- Okta/Auth0 to Keycloak/Zitadel.
+- Okta/Auth0 to Keycloak/Zitadel, with fixture import and read-only live Okta identity inventory collection.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza.
 - OpenAI/Anthropic to vLLM/LiteLLM.
 
-The identity, edge, and AI provider paths are complete for local fixture assessment workflows. Datadog and GitHub Enterprise currently include read-only live SaaS collectors.
+The edge and AI provider paths are complete for local fixture assessment workflows. Datadog, GitHub Enterprise, and Okta currently include read-only live SaaS collectors.
 
 ## Release Checklist
 
@@ -36,7 +36,7 @@ The identity, edge, and AI provider paths are complete for local fixture assessm
 - [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `generate --all`, `validate`, `export`.
-- [ ] GitHub fixture and live-collector test coverage pass, and fixture-only pipelines validate for identity, edge, and AI provider paths.
+- [ ] GitHub and Okta fixture/live-collector test coverage pass, and fixture-only pipelines validate for edge and AI provider paths.
 - [ ] `openexit version` prints name, version, commit, and date from release build flags.
 - [ ] `README.md`, `docs/cli.md`, `docs/security.md`, and this checklist reflect current behavior.
 - [ ] `examples/datadog-to-grafana/README.md` reproduces the primary local demo.
@@ -56,7 +56,7 @@ Primary supported path:
 Additional assessment paths:
 
 - GitHub Enterprise to Forgejo, including a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
-- Okta/Auth0 to Keycloak/Zitadel.
+- Okta/Auth0 to Keycloak/Zitadel, including a read-only live Okta collector for identity migration inventory.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza.
 - OpenAI/Anthropic to vLLM/LiteLLM.
 

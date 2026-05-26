@@ -104,6 +104,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectDatadogCommand())
 	collectCmd.AddCommand(newCollectGitHubCommand())
 	collectCmd.AddCommand(newCollectGitHubFixtureCommand())
+	collectCmd.AddCommand(newCollectOktaCommand())
 	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
 	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
 	collectCmd.AddCommand(newCollectAIFixtureCommand())
@@ -183,6 +184,30 @@ func newCollectGitHubFixtureCommand() *cobra.Command {
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
 	cmd.Flags().StringVar(&input, "input", "", "GitHub Enterprise fixture JSON file")
 	_ = cmd.MarkFlagRequired("input")
+	return cmd
+}
+
+func newCollectOktaCommand() *cobra.Command {
+	var project, orgURL, tokenEnv, authScheme string
+	var breakGlassUsers []string
+	cmd := &cobra.Command{
+		Use:   "okta",
+		Short: "Collect read-only Okta identity inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, "identity", identity.LiveCollector{}, map[string]string{
+				"org-url":           orgURL,
+				"token-env":         tokenEnv,
+				"auth-scheme":       authScheme,
+				"break-glass-users": strings.Join(breakGlassUsers, "\n"),
+			})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&orgURL, "org-url", "", "Okta org URL, such as https://dev-123456.okta.com")
+	cmd.Flags().StringVar(&tokenEnv, "token-env", "OKTA_API_TOKEN", "Environment variable containing a read-only Okta token")
+	cmd.Flags().StringVar(&authScheme, "auth-scheme", "SSWS", "Authorization scheme for the token: SSWS or Bearer")
+	cmd.Flags().StringArrayVar(&breakGlassUsers, "break-glass-user", nil, "Break-glass user login to inventory; repeatable")
+	_ = cmd.MarkFlagRequired("org-url")
 	return cmd
 }
 

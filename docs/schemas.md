@@ -8,7 +8,7 @@ Inventory dashboards can include optional `dataSources` and `templateVariables` 
 
 For the GitHub Enterprise to Forgejo path, inventory can include `repositories`, `teams`, `branchProtections`, `actionsWorkflows`, `secrets`, `runners`, `deployKeys`, and `githubApps`. The live collector currently populates repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy-key assets; GitHub App metadata is fixture-only. Secret entries are metadata only; OpenExit should never collect or store secret values.
 
-For the Okta/Auth0 to Keycloak/Zitadel fixture path, inventory can include `identityApplications`, `identityGroups`, `identityPolicies`, `mfaSettings`, and `breakGlassAccounts`. Client entries include redirect URIs, grant types, owners, group assignments, and SAML signing metadata; they do not include client secrets.
+For the Okta/Auth0 to Keycloak/Zitadel path, inventory can include `identityApplications`, `identityGroups`, `identityPolicies`, `mfaSettings`, and `breakGlassAccounts`. The live Okta collector currently populates application, group, policy, MFA, and explicitly named break-glass account assets; Auth0 is fixture-only. Client entries include redirect URIs, grant types, owners, group assignments, and SAML signing metadata; they do not include client secrets.
 
 For the Cloudflare/Akamai to Varnish/HAProxy/Coraza fixture path, inventory can include `dnsRecords`, `wafRules`, `cacheRules`, `redirects`, `origins`, `tlsSettings`, `botRules`, and `pageRules`. WAF entries contain rule metadata and expressions only; they should not contain provider credentials.
 
