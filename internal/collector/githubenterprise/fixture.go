@@ -41,8 +41,17 @@ func (FixtureCollector) Collect(_ context.Context, req collector.CollectRequest)
 }
 
 func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Inventory, raw []byte) error {
-	if err := writeEvidence(projectDir, "github-enterprise/raw-fixture.json", raw); err != nil {
-		return err
+	return normalizeFixtureWithRawPath(projectDir, fixture, inv, raw, "github-enterprise/raw-fixture.json")
+}
+
+func normalizeFixtureWithRawPath(projectDir string, fixture *Fixture, inv *inventory.Inventory, raw []byte, rawPath string) error {
+	if rawPath != "" && len(raw) > 0 {
+		if err := writeEvidence(projectDir, rawPath, raw); err != nil {
+			return err
+		}
+	}
+	if rawPath == "" && len(raw) > 0 {
+		return fmt.Errorf("raw evidence path is required when raw evidence is provided")
 	}
 	for _, repo := range fixture.Repositories {
 		evidenceID := safeID(repo.Name)
@@ -214,6 +223,22 @@ func sortInventory(inv *inventory.Inventory) {
 		right := inv.Assets.ActionsWorkflows[j].Repository + inv.Assets.ActionsWorkflows[j].Path
 		return left < right
 	})
+	sort.Slice(inv.Assets.Secrets, func(i, j int) bool {
+		left := inv.Assets.Secrets[i].Scope + inv.Assets.Secrets[i].Repository + inv.Assets.Secrets[i].Name
+		right := inv.Assets.Secrets[j].Scope + inv.Assets.Secrets[j].Repository + inv.Assets.Secrets[j].Name
+		return left < right
+	})
+	sort.Slice(inv.Assets.Runners, func(i, j int) bool {
+		left := inv.Assets.Runners[i].Scope + inv.Assets.Runners[i].Name
+		right := inv.Assets.Runners[j].Scope + inv.Assets.Runners[j].Name
+		return left < right
+	})
+	sort.Slice(inv.Assets.DeployKeys, func(i, j int) bool {
+		left := inv.Assets.DeployKeys[i].Repository + inv.Assets.DeployKeys[i].Title
+		right := inv.Assets.DeployKeys[j].Repository + inv.Assets.DeployKeys[j].Title
+		return left < right
+	})
+	sort.Slice(inv.Assets.GitHubApps, func(i, j int) bool { return inv.Assets.GitHubApps[i].Name < inv.Assets.GitHubApps[j].Name })
 }
 
 func safeID(value string) string {

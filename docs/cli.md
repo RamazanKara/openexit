@@ -36,6 +36,29 @@ openexit generate --project ./ghe-demo --all
 openexit validate --project ./ghe-demo
 ```
 
+The same path can collect read-only live GitHub or GitHub Enterprise metadata. Set the token in an environment variable; OpenExit reads it at runtime and does not write it into project files.
+
+```bash
+export GITHUB_TOKEN=<read-only-token>
+openexit init ./ghe-live --source github-enterprise --target forgejo
+openexit collect github --project ./ghe-live --owner acme --token-env GITHUB_TOKEN
+openexit assess --project ./ghe-live --target forgejo
+openexit generate --project ./ghe-live --all
+openexit validate --project ./ghe-live
+```
+
+For GitHub Enterprise Server, pass the API root:
+
+```bash
+openexit collect github --project ./ghe-live --owner acme --base-url https://github.example.com/api/v3
+```
+
+Use repeatable `--repo` flags to restrict collection to selected repositories:
+
+```bash
+openexit collect github --project ./ghe-live --owner acme --repo acme/platform-api --repo docs-site
+```
+
 The Okta/Auth0 to Keycloak/Zitadel fixture path uses local JSON metadata:
 
 ```bash

@@ -102,6 +102,7 @@ func newCollectCommand() *cobra.Command {
 	}
 	collectCmd.AddCommand(newCollectFixtureCommand())
 	collectCmd.AddCommand(newCollectDatadogCommand())
+	collectCmd.AddCommand(newCollectGitHubCommand())
 	collectCmd.AddCommand(newCollectGitHubFixtureCommand())
 	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
 	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
@@ -141,6 +142,32 @@ func newCollectDatadogCommand() *cobra.Command {
 	cmd.Flags().StringVar(&site, "site", "datadoghq.com", "Datadog site, such as datadoghq.com or datadoghq.eu")
 	cmd.Flags().StringVar(&apiKeyEnv, "api-key-env", "DATADOG_API_KEY", "Environment variable containing the Datadog API key")
 	cmd.Flags().StringVar(&appKeyEnv, "app-key-env", "DATADOG_APP_KEY", "Environment variable containing the Datadog app key")
+	return cmd
+}
+
+func newCollectGitHubCommand() *cobra.Command {
+	var project, owner, ownerType, baseURL, tokenEnv string
+	var repos []string
+	cmd := &cobra.Command{
+		Use:   "github",
+		Short: "Collect read-only GitHub or GitHub Enterprise inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, "github-enterprise", githubenterprise.LiveCollector{}, map[string]string{
+				"owner":      owner,
+				"owner-type": ownerType,
+				"base-url":   baseURL,
+				"token-env":  tokenEnv,
+				"repos":      strings.Join(repos, "\n"),
+			})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&owner, "owner", "", "GitHub organization or user login to inventory")
+	cmd.Flags().StringVar(&ownerType, "owner-type", "org", "GitHub owner type: org or user")
+	cmd.Flags().StringVar(&baseURL, "base-url", "https://api.github.com", "GitHub API base URL; use the /api/v3 URL for GitHub Enterprise Server")
+	cmd.Flags().StringVar(&tokenEnv, "token-env", "GITHUB_TOKEN", "Environment variable containing a read-only GitHub token")
+	cmd.Flags().StringArrayVar(&repos, "repo", nil, "Limit collection to a repository; repeatable; accepts name or owner/name")
+	_ = cmd.MarkFlagRequired("owner")
 	return cmd
 }
 

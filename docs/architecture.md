@@ -6,9 +6,9 @@ OpenExit uses a deterministic pipeline:
 Collect -> Normalize -> Analyze -> Map -> Generate -> Validate -> Export
 ```
 
-The core engine is written in Go. The primary live-collector path is Datadog to Grafana LGTM with Prometheus-compatible alerting and OpenTelemetry Collector or Alloy sketches.
+The core engine is written in Go. The primary Datadog live-collector path targets Grafana LGTM with Prometheus-compatible alerting and OpenTelemetry Collector or Alloy sketches.
 
-GitHub Enterprise to Forgejo is a fixture-complete assessment path that keeps the same local-first collect, normalize, analyze, generate, validate, export pipeline.
+GitHub Enterprise to Forgejo keeps the same local-first collect, normalize, analyze, generate, validate, export pipeline. It supports fixture import and a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
 
 Okta/Auth0 to Keycloak/Zitadel is a fixture-complete assessment path. It reuses the same normalized inventory and evidence model, but generates identity-specific planning artifacts and a candidate realm/client YAML instead of Datadog target configs.
 

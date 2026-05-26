@@ -1,8 +1,8 @@
 # GitHub Enterprise To Forgejo
 
-This is a fixture-complete assessment path. It makes no live API calls.
+This path supports local fixture assessment and read-only live GitHub/GitHub Enterprise inventory collection.
 
-Collected fixture metadata:
+Collected metadata:
 
 - repositories
 - teams
@@ -12,6 +12,24 @@ Collected fixture metadata:
 - runners
 - deploy keys metadata
 - GitHub Apps metadata
+
+The live collector gathers repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy key metadata. It does not collect secret values, it does not write to GitHub, and GitHub App metadata remains fixture-only.
+
+Live collection:
+
+```bash
+export GITHUB_TOKEN=<read-only-token>
+openexit init ./ghe-live --source github-enterprise --target forgejo
+openexit collect github --project ./ghe-live --owner acme --token-env GITHUB_TOKEN
+```
+
+For GitHub Enterprise Server:
+
+```bash
+openexit collect github --project ./ghe-live --owner acme --base-url https://github.example.com/api/v3
+```
+
+Use `--repo` one or more times to limit collection to selected repositories. Repository names can be passed as `name` or `owner/name`.
 
 Generated reports:
 

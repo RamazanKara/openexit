@@ -4,7 +4,7 @@ Local-first migration assessments from proprietary SaaS platforms to open-source
 
 OpenExit collects migration inventory, normalizes it, analyzes migration risks, generates candidate target files, validates outputs, and exports a local evidence bundle.
 
-The Datadog to Grafana LGTM path includes both fixture import and a read-only live Datadog collector. The GitHub Enterprise, Okta/Auth0, Cloudflare/Akamai, and OpenAI/Anthropic paths are feature-complete for local fixture assessment workflows: they collect fixture inventory, generate the planned artifacts, validate evidence, and export bundles, but they do not include live SaaS collectors yet.
+The Datadog to Grafana LGTM path includes both fixture import and a read-only live Datadog collector. The GitHub Enterprise to Forgejo path includes fixture import and a read-only GitHub/GitHub Enterprise collector for repository migration inventory. The Okta/Auth0, Cloudflare/Akamai, and OpenAI/Anthropic paths are feature-complete for local fixture assessment workflows: they collect fixture inventory, generate the planned artifacts, validate evidence, and export bundles, but they do not include live SaaS collectors yet.
 
 ## Safety Model
 
@@ -52,6 +52,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit init <project-dir> [--source <type> --target <type>]`
 - `openexit status --project <project-dir>`
 - `openexit collect fixture --project <project-dir> --input <file>`
+- `openexit collect github --project <project-dir> --owner <org> [--base-url https://github.example.com/api/v3] [--token-env GITHUB_TOKEN] [--repo owner/name]`
 - `openexit collect github-fixture --project <project-dir> --input <file>`
 - `openexit collect identity-fixture --project <project-dir> --input <file>`
 - `openexit collect edge-fixture --project <project-dir> --input <file>`
@@ -63,7 +64,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit export --project <project-dir> --format zip --out <file>`
 - `openexit assist summarize --project <project-dir> --provider noop`
 
-The Datadog collector is read-only. API keys are read from environment variables, are not printed, and are not stored.
+The Datadog and GitHub collectors are read-only. API tokens are read from environment variables, are not printed, and are not stored.
 When `--target` is omitted during `init`, OpenExit selects the standard target for the chosen source.
 
 ## Supported Paths
@@ -71,7 +72,7 @@ When `--target` is omitted during `init`, OpenExit selects the standard target f
 | Source | Target | Status | Collector |
 | --- | --- | --- | --- |
 | Datadog | Grafana LGTM, Prometheus-compatible alerting, OpenTelemetry Collector/Alloy | Primary path | Fixture and read-only live Datadog collector |
-| GitHub Enterprise | Forgejo | Fixture-complete assessment path | Fixture only |
+| GitHub Enterprise | Forgejo | Repository migration assessment path | Fixture and read-only live GitHub/GitHub Enterprise collector |
 | Okta/Auth0 | Keycloak/Zitadel | Fixture-complete assessment path | Fixture only |
 | Cloudflare/Akamai | Varnish/HAProxy/Coraza | Fixture-complete assessment path | Fixture only |
 | OpenAI/Anthropic | vLLM/LiteLLM | Fixture-complete assessment path | Fixture only |
@@ -86,6 +87,7 @@ Included in the current implementation:
 - Typed project, inventory, assessment, mapping, and validation manifests.
 - Fixture-based Datadog inventory import.
 - Read-only Datadog collection for dashboards, monitors, and SLOs.
+- Read-only GitHub/GitHub Enterprise collection for repositories, teams, branch protection, Actions workflows, secret metadata, runners, and deploy keys.
 - Deterministic risk assessment.
 - Markdown handover artifacts.
 - Grafana dashboard candidate JSON.
@@ -95,7 +97,7 @@ Included in the current implementation:
 - Validation report with YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export.
 - No-op assist provider and explicit opt-in LiteLLM assist.
-- Fixture-complete GitHub Enterprise to Forgejo assessment path.
+- GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.
 - Fixture-complete Okta/Auth0 to Keycloak/Zitadel assessment path.
 - Fixture-complete Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment path.
 - Fixture-complete OpenAI/Anthropic to vLLM/LiteLLM assessment path.
@@ -107,7 +109,7 @@ Not included in the current release:
 - Hosted portal.
 - Perfect Datadog to Grafana parity.
 - AI-required decision making.
-- Live collectors for GitHub Enterprise, Okta/Auth0, Cloudflare/Akamai, or OpenAI/Anthropic.
+- Live collectors for Okta/Auth0, Cloudflare/Akamai, or OpenAI/Anthropic.
 
 ## Optional Assist
 
@@ -132,9 +134,9 @@ The assessment engine includes dashboard, monitor, SLO, cost, scale, identity, e
 
 The release checklist lives in `docs/release.md`. A release build should pass `make verify`, `make release-dist VERSION=0.1.0`, the Datadog definition-of-done pipeline, and validation/export for every fixture-only path.
 
-## Fixture Assessment Paths
+## Assessment Paths
 
-GitHub Enterprise to Forgejo collects repository, team, branch protection, Actions workflow, secret metadata, runner, deploy key, and GitHub App metadata from local fixtures. It generates Forgejo migration assessment, CI compatibility, branch protection mapping, runner migration, repository ownership reports, and a Forgejo migration candidate YAML.
+GitHub Enterprise to Forgejo collects repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy key metadata from live GitHub/GitHub Enterprise APIs or local fixtures. GitHub App metadata is currently fixture-only. It generates Forgejo migration assessment, CI compatibility, branch protection mapping, runner migration, repository ownership reports, and a Forgejo migration candidate YAML.
 
 Okta/Auth0 to Keycloak/Zitadel collects applications, SAML/OIDC client metadata, groups, policies, MFA settings, redirect URIs, owners, and break-glass account metadata from local fixtures. It generates identity migration risk, realm/client candidate config, break-glass, cutover, and rollback artifacts.
 

@@ -19,14 +19,14 @@ Release-blocking v0.1 requirements:
 - No-op AI assist and optional external assist behind explicit opt-in.
 - Documentation, examples, CI, release draft workflow, and reproducible release artifacts.
 
-Fixture-only paths present in this repository:
+Additional assessment paths present in this repository:
 
-- GitHub Enterprise to Forgejo.
+- GitHub Enterprise to Forgejo, with fixture import and read-only live repository inventory collection.
 - Okta/Auth0 to Keycloak/Zitadel.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza.
 - OpenAI/Anthropic to vLLM/LiteLLM.
 
-These paths are complete for local fixture assessment workflows. Only the Datadog path currently includes a read-only live SaaS collector.
+The identity, edge, and AI provider paths are complete for local fixture assessment workflows. Datadog and GitHub Enterprise currently include read-only live SaaS collectors.
 
 ## Release Checklist
 
@@ -36,7 +36,7 @@ These paths are complete for local fixture assessment workflows. Only the Datado
 - [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `generate --all`, `validate`, `export`.
-- [ ] Fixture-only pipelines validate for GitHub, identity, edge, and AI provider paths.
+- [ ] GitHub fixture and live-collector test coverage pass, and fixture-only pipelines validate for identity, edge, and AI provider paths.
 - [ ] `openexit version` prints name, version, commit, and date from release build flags.
 - [ ] `README.md`, `docs/cli.md`, `docs/security.md`, and this checklist reflect current behavior.
 - [ ] `examples/datadog-to-grafana/README.md` reproduces the primary local demo.
@@ -53,9 +53,9 @@ Primary supported path:
 
 - Datadog to Grafana LGTM, Prometheus-compatible alerting, and OpenTelemetry Collector/Alloy candidate artifacts.
 
-Fixture-only assessment paths:
+Additional assessment paths:
 
-- GitHub Enterprise to Forgejo.
+- GitHub Enterprise to Forgejo, including a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
 - Okta/Auth0 to Keycloak/Zitadel.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza.
 - OpenAI/Anthropic to vLLM/LiteLLM.
