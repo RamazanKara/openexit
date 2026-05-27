@@ -17,7 +17,7 @@ Release-blocking v0.1 requirements:
 - Grafana, Prometheus, OpenTelemetry, and ArgoCD candidate generators.
 - Typed migration plan manifest with assessment, pilot, shadow, and cutover phase gates.
 - Validation engine with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence refs, secret scan, optional promtool, and optional kubeconform.
-- Evidence bundle export with checksums, a machine-readable manifest, and OpenExit version metadata.
+- Evidence bundle export with checksums, a schema-backed machine-readable manifest, and OpenExit version metadata.
 - No-op AI assist and optional external assist behind explicit opt-in.
 - Documentation, examples, CI, release draft workflow, and reproducible release artifacts.
 
@@ -60,7 +60,7 @@ The AI provider path is complete for local fixture assessment workflows and incl
 - [ ] `validation/validation-report.md` includes `litellm-config-candidate: passed` for the OpenAI/Anthropic to vLLM/LiteLLM pipeline.
 - [ ] `CHANGELOG.md` has a `0.1.0` section.
 - [ ] Exported bundle README includes version, commit, build date, bundle timestamp, and candidate warning.
-- [ ] Exported bundle `manifest.json` includes build metadata, project source/target, validation totals, and per-file SHA-256 digests.
+- [ ] Exported bundle `manifest.json` includes build metadata, project source/target, validation totals, and per-file SHA-256 digests, and validates against `schemas/openexit.evidence-bundle.schema.json`.
 - [ ] Export refuses symlinks in exported project sections, including when `--force` is used.
 - [ ] No credentials, tokens, passwords, or private keys are present in fixtures, generated files, docs, or bundles.
 - [ ] Draft release notes have been reviewed.

@@ -118,7 +118,7 @@ Included in the current implementation:
 - ArgoCD starter manifest.
 - Typed migration plan manifest and phase-gate Markdown plan.
 - Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
-- Evidence bundle export with README, checksums, and a machine-readable manifest.
+- Evidence bundle export with README, checksums, and a schema-backed machine-readable manifest.
 - Evidence bundle path-safety checks that reject symlinks in exported project sections.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.

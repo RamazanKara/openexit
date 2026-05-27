@@ -11,6 +11,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	publicschemas "github.com/RamazanKara/openexit/schemas"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
@@ -1208,6 +1211,9 @@ func verifyBundleManifest(files map[string][]byte) error {
 	if err := json.Unmarshal(data, &manifest); err != nil {
 		return err
 	}
+	if err := validateBundleManifestSchema(data); err != nil {
+		return err
+	}
 	if manifest.APIVersion != "openexit.dev/v1alpha1" || manifest.Kind != "EvidenceBundle" {
 		return &checksumError{message: "unexpected bundle manifest identity"}
 	}
@@ -1238,6 +1244,31 @@ func verifyBundleManifest(files map[string][]byte) error {
 		}
 	}
 	return nil
+}
+
+func validateBundleManifestSchema(data []byte) error {
+	schemaData, err := publicschemas.FS.ReadFile("openexit.evidence-bundle.schema.json")
+	if err != nil {
+		return err
+	}
+	compiler := jsonschema.NewCompiler()
+	compiler.DefaultDraft(jsonschema.Draft7)
+	document, err := jsonschema.UnmarshalJSON(bytes.NewReader(schemaData))
+	if err != nil {
+		return err
+	}
+	if err := compiler.AddResource("openexit.evidence-bundle.schema.json", document); err != nil {
+		return err
+	}
+	schema, err := compiler.Compile("openexit.evidence-bundle.schema.json")
+	if err != nil {
+		return err
+	}
+	instance, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	return schema.Validate(instance)
 }
 
 func verifyChecksums(files map[string][]byte) error {

@@ -2,6 +2,8 @@
 
 OpenExit schemas live under `schemas/` and mirror the typed Go manifests. Release binaries embed these public Draft 7 JSON Schemas, and `openexit validate` checks project, inventory, assessment, mapping, migration-plan, and validation-report manifests against the embedded copies in addition to typed consistency checks and YAML/JSON parse checks.
 
+Evidence bundle exports include `openexit-evidence/manifest.json`, which follows `schemas/openexit.evidence-bundle.schema.json`. The manifest records OpenExit build metadata, project source/target metadata, validation totals, and SHA-256 digests for exported project files so downstream review tooling can verify a bundle without parsing every human-readable report first.
+
 Project manifests must use one of the supported source/target pairs: Datadog to Grafana LGTM, GitHub Enterprise to Forgejo, Okta/Auth0 to Keycloak/Zitadel, Cloudflare/Akamai to Varnish/HAProxy/Coraza, or OpenAI/Anthropic to vLLM/LiteLLM.
 
 Inventory dashboards can include optional `dataSources` and `templateVariables` fields so assessment can flag Grafana mapping risk. Datadog fixture and live collectors populate `metrics` from captured dashboard and monitor queries, including referenced tag keys where available. The live Datadog collector also populates `integrations` from the Datadog v2 Integrations API when accessible. SLOs can include optional `sli`, `burnRateMonitorIds`, and `dashboardRefs` fields. The top-level inventory `volumes` section records whether log and trace volume assumptions are known.
