@@ -38,6 +38,7 @@
 - Added a machine-readable evidence bundle manifest with build metadata, validation summary, and per-file SHA-256 digests.
 - Added a public JSON Schema for evidence bundle manifests and test coverage that validates exported manifests against it.
 - Added `openexit verify-bundle` for offline evidence bundle verification with text and JSON reports.
+- Added `openexit release-manifest` and `openexit verify-release` for schema-backed release artifact manifests and offline binary/checksum verification.
 - Added `make release-check` and wired the draft-release workflow to run the full release gate before packaging artifacts.
 - Updated push CI to run the same release readiness gate, including smoke pipelines and bundle verification.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.

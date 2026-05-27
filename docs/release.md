@@ -20,6 +20,7 @@ Release-blocking v0.1 requirements:
 - Validation engine with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence refs, secret scan, optional promtool, and optional kubeconform.
 - Evidence bundle export with checksums, a schema-backed machine-readable manifest, and OpenExit version metadata.
 - Offline evidence bundle verification for archive path safety, manifest schema, manifest digests, and checksums.
+- Machine-readable release manifest generation and offline release artifact verification for OS/architecture binaries and `SHA256SUMS`.
 - No-op AI assist and optional external assist behind explicit opt-in.
 - Documentation, examples, CI, release draft workflow, and reproducible release artifacts.
 
@@ -39,7 +40,8 @@ The AI provider path is complete for local fixture assessment workflows and incl
 - [ ] `make release-check VERSION=0.1.0` passes locally, including verification, CLI smoke pipelines, bundle verification, release artifact builds, and checksum count checks.
 - [ ] `make verify VERSION=0.1.0` passes, including CLI smoke pipelines.
 - [ ] `make lint` runs `gofmt`, `golangci-lint`, and `go vet`.
-- [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
+- [ ] `make release-dist VERSION=0.1.0` produces binaries, `dist/SHA256SUMS`, and `dist/RELEASE_MANIFEST.json`.
+- [ ] `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums` passes and fails when a release binary is tampered with.
 - [ ] `make example VERSION=0.1.0-dev` refreshes `examples/datadog-to-grafana/output/` and exports `examples/datadog-to-grafana/openexit-example.zip`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `map`, `generate --all`, `validate`, `export`.
@@ -67,6 +69,7 @@ The AI provider path is complete for local fixture assessment workflows and incl
 - [ ] Exported bundle README includes version, commit, build date, bundle timestamp, and candidate warning.
 - [ ] Exported bundle `manifest.json` includes build metadata, project source/target, validation totals, and per-file SHA-256 digests, and validates against `schemas/openexit.evidence-bundle.schema.json`.
 - [ ] `openexit verify-bundle <zip>` passes for exported bundles and fails when an archived file is tampered with.
+- [ ] Release manifest validates against `schemas/openexit.release-manifest.schema.json` and includes version, commit, build date, generation time, OS/architecture metadata, sizes, and SHA-256 digests.
 - [ ] Export refuses symlinks in exported project sections, including when `--force` is used.
 - [ ] No credentials, tokens, passwords, or private keys are present in fixtures, generated files, docs, or bundles.
 - [ ] Draft release notes have been reviewed.

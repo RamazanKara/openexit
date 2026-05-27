@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openexit.dev/schemas/openexit.release-manifest.schema.json",
+  "title": "OpenExit Release Manifest",
+  "type": "object",
+  "required": ["apiVersion", "kind", "generatedAt", "build", "artifacts"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": { "const": "openexit.dev/v1alpha1" },
+    "kind": { "const": "ReleaseManifest" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "build": {
+      "type": "object",
+      "required": ["version", "commit", "date"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "minLength": 1 }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "os", "arch", "path", "size", "sha256"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "os": { "type": "string", "minLength": 1 },
+          "arch": { "type": "string", "minLength": 1 },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\].*"
+          },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    }
+  }
+}

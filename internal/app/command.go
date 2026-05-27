@@ -24,6 +24,7 @@ import (
 	"github.com/RamazanKara/openexit/internal/generate"
 	"github.com/RamazanKara/openexit/internal/inventory"
 	"github.com/RamazanKara/openexit/internal/mapping"
+	openrelease "github.com/RamazanKara/openexit/internal/release"
 	"github.com/RamazanKara/openexit/internal/validate"
 	"github.com/RamazanKara/openexit/internal/version"
 	"github.com/spf13/cobra"
@@ -50,6 +51,8 @@ func NewRootCommand() *cobra.Command {
 	root.AddCommand(newValidateCommand())
 	root.AddCommand(newExportCommand())
 	root.AddCommand(newVerifyBundleCommand())
+	root.AddCommand(newReleaseManifestCommand())
+	root.AddCommand(newVerifyReleaseCommand())
 	root.AddCommand(newAssistCommand())
 	return root
 }
@@ -918,6 +921,108 @@ func writeBundleVerification(w io.Writer, report *openexport.VerificationReport)
 		_, _ = fmt.Fprintf(w, "validation: %s (checks=%d passed=%d failed=%d warnings=%d)\n", report.Validation.Status, report.Validation.Checks, report.Validation.Passed, report.Validation.Failed, report.Validation.Warnings)
 	}
 	_, _ = fmt.Fprintf(w, "files: archive=%d manifest=%d checksums=%d\n", report.ArchiveFiles, report.ManifestFiles, report.ChecksumEntries)
+	for _, message := range report.Errors {
+		_, _ = fmt.Fprintf(w, "error: %s\n", message)
+	}
+}
+
+func newReleaseManifestCommand() *cobra.Command {
+	var distDir, out, manifestVersion, commit, date string
+	var platforms []string
+	cmd := &cobra.Command{
+		Use:   "release-manifest",
+		Short: "Write a machine-readable OpenExit release artifact manifest",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if manifestVersion == "" {
+				manifestVersion = version.Version
+			}
+			if commit == "" {
+				commit = version.Commit
+			}
+			if date == "" {
+				date = version.Date
+			}
+			if out == "" {
+				out = filepath.Join(distDir, openrelease.DefaultManifest)
+			}
+			manifest, err := openrelease.Generate(openrelease.ManifestOptions{
+				DistDir:   distDir,
+				Version:   manifestVersion,
+				Commit:    commit,
+				Date:      date,
+				Platforms: platforms,
+			})
+			if err != nil {
+				return err
+			}
+			if err := openrelease.Write(out, manifest); err != nil {
+				return err
+			}
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "release manifest: %s\n", out)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "artifacts: %d\n", len(manifest.Artifacts))
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&distDir, "dist", "dist", "Release artifact directory")
+	cmd.Flags().StringVar(&out, "out", "", "Manifest output path; defaults to dist/RELEASE_MANIFEST.json")
+	cmd.Flags().StringVar(&manifestVersion, "version", "", "Release version; defaults to the stamped CLI version")
+	cmd.Flags().StringVar(&commit, "commit", "", "Release commit; defaults to the stamped CLI commit")
+	cmd.Flags().StringVar(&date, "date", "", "Release build date; defaults to the stamped CLI date")
+	cmd.Flags().StringArrayVar(&platforms, "platform", nil, "Release target os/arch; repeatable and defaults to the standard release matrix")
+	return cmd
+}
+
+func newVerifyReleaseCommand() *cobra.Command {
+	var distDir string
+	var jsonOutput, requireChecksums bool
+	cmd := &cobra.Command{
+		Use:   "verify-release <manifest.json>",
+		Short: "Verify OpenExit release artifacts against a release manifest",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			report, err := openrelease.Verify(openrelease.VerifyOptions{
+				ManifestPath:     args[0],
+				DistDir:          distDir,
+				RequireChecksums: requireChecksums,
+			})
+			if jsonOutput {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				if encErr := enc.Encode(report); encErr != nil {
+					return encErr
+				}
+				return err
+			}
+			writeReleaseVerification(cmd.OutOrStdout(), report)
+			return err
+		},
+	}
+	cmd.Flags().StringVar(&distDir, "dist", "", "Release artifact directory; defaults to the manifest directory")
+	cmd.Flags().BoolVar(&requireChecksums, "require-checksums", false, "Require and verify SHA256SUMS alongside the manifest")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Write machine-readable release verification report")
+	return cmd
+}
+
+func writeReleaseVerification(w io.Writer, report *openrelease.VerificationReport) {
+	if report == nil {
+		return
+	}
+	_, _ = fmt.Fprintf(w, "release manifest: %s\n", report.ManifestPath)
+	_, _ = fmt.Fprintf(w, "status: %s\n", report.Status)
+	if report.Build.Version != "" || report.Build.Commit != "" || report.Build.Date != "" {
+		_, _ = fmt.Fprintf(w, "build: version=%s commit=%s date=%s\n", report.Build.Version, report.Build.Commit, report.Build.Date)
+	}
+	_, _ = fmt.Fprintf(w, "artifacts: %d\n", len(report.Artifacts))
+	_, _ = fmt.Fprintf(w, "checksums: %d\n", report.ChecksumEntries)
+	for _, artifact := range report.Artifacts {
+		if artifact.Status == "passed" {
+			continue
+		}
+		_, _ = fmt.Fprintf(w, "artifact: %s status=%s\n", artifact.Path, artifact.Status)
+		for _, message := range artifact.Errors {
+			_, _ = fmt.Fprintf(w, "error: %s: %s\n", artifact.Path, message)
+		}
+	}
 	for _, message := range report.Errors {
 		_, _ = fmt.Fprintf(w, "error: %s\n", message)
 	}

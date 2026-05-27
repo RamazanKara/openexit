@@ -41,7 +41,7 @@ Release candidates can be built locally with:
 make release-check VERSION=0.1.0
 ```
 
-This runs the release gate, writes OS/architecture binaries, and verifies `dist/SHA256SUMS`.
+This runs the release gate, writes OS/architecture binaries, writes `dist/SHA256SUMS`, writes `dist/RELEASE_MANIFEST.json`, and verifies the release artifacts.
 
 Refresh the checked-in Datadog example project with:
 
@@ -76,6 +76,8 @@ make example VERSION=0.1.0-dev
 - `openexit validate --project <project-dir>`
 - `openexit export --project <project-dir> --format zip --out <file>`
 - `openexit verify-bundle <file> [--json]`
+- `openexit release-manifest [--dist dist --out dist/RELEASE_MANIFEST.json]`
+- `openexit verify-release <manifest.json> [--dist dist] [--require-checksums] [--json]`
 - `openexit assist summarize --project <project-dir> --provider noop`
 
 The Datadog, GitHub, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic collectors are read-only. API tokens are read from environment variables or local credential files, are not printed, and are not stored.
@@ -123,6 +125,8 @@ Included in the current implementation:
 - Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export with README, checksums, and a schema-backed machine-readable manifest.
 - Offline evidence bundle verification for manifest schema, checksums, digest/size metadata, and archive path safety.
+- Release artifact manifest generation with per-binary OS/architecture metadata, size, and SHA-256 digests.
+- Offline release artifact verification against `RELEASE_MANIFEST.json` and optional `SHA256SUMS`.
 - Evidence bundle path-safety checks that reject symlinks in exported project sections.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.
@@ -159,7 +163,7 @@ The assessment engine includes dashboard, monitor, SLO, cost, scale, identity, e
 
 ## Release Process
 
-The release checklist lives in `docs/release.md`. A release build should pass `make verify`, `make release-dist VERSION=0.1.0`, `make example VERSION=0.1.0-dev`, the Datadog definition-of-done pipeline, and validation/export for every supported assessment path.
+The release checklist lives in `docs/release.md`. A release build should pass `make verify`, `make release-dist VERSION=0.1.0`, `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums`, `make example VERSION=0.1.0-dev`, the Datadog definition-of-done pipeline, and validation/export for every supported assessment path.
 
 ## Assessment Paths
 

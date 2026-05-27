@@ -6,6 +6,7 @@ DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w -X github.com/RamazanKara/openexit/internal/version.Version=$(VERSION) -X github.com/RamazanKara/openexit/internal/version.Commit=$(COMMIT) -X github.com/RamazanKara/openexit/internal/version.Date=$(DATE)
 GOFILES := $(shell find . -name '*.go' -not -path './bin/*' -not -path './dist/*')
 PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
+RELEASE_MANIFEST ?= RELEASE_MANIFEST.json
 GOLANGCI_LINT_VERSION ?= v2.12.2
 GOLANGCI_LINT ?= bin/golangci-lint
 EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
@@ -128,15 +129,18 @@ release-dist:
 		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o "$$out" ./cmd/openexit; \
 	done
 	cd dist && sha256sum openexit_* > SHA256SUMS
+	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit release-manifest --dist dist --out dist/$(RELEASE_MANIFEST) $(foreach target,$(PLATFORMS),--platform $(target))
 
 release-check: verify release-dist
 	@test -s dist/SHA256SUMS
+	@test -s dist/$(RELEASE_MANIFEST)
 	@expected=$$(printf '%s\n' $(PLATFORMS) | wc -w | tr -d ' '); \
 	actual=$$(wc -l < dist/SHA256SUMS | tr -d ' '); \
 	if [ "$$actual" != "$$expected" ]; then \
 		echo "expected $$expected release checksums, got $$actual"; \
 		exit 1; \
 	fi
+	@$(BINARY) verify-release dist/$(RELEASE_MANIFEST) --dist dist --require-checksums
 	@$(BINARY) version | grep -q 'name: openexit'
 	@$(BINARY) version | grep -q 'version: $(VERSION)'
 	@echo "release check passed for $(VERSION)"

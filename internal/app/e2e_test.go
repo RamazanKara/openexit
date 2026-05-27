@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	openrelease "github.com/RamazanKara/openexit/internal/release"
 	publicschemas "github.com/RamazanKara/openexit/schemas"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
@@ -118,6 +119,75 @@ func TestVerifyBundleCommandRejectsTampering(t *testing.T) {
 		if !strings.Contains(out, marker) {
 			t.Fatalf("expected tamper marker %q, got:\n%s", marker, out)
 		}
+	}
+}
+
+func TestReleaseManifestAndVerifyCommands(t *testing.T) {
+	distDir := t.TempDir()
+	version := "9.9.9-test"
+	platforms := []string{"linux/amd64", "windows/amd64"}
+	for _, platform := range platforms {
+		parts := strings.Split(platform, "/")
+		name := openrelease.ArtifactName(version, parts[0], parts[1])
+		if err := os.WriteFile(filepath.Join(distDir, name), []byte("binary "+platform), 0o755); err != nil {
+			t.Fatalf("write artifact %s: %v", name, err)
+		}
+	}
+	manifestPath := filepath.Join(distDir, openrelease.DefaultManifest)
+
+	args := []string{
+		"release-manifest",
+		"--dist", distDir,
+		"--out", manifestPath,
+		"--version", version,
+		"--commit", "abc123",
+		"--date", "2026-05-27T00:00:00Z",
+	}
+	for _, platform := range platforms {
+		args = append(args, "--platform", platform)
+	}
+	out, err := executeForTestWithOutput(args...)
+	if err != nil {
+		t.Fatalf("openexit release-manifest failed: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "artifacts: 2") {
+		t.Fatalf("expected release-manifest artifact count, got:\n%s", out)
+	}
+	manifestData, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest openrelease.Manifest
+	if err := json.Unmarshal(manifestData, &manifest); err != nil {
+		t.Fatalf("decode release manifest: %v", err)
+	}
+	if err := openrelease.ValidateManifestSchema(manifestData); err != nil {
+		t.Fatalf("validate release manifest schema: %v", err)
+	}
+	if err := writeReleaseChecksums(distDir, manifest.Artifacts); err != nil {
+		t.Fatalf("write release checksums: %v", err)
+	}
+
+	out, err = executeForTestWithOutput("verify-release", manifestPath, "--dist", distDir, "--require-checksums")
+	if err != nil {
+		t.Fatalf("openexit verify-release failed: %v\n%s", err, out)
+	}
+	for _, marker := range []string{"status: passed", "build: version=9.9.9-test", "artifacts: 2", "checksums: 2"} {
+		if !strings.Contains(out, marker) {
+			t.Fatalf("expected verify-release marker %q, got:\n%s", marker, out)
+		}
+	}
+
+	jsonOut, err := executeForTestWithOutput("verify-release", manifestPath, "--dist", distDir, "--require-checksums", "--json")
+	if err != nil {
+		t.Fatalf("openexit verify-release --json failed: %v\n%s", err, jsonOut)
+	}
+	var report openrelease.VerificationReport
+	if err := json.Unmarshal([]byte(jsonOut), &report); err != nil {
+		t.Fatalf("decode verify-release JSON: %v\n%s", err, jsonOut)
+	}
+	if report.Status != "passed" || len(report.Artifacts) != 2 || report.ChecksumEntries != 2 {
+		t.Fatalf("unexpected verify-release JSON report: %+v", report)
 	}
 }
 
@@ -1451,6 +1521,22 @@ func verifyChecksums(files map[string][]byte) error {
 		}
 	}
 	return nil
+}
+
+func writeReleaseChecksums(distDir string, artifacts []openrelease.Artifact) error {
+	var builder strings.Builder
+	for _, artifact := range artifacts {
+		data, err := os.ReadFile(filepath.Join(distDir, filepath.FromSlash(artifact.Path)))
+		if err != nil {
+			return err
+		}
+		actualBytes := sha256.Sum256(data)
+		builder.WriteString(hex.EncodeToString(actualBytes[:]))
+		builder.WriteString("  ")
+		builder.WriteString(artifact.Path)
+		builder.WriteByte('\n')
+	}
+	return os.WriteFile(filepath.Join(distDir, openrelease.ChecksumFileName), []byte(builder.String()), 0o644)
 }
 
 type missingBundleFileError struct {
