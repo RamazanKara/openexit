@@ -36,6 +36,7 @@
 - Added `openexit demo` with embedded redacted fixtures for complete release-binary demos across supported assessment paths.
 - Added a machine-readable evidence bundle manifest with build metadata, validation summary, and per-file SHA-256 digests.
 - Added a public JSON Schema for evidence bundle manifests and test coverage that validates exported manifests against it.
+- Added `make release-check` and wired the draft-release workflow to run the full release gate before packaging artifacts.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
 
 ## 0.1.0 - 2026-05-24

@@ -24,10 +24,8 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - name: Verify
-        run: make verify VERSION=${{ inputs.version }}
-      - name: Build release artifacts
-        run: make release-dist VERSION=${{ inputs.version }}
+      - name: Release readiness check
+        run: make release-check VERSION=${{ inputs.version }}
       - name: Draft release notes
         env:
           VERSION: ${{ inputs.version }}

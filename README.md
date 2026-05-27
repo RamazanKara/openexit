@@ -38,10 +38,10 @@ make build VERSION=0.1.0
 Release candidates can be built locally with:
 
 ```bash
-make release-dist VERSION=0.1.0
+make release-check VERSION=0.1.0
 ```
 
-This writes OS/architecture binaries and `dist/SHA256SUMS`.
+This runs the release gate, writes OS/architecture binaries, and verifies `dist/SHA256SUMS`.
 
 Refresh the checked-in Datadog example project with:
 

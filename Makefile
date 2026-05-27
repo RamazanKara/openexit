@@ -12,7 +12,7 @@ EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
 EXAMPLE_DIR ?= examples/datadog-to-grafana/output
 EXAMPLE_BUNDLE ?= examples/datadog-to-grafana/openexit-example.zip
 
-.PHONY: build test fmt fmt-check lint golangci-lint smoke example example-smoke verify release-dist clean
+.PHONY: build test fmt fmt-check lint golangci-lint smoke example example-smoke verify release-dist release-check clean
 
 build:
 	mkdir -p $(dir $(BINARY))
@@ -120,6 +120,18 @@ release-dist:
 		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o "$$out" ./cmd/openexit; \
 	done
 	cd dist && sha256sum openexit_* > SHA256SUMS
+
+release-check: verify release-dist
+	@test -s dist/SHA256SUMS
+	@expected=$$(printf '%s\n' $(PLATFORMS) | wc -w | tr -d ' '); \
+	actual=$$(wc -l < dist/SHA256SUMS | tr -d ' '); \
+	if [ "$$actual" != "$$expected" ]; then \
+		echo "expected $$expected release checksums, got $$actual"; \
+		exit 1; \
+	fi
+	@$(BINARY) version | grep -q 'name: openexit'
+	@$(BINARY) version | grep -q 'version: $(VERSION)'
+	@echo "release check passed for $(VERSION)"
 
 clean:
 	rm -rf bin dist demo openexit-demo.zip
