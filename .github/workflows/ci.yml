@@ -14,13 +14,5 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - name: Check formatting
-        run: make fmt-check
-      - name: Run lint
-        run: make lint
-      - name: Run tests
-        run: make test
-      - name: Build stamped binary
-        run: make build VERSION=0.1.0-ci
-      - name: Build release artifacts
-        run: make release-dist VERSION=0.1.0-ci
+      - name: Release readiness check
+        run: make release-check VERSION=0.1.0-ci

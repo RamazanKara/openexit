@@ -34,7 +34,8 @@ The AI provider path is complete for local fixture assessment workflows and incl
 ## Release Checklist
 
 - [ ] `git status --short --branch` is clean and on the intended release branch.
-- [ ] `make release-check VERSION=0.1.0` passes, including verification, CLI smoke pipelines, bundle verification, release artifact builds, and checksum count checks.
+- [ ] GitHub Actions CI passes the same `make release-check VERSION=0.1.0-ci` gate used for local release readiness.
+- [ ] `make release-check VERSION=0.1.0` passes locally, including verification, CLI smoke pipelines, bundle verification, release artifact builds, and checksum count checks.
 - [ ] `make verify VERSION=0.1.0` passes, including CLI smoke pipelines.
 - [ ] `make lint` runs `gofmt`, `golangci-lint`, and `go vet`.
 - [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
