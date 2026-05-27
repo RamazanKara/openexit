@@ -103,6 +103,7 @@ func Run(projectDir string, strict bool) (*Report, error) {
 		if mappingResult != nil {
 			addMappingConsistencyChecks(inv, a, mappingResult, add)
 			addGrafanaDashboardCandidateChecks(projectDir, inv, mappingResult, add)
+			addPrometheusRuleCandidateChecks(projectDir, inv, mappingResult, add)
 		}
 		addEvidenceChecks(projectDir, inv, a, add)
 	}

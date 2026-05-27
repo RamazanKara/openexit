@@ -18,6 +18,7 @@
 - Added explicit source-to-target mapping manifests and `openexit map`.
 - Added embedded JSON Schema validation for project, inventory, assessment, mapping, migration plan, and validation report manifests.
 - Added Grafana dashboard candidate validation for mapping, source metadata, candidate safety flags, panels, and unsupported-widget notes.
+- Added Prometheus alert-rule candidate validation for mapping, source monitor metadata, candidate safety labels, review annotations, and manual placeholders.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
 
 ## 0.1.0 - 2026-05-24

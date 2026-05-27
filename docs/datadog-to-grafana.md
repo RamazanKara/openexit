@@ -21,6 +21,8 @@ The generated PromQL remains a candidate and includes review annotations. Comple
 
 Validation checks Grafana dashboard candidate JSON against OpenExit's migration safety contract: mapped dashboard paths must exist, source metadata must match inventory, candidate dashboards must stay marked `productionReady=false`, panels must preserve source query hints, and unsupported widgets must be documented in the Grafana README.
 
+Validation also checks Prometheus alert-rule candidates against mapping and inventory. Every generated alert must preserve its Datadog monitor ID and source query, keep `openexit_candidate=true` and `production_ready=false`, include manual review annotations, and keep uncertain conversions on explicit `vector(0)` placeholders.
+
 ## Live Collection
 
 The live Datadog collector stores redacted evidence for dashboards, monitors, and SLOs. Evidence refs in generated assessments resolve to local files under `evidence/datadog/`.
