@@ -12,6 +12,7 @@
 - Added a read-only Auth0 collector for client, role, action/rule, Guardian MFA factor, and explicit break-glass identity inventory.
 - Added a read-only Cloudflare collector for DNS, WAF/ruleset, cache, redirect, TLS, origin, bot-rule, and page-rule edge inventory.
 - Added a read-only OpenAI collector for aggregate model usage, token volumes, available model metadata, and peak throughput estimates.
+- Added a read-only Anthropic collector for aggregate Messages API usage, token volumes, server web-search tool metadata, filters, and peak throughput estimates.
 
 ## 0.1.0 - 2026-05-24
 

@@ -152,3 +152,23 @@ openexit validate --project ./openai-live
 ```
 
 Use `--days` to change the aggregate usage window and `--peak-days` to change the hourly peak-estimate window. Use `--organization-id` or `--project-id` only when your OpenAI account requires those headers.
+
+The same path can collect read-only aggregate Anthropic Messages API usage. Set an Anthropic Admin API key in an environment variable; OpenExit reads it at runtime and does not write it into project files or evidence. The live collector records model-grouped token usage and server tool metadata, not raw prompts or responses.
+
+```bash
+export ANTHROPIC_ADMIN_KEY=<admin-key>
+openexit init ./anthropic-live --source ai-provider --target vllm-litellm
+openexit collect anthropic \
+  --project ./anthropic-live \
+  --admin-key-env ANTHROPIC_ADMIN_KEY \
+  --workspace platform \
+  --workspace-id wrkspc_01JwQvzr7rXLA5AGx3HKfFUJ \
+  --owner platform-ai \
+  --fallback-strategy manual-queue \
+  --fallback-manual-queue
+openexit assess --project ./anthropic-live --target vllm-litellm
+openexit generate --project ./anthropic-live --all
+openexit validate --project ./anthropic-live
+```
+
+Use `--api-key-id`, `--workspace-id`, or `--model` to restrict the Anthropic usage query. Use `--days` to change the daily aggregate usage window and `--peak-days` to change the hourly peak-estimate window.

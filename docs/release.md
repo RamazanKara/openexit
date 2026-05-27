@@ -24,9 +24,9 @@ Additional assessment paths present in this repository:
 - GitHub Enterprise to Forgejo, with fixture import and read-only live repository inventory collection.
 - Okta/Auth0 to Keycloak/Zitadel, with fixture import and read-only live Okta/Auth0 identity inventory collection.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza, with fixture import and read-only live Cloudflare edge inventory collection.
-- OpenAI/Anthropic to vLLM/LiteLLM, with fixture import and read-only live OpenAI aggregate usage inventory collection.
+- OpenAI/Anthropic to vLLM/LiteLLM, with fixture import and read-only live OpenAI/Anthropic aggregate usage inventory collection.
 
-The AI provider path is complete for local fixture assessment workflows and includes a read-only live OpenAI collector for aggregate usage. Datadog, GitHub Enterprise, Okta, Auth0, Cloudflare, and OpenAI currently include read-only live SaaS collectors.
+The AI provider path is complete for local fixture assessment workflows and includes read-only live OpenAI and Anthropic collectors for aggregate usage. Datadog, GitHub Enterprise, Okta, Auth0, Cloudflare, OpenAI, and Anthropic currently include read-only live SaaS collectors.
 
 ## Release Checklist
 
@@ -36,7 +36,7 @@ The AI provider path is complete for local fixture assessment workflows and incl
 - [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `generate --all`, `validate`, `export`.
-- [ ] GitHub, Okta, Auth0, Cloudflare, and OpenAI fixture/live-collector test coverage pass, and remaining fixture-only provider pipelines validate.
+- [ ] GitHub, Okta, Auth0, Cloudflare, OpenAI, and Anthropic fixture/live-collector test coverage pass, and remaining fixture-only provider pipelines validate.
 - [ ] `openexit version` prints name, version, commit, and date from release build flags.
 - [ ] `README.md`, `docs/cli.md`, `docs/security.md`, and this checklist reflect current behavior.
 - [ ] `examples/datadog-to-grafana/README.md` reproduces the primary local demo.
@@ -58,7 +58,7 @@ Additional assessment paths:
 - GitHub Enterprise to Forgejo, including a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
 - Okta/Auth0 to Keycloak/Zitadel, including read-only live Okta/Auth0 collectors for identity migration inventory.
 - Cloudflare/Akamai to Varnish/HAProxy/Coraza, including a read-only live Cloudflare collector for edge migration inventory.
-- OpenAI/Anthropic to vLLM/LiteLLM, including a read-only live OpenAI aggregate usage collector.
+- OpenAI/Anthropic to vLLM/LiteLLM, including read-only live OpenAI/Anthropic aggregate usage collectors.
 
 Safety model:
 

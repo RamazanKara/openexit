@@ -111,6 +111,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectCloudflareCommand())
 	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
 	collectCmd.AddCommand(newCollectOpenAICommand())
+	collectCmd.AddCommand(newCollectAnthropicCommand())
 	collectCmd.AddCommand(newCollectAIFixtureCommand())
 	return collectCmd
 }
@@ -340,6 +341,56 @@ func newCollectOpenAICommand() *cobra.Command {
 	cmd.Flags().StringVar(&organizationID, "organization-id", "", "Optional OpenAI organization ID header")
 	cmd.Flags().StringVar(&projectID, "project-id", "", "Optional OpenAI project ID header")
 	cmd.Flags().StringArrayVar(&owners, "owner", nil, "Owner for collected AI usage classes; repeatable")
+	cmd.Flags().IntVar(&defaultP95Ms, "default-p95-ms", 0, "Optional default p95 latency expectation in milliseconds")
+	cmd.Flags().IntVar(&defaultTimeoutMs, "default-timeout-ms", 0, "Optional default timeout expectation in milliseconds")
+	cmd.Flags().BoolVar(&streamingRequired, "streaming-required", false, "Mark collected usage classes as requiring streaming")
+	cmd.Flags().StringVar(&fallbackStrategy, "fallback-strategy", "", "Optional fallback strategy to attach to collected usage classes")
+	cmd.Flags().BoolVar(&fallbackManualQueue, "fallback-manual-queue", false, "Mark fallback strategy as using a manual queue")
+	cmd.Flags().IntVar(&fallbackMaxRetries, "fallback-max-retries", 0, "Optional maximum retry count for fallback behavior")
+	return cmd
+}
+
+func newCollectAnthropicCommand() *cobra.Command {
+	var project, adminKeyEnv, baseURL, anthropicVersion, workspace string
+	var days, peakDays, defaultP95Ms, defaultTimeoutMs, fallbackMaxRetries int
+	var owners, workspaceIDs, apiKeyIDs, models []string
+	var streamingRequired, fallbackManualQueue bool
+	var fallbackStrategy string
+	cmd := &cobra.Command{
+		Use:   "anthropic",
+		Short: "Collect read-only Anthropic aggregate usage inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, "ai-provider", aiprovider.AnthropicCollector{}, map[string]string{
+				"admin-key-env":         adminKeyEnv,
+				"base-url":              baseURL,
+				"anthropic-version":     anthropicVersion,
+				"days":                  strconv.Itoa(days),
+				"peak-days":             strconv.Itoa(peakDays),
+				"workspace":             workspace,
+				"owners":                strings.Join(owners, "\n"),
+				"workspace-ids":         strings.Join(workspaceIDs, "\n"),
+				"api-key-ids":           strings.Join(apiKeyIDs, "\n"),
+				"models":                strings.Join(models, "\n"),
+				"default-p95-ms":        strconv.Itoa(defaultP95Ms),
+				"default-timeout-ms":    strconv.Itoa(defaultTimeoutMs),
+				"streaming-required":    strconv.FormatBool(streamingRequired),
+				"fallback-strategy":     fallbackStrategy,
+				"fallback-manual-queue": strconv.FormatBool(fallbackManualQueue),
+				"fallback-max-retries":  strconv.Itoa(fallbackMaxRetries),
+			})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringVar(&adminKeyEnv, "admin-key-env", "ANTHROPIC_ADMIN_KEY", "Environment variable containing an Anthropic Admin API key")
+	cmd.Flags().StringVar(&baseURL, "base-url", "https://api.anthropic.com", "Anthropic API base URL")
+	cmd.Flags().StringVar(&anthropicVersion, "anthropic-version", "2023-06-01", "Anthropic API version header")
+	cmd.Flags().IntVar(&days, "days", 30, "Number of days of aggregate usage to collect")
+	cmd.Flags().IntVar(&peakDays, "peak-days", 7, "Number of recent days to use for hourly peak estimates")
+	cmd.Flags().StringVar(&workspace, "workspace", "organization", "Workspace label to record in inventory")
+	cmd.Flags().StringArrayVar(&owners, "owner", nil, "Owner for collected AI usage classes; repeatable")
+	cmd.Flags().StringArrayVar(&workspaceIDs, "workspace-id", nil, "Limit collection to an Anthropic workspace ID; repeatable")
+	cmd.Flags().StringArrayVar(&apiKeyIDs, "api-key-id", nil, "Limit collection to an Anthropic API key ID; repeatable")
+	cmd.Flags().StringArrayVar(&models, "model", nil, "Limit collection to an Anthropic model ID; repeatable")
 	cmd.Flags().IntVar(&defaultP95Ms, "default-p95-ms", 0, "Optional default p95 latency expectation in milliseconds")
 	cmd.Flags().IntVar(&defaultTimeoutMs, "default-timeout-ms", 0, "Optional default timeout expectation in milliseconds")
 	cmd.Flags().BoolVar(&streamingRequired, "streaming-required", false, "Mark collected usage classes as requiring streaming")
