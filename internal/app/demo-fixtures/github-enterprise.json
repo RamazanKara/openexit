@@ -1,0 +1,104 @@
+{
+  "host": "ghe.example.invalid",
+  "repositories": [
+    {
+      "name": "platform/api",
+      "visibility": "private",
+      "defaultBranch": "main",
+      "archived": false,
+      "topics": ["platform", "api"],
+      "teams": ["platform"],
+      "actionsEnabled": true,
+      "hasCodeowners": false,
+      "usesGitHubPages": false,
+      "usesGitHubPackages": true,
+      "usesGitHubDiscussions": false
+    },
+    {
+      "name": "platform/docs",
+      "visibility": "internal",
+      "defaultBranch": "main",
+      "archived": false,
+      "topics": ["docs"],
+      "teams": [],
+      "actionsEnabled": true,
+      "hasCodeowners": true,
+      "usesGitHubPages": true,
+      "usesGitHubPackages": false,
+      "usesGitHubDiscussions": true
+    }
+  ],
+  "teams": [
+    {
+      "slug": "platform",
+      "name": "Platform",
+      "members": 12,
+      "maintainers": 2,
+      "repos": ["platform/api"]
+    }
+  ],
+  "branchProtections": [
+    {
+      "repository": "platform/api",
+      "branch": "main",
+      "requiredStatusChecks": ["test", "lint"],
+      "requiredReviews": 1,
+      "requireCodeOwnerReview": false,
+      "restrictPushes": true,
+      "allowsForcePushes": false
+    },
+    {
+      "repository": "platform/docs",
+      "branch": "main",
+      "requiredStatusChecks": [],
+      "requiredReviews": 0,
+      "requireCodeOwnerReview": false,
+      "restrictPushes": false,
+      "allowsForcePushes": true
+    }
+  ],
+  "actionsWorkflows": [
+    {
+      "repository": "platform/api",
+      "path": ".github/workflows/ci.yml",
+      "name": "CI",
+      "usesGitHubHosted": true,
+      "usesSelfHosted": false,
+      "actions": ["actions/checkout", "actions/cache", "github/codeql-action/init"],
+      "secrets": ["PROD_DEPLOY_TOKEN"]
+    }
+  ],
+  "secrets": [
+    {
+      "name": "PROD_DEPLOY_TOKEN",
+      "scope": "repository",
+      "repository": "platform/api",
+      "consumers": []
+    }
+  ],
+  "runners": [
+    {
+      "name": "legacy-linux-runner",
+      "scope": "organization",
+      "labels": ["self-hosted", "linux", "x64"],
+      "online": false
+    }
+  ],
+  "deployKeys": [
+    {
+      "repository": "platform/api",
+      "title": "production deploy",
+      "readOnly": false
+    }
+  ],
+  "githubApps": [
+    {
+      "name": "release-bot",
+      "repositories": ["platform/api"],
+      "repositorySelection": "selected",
+      "permissions": ["contents:write", "pull_requests:write"],
+      "events": ["deployment", "pull_request"],
+      "webhookEnabled": true
+    }
+  ]
+}

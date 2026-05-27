@@ -1,0 +1,71 @@
+{
+  "site": "datadoghq.eu",
+  "dashboards": [
+    {
+      "id": "abc-123",
+      "title": "Production API Overview",
+      "url": "https://app.datadoghq.eu/dashboard/abc-123",
+      "tags": ["env:prod", "team:platform"],
+      "widgets": [
+        {
+          "id": "w1",
+          "type": "timeseries",
+          "title": "CPU by service",
+          "query": "avg:system.cpu.user{env:prod} by {service}"
+        },
+        {
+          "id": "w2",
+          "type": "note",
+          "title": "Migration notes"
+        }
+      ],
+      "queries": ["sum:trace.http.request.errors{env:prod}.as_count()"]
+    }
+  ],
+  "monitors": [
+    {
+      "id": "123456",
+      "name": "High error rate",
+      "type": "query alert",
+      "query": "sum(last_5m):avg:trace.http.request.errors{env:prod} > 10",
+      "message": "Investigate API errors @slack-platform",
+      "notificationTargets": ["slack-platform"],
+      "tags": ["env:prod", "team:platform"],
+      "runbookUrl": "https://runbooks.example.invalid/high-error-rate"
+    },
+    {
+      "id": "789012",
+      "name": "Latency anomaly",
+      "type": "query alert",
+      "query": "avg(last_15m):anomalies(avg:trace.http.request.duration{env:prod}, 'basic', 2) >= 1",
+      "message": "Latency anomaly @webhook-custom",
+      "notificationTargets": ["webhook-custom"],
+      "tags": ["env:prod"]
+    }
+  ],
+  "slos": [
+    {
+      "id": "slo-123",
+      "name": "API availability",
+      "target": 99.9,
+      "timeframe": "30d"
+    }
+  ],
+  "integrations": [
+    {
+      "name": "kubernetes",
+      "enabled": true,
+      "tags": ["env:prod"]
+    }
+  ],
+  "metrics": [
+    {
+      "name": "system.cpu.user",
+      "tags": ["env", "service"]
+    },
+    {
+      "name": "trace.http.request.errors",
+      "tags": ["env", "service"]
+    }
+  ]
+}

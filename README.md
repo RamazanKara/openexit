@@ -20,10 +20,10 @@ The Datadog to Grafana LGTM path includes both fixture import and a read-only li
 
 ```bash
 make build
-./bin/openexit init ./demo --source datadog --target grafana-lgtm
-./bin/openexit collect fixture --project ./demo --input ./testdata/datadog/small.json
-./bin/openexit run --project ./demo --export --out ./openexit-demo.zip
+./bin/openexit demo ./demo
 ```
+
+`openexit demo` uses built-in redacted fixture data, runs the deterministic workflow, validates the output, and writes `./demo/openexit-demo.zip`.
 
 ## Install From Source
 
@@ -53,6 +53,7 @@ make example VERSION=0.1.0-dev
 
 - `openexit version`
 - `openexit init <project-dir> [--source <type> --target <type>]`
+- `openexit demo <project-dir> [--source <type>] [--out <file>] [--force]`
 - `openexit status --project <project-dir> [--json]`
 - `openexit run --project <project-dir> [--strict] [--export --out <file>]`
 - `openexit collect fixture --project <project-dir> --input <file>`
@@ -95,6 +96,7 @@ Fixture workflows run the full local OpenExit workflow with sample or customer-p
 Included in the current implementation:
 
 - CLI skeleton and project init/status.
+- Built-in demo project generation for release binaries without repository-local fixture files.
 - Project readiness status with pipeline counts, validation state, export readiness, and JSON output for automation.
 - One-command deterministic workflow runner for collected projects, with optional evidence bundle export.
 - Typed project, inventory, assessment, mapping, and validation manifests.

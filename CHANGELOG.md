@@ -33,6 +33,7 @@
 - Added LiteLLM/vLLM config candidate validation for the OpenAI/Anthropic assessment path.
 - Added project readiness status with pipeline summaries, export readiness, next actions, and `--json` output.
 - Added `openexit run` to execute assessment, mapping, full generation, validation, status reporting, and optional evidence bundle export for collected projects.
+- Added `openexit demo` with embedded redacted fixtures for complete release-binary demos across supported assessment paths.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
 
 ## 0.1.0 - 2026-05-24

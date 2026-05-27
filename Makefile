@@ -37,6 +37,8 @@ golangci-lint:
 smoke:
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
+	$(BINARY) demo "$$tmp/builtin-demo" --out "$$tmp/builtin-demo.zip"; \
+	test -s "$$tmp/builtin-demo.zip"; \
 	$(BINARY) init "$$tmp/datadog-demo"; \
 	$(BINARY) collect fixture --project "$$tmp/datadog-demo" --input ./testdata/datadog/small.json; \
 	$(BINARY) assess --project "$$tmp/datadog-demo" --target grafana-lgtm; \

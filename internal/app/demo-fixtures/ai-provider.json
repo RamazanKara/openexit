@@ -1,0 +1,175 @@
+{
+  "provider": "openai",
+  "workspace": "acme-prod",
+  "modelUsageClasses": [
+    {
+      "id": "support-chat",
+      "name": "Support chat assistant",
+      "provider": "openai",
+      "models": ["gpt-4o", "gpt-4o-mini"],
+      "purpose": "Customer support answers with CRM context",
+      "owners": ["support-ai"],
+      "sensitivePromptCategories": ["customer-pii", "ticket-history"],
+      "toolRefs": ["crm-lookup", "ticket-update"],
+      "fallbackBehavior": "manual-queue"
+    },
+    {
+      "id": "code-assist",
+      "name": "Internal code assistant",
+      "provider": "anthropic",
+      "models": ["claude-3-5-sonnet"],
+      "purpose": "Developer code review and explanation",
+      "owners": [],
+      "sensitivePromptCategories": ["source-code"],
+      "toolRefs": ["repo-search"],
+      "fallbackBehavior": "retry-source-provider"
+    },
+    {
+      "id": "batch-summarization",
+      "name": "Batch summarization",
+      "provider": "openai",
+      "models": ["gpt-4o-mini"],
+      "purpose": "Nightly document summaries",
+      "owners": ["data-platform"],
+      "sensitivePromptCategories": [],
+      "toolRefs": [],
+      "fallbackBehavior": "defer-batch"
+    }
+  ],
+  "tokenVolumes": [
+    {
+      "id": "support-chat-volume",
+      "usageClassId": "support-chat",
+      "monthlyInputTokens": 180000000,
+      "monthlyOutputTokens": 90000000,
+      "peakTokensPerMinute": 42000,
+      "burstWindow": "15m"
+    },
+    {
+      "id": "code-assist-volume",
+      "usageClassId": "code-assist",
+      "monthlyInputTokens": 720000000,
+      "monthlyOutputTokens": 260000000,
+      "peakTokensPerMinute": 83000,
+      "burstWindow": "30m"
+    },
+    {
+      "id": "batch-summarization-volume",
+      "usageClassId": "batch-summarization",
+      "monthlyInputTokens": 95000000,
+      "monthlyOutputTokens": 18000000,
+      "peakTokensPerMinute": 9000,
+      "burstWindow": "2h"
+    }
+  ],
+  "latencyExpectations": [
+    {
+      "id": "support-chat-latency",
+      "usageClassId": "support-chat",
+      "p50Ms": 700,
+      "p95Ms": 1400,
+      "timeoutMs": 6000,
+      "streamingRequired": true
+    },
+    {
+      "id": "code-assist-latency",
+      "usageClassId": "code-assist",
+      "p50Ms": 1800,
+      "p95Ms": 4500,
+      "timeoutMs": 12000,
+      "streamingRequired": true
+    },
+    {
+      "id": "batch-summarization-latency",
+      "usageClassId": "batch-summarization",
+      "p50Ms": 9000,
+      "p95Ms": 30000,
+      "timeoutMs": 120000,
+      "streamingRequired": false
+    }
+  ],
+  "sensitivePromptCategories": [
+    {
+      "id": "support-chat-customer-pii",
+      "usageClassId": "support-chat",
+      "category": "customer-pii",
+      "dataClass": "restricted",
+      "containsPii": true,
+      "requiresDataResidency": true,
+      "retention": "transient"
+    },
+    {
+      "id": "support-chat-ticket-history",
+      "usageClassId": "support-chat",
+      "category": "ticket-history",
+      "dataClass": "confidential",
+      "containsPii": true,
+      "requiresDataResidency": false,
+      "retention": "redacted-analytics"
+    },
+    {
+      "id": "code-assist-source-code",
+      "usageClassId": "code-assist",
+      "category": "source-code",
+      "dataClass": "confidential",
+      "containsPii": false,
+      "requiresDataResidency": true,
+      "retention": "none"
+    }
+  ],
+  "toolUsages": [
+    {
+      "id": "crm-lookup",
+      "usageClassId": "support-chat",
+      "name": "CRM lookup",
+      "type": "http-read",
+      "networkAccess": true,
+      "writesExternalState": false,
+      "humanApprovalRequired": false
+    },
+    {
+      "id": "ticket-update",
+      "usageClassId": "support-chat",
+      "name": "Ticket update",
+      "type": "http-write",
+      "networkAccess": true,
+      "writesExternalState": true,
+      "humanApprovalRequired": false
+    },
+    {
+      "id": "repo-search",
+      "usageClassId": "code-assist",
+      "name": "Repository search",
+      "type": "vector-search",
+      "networkAccess": false,
+      "writesExternalState": false,
+      "humanApprovalRequired": false
+    }
+  ],
+  "fallbackBehaviors": [
+    {
+      "id": "support-chat-fallback",
+      "usageClassId": "support-chat",
+      "strategy": "manual-queue",
+      "models": [],
+      "manualQueue": true,
+      "maxRetries": 1
+    },
+    {
+      "id": "code-assist-fallback",
+      "usageClassId": "code-assist",
+      "strategy": "retry-source-provider",
+      "models": ["claude-3-5-sonnet"],
+      "manualQueue": false,
+      "maxRetries": 3
+    },
+    {
+      "id": "batch-summarization-fallback",
+      "usageClassId": "batch-summarization",
+      "strategy": "defer-batch",
+      "models": [],
+      "manualQueue": false,
+      "maxRetries": 2
+    }
+  ]
+}

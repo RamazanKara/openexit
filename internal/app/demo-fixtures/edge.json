@@ -1,0 +1,125 @@
+{
+  "provider": "cloudflare",
+  "zone": "example.com",
+  "dnsRecords": [
+    {
+      "id": "dns-api",
+      "name": "api.example.com",
+      "type": "A",
+      "value": "203.0.113.10",
+      "ttl": 3600,
+      "proxied": true
+    },
+    {
+      "id": "dns-wildcard",
+      "name": "*.example.com",
+      "type": "CNAME",
+      "value": "edge.example.net",
+      "ttl": 86400,
+      "proxied": false
+    }
+  ],
+  "wafRules": [
+    {
+      "id": "waf-sqli",
+      "name": "SQL Injection Managed Rule",
+      "expression": "http.request.uri.path contains \"/api\"",
+      "action": "block",
+      "enabled": true,
+      "managed": true
+    },
+    {
+      "id": "waf-log-only",
+      "name": "Suspicious Admin Paths",
+      "expression": "http.request.uri.path contains \"/admin\"",
+      "action": "log",
+      "enabled": true,
+      "managed": false
+    }
+  ],
+  "cacheRules": [
+    {
+      "id": "cache-static",
+      "name": "Static Assets",
+      "pattern": "/assets/*",
+      "action": "cache",
+      "edgeTtl": 86400,
+      "browserTtl": 3600,
+      "cacheKey": ["host", "path", "query"]
+    },
+    {
+      "id": "cache-api-bypass",
+      "name": "API Bypass",
+      "pattern": "/api/*",
+      "action": "bypass",
+      "edgeTtl": 0,
+      "browserTtl": 0,
+      "cacheKey": ["host", "path", "cookie:session"]
+    }
+  ],
+  "redirects": [
+    {
+      "id": "redir-www",
+      "name": "WWW Canonical",
+      "source": "https://www.example.com/*",
+      "target": "https://example.com/$1",
+      "statusCode": 301,
+      "preserveQuery": true
+    },
+    {
+      "id": "redir-legacy",
+      "name": "Legacy Campaign",
+      "source": "https://example.com/old-campaign",
+      "target": "https://example.com/new-campaign",
+      "statusCode": 302,
+      "preserveQuery": false
+    }
+  ],
+  "origins": [
+    {
+      "id": "origin-api",
+      "hostname": "api-origin.example.com",
+      "scheme": "https",
+      "port": 443,
+      "hostHeader": "api.example.com",
+      "tlsVerify": false,
+      "healthCheck": false
+    },
+    {
+      "id": "origin-static",
+      "hostname": "static-origin.example.com",
+      "scheme": "http",
+      "port": 80,
+      "hostHeader": "static.example.com",
+      "tlsVerify": false,
+      "healthCheck": true
+    }
+  ],
+  "tlsSettings": [
+    {
+      "id": "tls-default",
+      "hostname": "example.com",
+      "mode": "flexible",
+      "minVersion": "1.0",
+      "hstsEnabled": false
+    }
+  ],
+  "botRules": [
+    {
+      "id": "bot-challenge",
+      "name": "Bot Challenge",
+      "expression": "cf.bot_management.score lt 30",
+      "action": "challenge",
+      "enabled": true
+    }
+  ],
+  "pageRules": [
+    {
+      "id": "page-cache-html",
+      "target": "https://example.com/blog/*",
+      "actions": ["cache_everything", "edge_cache_ttl:7200"],
+      "priority": 1,
+      "enabled": true
+    }
+  ]
+}

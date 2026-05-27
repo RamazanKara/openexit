@@ -14,12 +14,12 @@ make build VERSION=0.1.0
 The minimum local demo is:
 
 ```bash
-openexit init ./demo --source datadog --target grafana-lgtm
-openexit collect fixture --project ./demo --input ./testdata/datadog/small.json
-openexit run --project ./demo --export --out ./openexit-demo.zip
+openexit demo ./demo
 ```
 
-The CI test suite also runs this definition-of-done pipeline against the fixture inventory and checks that the generated project layout and export bundle contain the expected artifacts. Bundle checksums are verified against the archived file bytes.
+`openexit demo` uses built-in redacted fixture data, so release binaries can create a complete sample project without access to this repository's `testdata/` directory. It initializes the project, collects fixture inventory, runs assessment, mapping, full artifact generation, validation, final status reporting, and evidence bundle export. Pass `--source github-enterprise`, `--source identity`, `--source edge`, or `--source ai-provider` to try another built-in path.
+
+The CI test suite also runs this definition-of-done pipeline against fixture inventory and checks that the generated project layout and export bundle contain the expected artifacts. Bundle checksums are verified against the archived file bytes.
 
 The checked-in Datadog example can be refreshed with `make example VERSION=0.1.0-dev`. CI also runs `make example-smoke` as part of `make verify` to ensure the example fixture still completes the full pipeline.
 

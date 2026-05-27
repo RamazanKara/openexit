@@ -150,6 +150,67 @@ func TestRunCommandCompletesCollectedProject(t *testing.T) {
 	}
 }
 
+func TestDemoCommandCreatesCompleteProject(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	bundlePath := filepath.Join(t.TempDir(), "openexit-demo.zip")
+	out, err := executeForTestWithOutput("demo", projectDir, "--out", bundlePath)
+	if err != nil {
+		t.Fatalf("openexit demo failed: %v\n%s", err, out)
+	}
+	for _, marker := range []string{
+		"demo: datadog -> grafana-lgtm",
+		"collected datadog-fixture inventory",
+		"validation status: passed",
+		"export-ready: yes",
+		"exported " + bundlePath,
+	} {
+		if !strings.Contains(out, marker) {
+			t.Fatalf("expected demo output marker %q, got:\n%s", marker, out)
+		}
+	}
+	for _, rel := range expectedProjectFiles() {
+		path := filepath.Join(projectDir, filepath.FromSlash(rel))
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("expected generated file %s: %v", rel, err)
+		}
+	}
+	if err := assertBundle(bundlePath, expectedBundleFiles()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDemoCommandSupportsBuiltInSources(t *testing.T) {
+	for _, source := range []string{"datadog", "github-enterprise", "identity", "edge", "ai-provider"} {
+		t.Run(source, func(t *testing.T) {
+			projectDir := filepath.Join(t.TempDir(), source)
+			bundlePath := filepath.Join(t.TempDir(), source+".zip")
+			out, err := executeForTestWithOutput("demo", projectDir, "--source", source, "--out", bundlePath)
+			if err != nil {
+				t.Fatalf("openexit demo --source %s failed: %v\n%s", source, err, out)
+			}
+			if !strings.Contains(out, "source: "+source) || !strings.Contains(out, "export-ready: yes") {
+				t.Fatalf("expected ready status for source %s, got:\n%s", source, out)
+			}
+			if info, err := os.Stat(bundlePath); err != nil || info.Size() == 0 {
+				t.Fatalf("expected non-empty demo bundle for %s: info=%+v err=%v", source, info, err)
+			}
+		})
+	}
+}
+
+func TestDemoCommandRejectsNonEmptyProjectWithoutForce(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	if err := os.MkdirAll(projectDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(projectDir, "keep.txt"), []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := executeForTestWithOutput("demo", projectDir); err == nil {
+		t.Fatal("expected demo to reject a non-empty directory without --force")
+	}
+}
+
 func TestCLICommandFailuresAreActionable(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "demo")
 	if err := executeForTest("init", projectDir); err != nil {
