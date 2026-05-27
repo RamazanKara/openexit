@@ -44,6 +44,9 @@ func (LiveCollector) Collect(ctx context.Context, req collector.CollectRequest) 
 	if err := collectSLOs(ctx, client, req.ProjectDir, inv); err != nil {
 		warnings = append(warnings, err.Error())
 	}
+	if err := collectIntegrations(ctx, client, req.ProjectDir, inv); err != nil {
+		warnings = append(warnings, err.Error())
+	}
 	inv.Warnings = warnings
 	inv.RecomputeSummary()
 	if err := inventory.Validate(inv); err != nil {
@@ -242,6 +245,44 @@ func collectSLOs(ctx context.Context, client *Client, projectDir string, inv *in
 	return nil
 }
 
+func collectIntegrations(ctx context.Context, client *Client, projectDir string, inv *inventory.Inventory) error {
+	var out struct {
+		Data []struct {
+			ID         string `json:"id"`
+			Attributes struct {
+				Title      string   `json:"title"`
+				Categories []string `json:"categories"`
+				Installed  bool     `json:"installed"`
+			} `json:"attributes"`
+		} `json:"data"`
+	}
+	body, err := client.get(ctx, "/api/v2/integrations", nil, &out)
+	if err != nil {
+		return fmt.Errorf("collect integrations: %w", err)
+	}
+	if err := writeEvidence(projectDir, "datadog/integrations/list.json", inventory.RedactBytes(body)); err != nil {
+		return err
+	}
+	for _, item := range out.Data {
+		name := firstNonEmpty(item.Attributes.Title, item.ID)
+		if name == "" {
+			continue
+		}
+		integration := inventory.Integration{
+			Name:        name,
+			Enabled:     item.Attributes.Installed,
+			Tags:        uniqueSorted(item.Attributes.Categories),
+			EvidenceRef: "evidence://datadog/integration/" + safeID(name),
+		}
+		if err := writeEvidence(projectDir, "datadog/integrations/"+safeID(name)+".json", inventory.RedactBytes(prettyJSON(item))); err != nil {
+			return err
+		}
+		inv.Assets.Integrations = append(inv.Assets.Integrations, integration)
+	}
+	sort.Slice(inv.Assets.Integrations, func(i, j int) bool { return inv.Assets.Integrations[i].Name < inv.Assets.Integrations[j].Name })
+	return nil
+}
+
 func stringSlice(value any) []string {
 	raw, ok := value.([]any)
 	if !ok {
@@ -259,6 +300,16 @@ func stringSlice(value any) []string {
 func rawString(value any) string {
 	text, _ := value.(string)
 	return text
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func uniqueSorted(values []string) []string {

@@ -94,7 +94,7 @@ Included in the current implementation:
 - CLI skeleton and project init/status.
 - Typed project, inventory, assessment, mapping, and validation manifests.
 - Fixture-based Datadog inventory import.
-- Read-only Datadog collection for dashboards, monitors, SLOs, and referenced metric/tag metadata.
+- Read-only Datadog collection for dashboards, monitors, SLOs, installed integration metadata, and referenced metric/tag metadata.
 - Read-only GitHub/GitHub Enterprise collection for repositories, teams, branch protection, Actions workflows, secret metadata, runners, deploy keys, and GitHub App installations.
 - Read-only Okta collection for applications, groups, policy/rule metadata, org MFA factors, and explicit break-glass user metadata.
 - Read-only Auth0 collection for clients, roles, action/rule metadata, Guardian MFA factors, and explicit break-glass user metadata.

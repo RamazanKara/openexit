@@ -25,6 +25,8 @@ func PathForRef(projectDir, ref string) (string, error) {
 		dir = "monitors"
 	case "slo":
 		dir = "slos"
+	case "integration":
+		dir = "integrations"
 	case "repository":
 		dir = "repositories"
 	case "team":

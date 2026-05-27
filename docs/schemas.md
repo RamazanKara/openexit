@@ -4,7 +4,7 @@ OpenExit schemas live under `schemas/` and mirror the typed Go manifests. Releas
 
 Project manifests must use one of the supported source/target pairs: Datadog to Grafana LGTM, GitHub Enterprise to Forgejo, Okta/Auth0 to Keycloak/Zitadel, Cloudflare/Akamai to Varnish/HAProxy/Coraza, or OpenAI/Anthropic to vLLM/LiteLLM.
 
-Inventory dashboards can include optional `dataSources` and `templateVariables` fields so assessment can flag Grafana mapping risk. Datadog fixture and live collectors populate `metrics` from captured dashboard and monitor queries, including referenced tag keys where available. SLOs can include optional `sli`, `burnRateMonitorIds`, and `dashboardRefs` fields. The top-level inventory `volumes` section records whether log and trace volume assumptions are known.
+Inventory dashboards can include optional `dataSources` and `templateVariables` fields so assessment can flag Grafana mapping risk. Datadog fixture and live collectors populate `metrics` from captured dashboard and monitor queries, including referenced tag keys where available. The live Datadog collector also populates `integrations` from the Datadog v2 Integrations API when accessible. SLOs can include optional `sli`, `burnRateMonitorIds`, and `dashboardRefs` fields. The top-level inventory `volumes` section records whether log and trace volume assumptions are known.
 
 Mapping manifests use `kind: Mapping` and are written to `mapping/openexit.mapping.yaml` and `.json`. They record candidate dashboard paths, alert-rule candidate paths, unsupported source items, and manual-review entries derived from assessment findings. Validation reloads the mapping manifest and checks that source and target types still match inventory and assessment.
 

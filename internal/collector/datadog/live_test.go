@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -44,6 +45,11 @@ func TestLiveCollectorNormalizationWithMockedAPI(t *testing.T) {
 			}]`))
 		case "/api/v1/slo":
 			_, _ = w.Write([]byte(`{"data":[{"id":"slo-1","attributes":{"name":"Availability","target_threshold":99.9,"timeframe":"30d"}}]}`))
+		case "/api/v2/integrations":
+			_, _ = w.Write([]byte(`{"data":[
+				{"id":"kubernetes","type":"integration","attributes":{"title":"Kubernetes","categories":["containers","orchestration"],"installed":true}},
+				{"id":"pagerduty","type":"integration","attributes":{"title":"PagerDuty","categories":["alerting"],"installed":false}}
+			]}`))
 		default:
 			http.NotFound(w, r)
 		}
@@ -61,6 +67,9 @@ func TestLiveCollectorNormalizationWithMockedAPI(t *testing.T) {
 	if err := collectSLOs(context.Background(), client, projectDir, inv); err != nil {
 		t.Fatal(err)
 	}
+	if err := collectIntegrations(context.Background(), client, projectDir, inv); err != nil {
+		t.Fatal(err)
+	}
 	inv.RecomputeSummary()
 	if err := inventory.Validate(inv); err != nil {
 		t.Fatal(err)
@@ -71,8 +80,17 @@ func TestLiveCollectorNormalizationWithMockedAPI(t *testing.T) {
 	if inv.Summary.Dashboards != 1 || inv.Summary.Monitors != 1 || inv.Summary.SLOs != 1 {
 		t.Fatalf("unexpected summary: %+v", inv.Summary)
 	}
+	if inv.Summary.Integrations != 2 {
+		t.Fatalf("expected live integrations in summary, got %+v", inv.Summary)
+	}
 	if inv.Summary.UniqueMetrics != 2 {
 		t.Fatalf("expected live queries to populate metric summary, got %+v", inv.Summary)
+	}
+	if integration := integrationByName(inv.Assets.Integrations, "Kubernetes"); integration == nil || !integration.Enabled || !hasAll(integration.Tags, "containers", "orchestration") {
+		t.Fatalf("expected installed Kubernetes integration metadata, got %+v", inv.Assets.Integrations)
+	}
+	if integration := integrationByName(inv.Assets.Integrations, "PagerDuty"); integration == nil || integration.Enabled {
+		t.Fatalf("expected disabled PagerDuty integration metadata, got %+v", inv.Assets.Integrations)
 	}
 	if metric := metricByName(inv.Assets.Metrics, "system.cpu.user"); metric == nil || !hasAll(metric.Tags, "env", "service") {
 		t.Fatalf("expected dashboard metric tags to be captured, got %+v", inv.Assets.Metrics)
@@ -84,6 +102,7 @@ func TestLiveCollectorNormalizationWithMockedAPI(t *testing.T) {
 		inv.Assets.Dashboards[0].EvidenceRef,
 		inv.Assets.Monitors[0].EvidenceRef,
 		inv.Assets.SLOs[0].EvidenceRef,
+		inv.Assets.Integrations[0].EvidenceRef,
 	} {
 		path, err := evidence.PathForRef(projectDir, ref)
 		if err != nil {
@@ -100,6 +119,29 @@ func TestLiveCollectorNormalizationWithMockedAPI(t *testing.T) {
 	}
 	if inventory.ContainsSecret(string(data)) {
 		t.Fatalf("monitor evidence was not redacted: %s", string(data))
+	}
+}
+
+func TestCollectIntegrationsReturnsWarningFriendlyError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == "/api/v2/integrations" {
+			w.WriteHeader(http.StatusForbidden)
+			_, _ = w.Write([]byte(`{"errors":["missing integrations_read"]}`))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	client := &Client{baseURL: server.URL, apiKey: "api", appKey: "app", http: server.Client()}
+	inv := inventory.New("demo", "datadog", "datadoghq.eu", "test", time.Unix(0, 0))
+	err := collectIntegrations(context.Background(), client, t.TempDir(), inv)
+	if err == nil || !strings.Contains(err.Error(), "collect integrations") {
+		t.Fatalf("expected contextual integration collection error, got %v", err)
+	}
+	if len(inv.Assets.Integrations) != 0 {
+		t.Fatalf("expected no integration assets on failed collection, got %+v", inv.Assets.Integrations)
 	}
 }
 
@@ -121,6 +163,15 @@ func metricByName(metrics []inventory.MetricRef, name string) *inventory.MetricR
 	for i := range metrics {
 		if metrics[i].Name == name {
 			return &metrics[i]
+		}
+	}
+	return nil
+}
+
+func integrationByName(integrations []inventory.Integration, name string) *inventory.Integration {
+	for i := range integrations {
+		if integrations[i].Name == name {
+			return &integrations[i]
 		}
 	}
 	return nil
