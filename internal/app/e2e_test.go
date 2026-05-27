@@ -45,7 +45,7 @@ func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, marker := range []string{"jsonschema-project: passed", "grafana-dashboard-candidates: passed", "prometheus-rule-candidates: passed"} {
+	for _, marker := range []string{"jsonschema-project: passed", "grafana-dashboard-candidates: passed", "prometheus-rule-candidates: passed", "opentelemetry-candidate: passed"} {
 		if !strings.Contains(string(report), marker) {
 			t.Fatalf("expected validation report marker %q, got:\n%s", marker, string(report))
 		}
@@ -252,6 +252,45 @@ func TestValidationRejectsProductionReadyPrometheusCandidate(t *testing.T) {
 	}
 	if !strings.Contains(string(report), "prometheus-rule-candidates") || !strings.Contains(string(report), "production_ready") {
 		t.Fatalf("expected Prometheus candidate failure in validation report, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsBrokenOpenTelemetryCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "otel-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "grafana-lgtm"},
+		{"map", "--project", projectDir},
+		{"generate", "--project", projectDir, "--all"},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	configPath := filepath.Join(projectDir, "generated-config", "opentelemetry", "collector.candidate.yaml")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "    traces:\n      receivers: [otlp]\n      processors: [memory_limiter, batch]\n      exporters: [otlp/tempo]\n", "", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain traces pipeline")
+	}
+	if err := os.WriteFile(configPath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when OpenTelemetry traces pipeline is missing")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "opentelemetry-candidate") || !strings.Contains(string(report), "service.pipelines.traces") {
+		t.Fatalf("expected OpenTelemetry candidate failure in validation report, got:\n%s", string(report))
 	}
 }
 

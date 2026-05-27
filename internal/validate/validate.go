@@ -105,6 +105,7 @@ func Run(projectDir string, strict bool) (*Report, error) {
 			addGrafanaDashboardCandidateChecks(projectDir, inv, mappingResult, add)
 			addPrometheusRuleCandidateChecks(projectDir, inv, mappingResult, add)
 		}
+		addOpenTelemetryCandidateChecks(projectDir, inv, add)
 		addEvidenceChecks(projectDir, inv, a, add)
 	}
 	if p, err := loadMigrationPlan(projectDir); err != nil {

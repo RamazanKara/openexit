@@ -23,6 +23,8 @@ Validation checks Grafana dashboard candidate JSON against OpenExit's migration 
 
 Validation also checks Prometheus alert-rule candidates against mapping and inventory. Every generated alert must preserve its Datadog monitor ID and source query, keep `openexit_candidate=true` and `production_ready=false`, include manual review annotations, and keep uncertain conversions on explicit `vector(0)` placeholders.
 
+Validation checks the OpenTelemetry Collector candidate for OTLP receivers, memory limiter and batch processors, metrics and traces pipelines, Mimir and Tempo placeholder exporters, candidate warnings, README production-change guidance, and absence of secret-like content.
+
 ## Live Collection
 
 The live Datadog collector stores redacted evidence for dashboards, monitors, and SLOs. Evidence refs in generated assessments resolve to local files under `evidence/datadog/`.
