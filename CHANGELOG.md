@@ -16,6 +16,7 @@
 - Added a read-only Anthropic collector for aggregate Messages API usage, token volumes, server web-search tool metadata, filters, and peak throughput estimates.
 - Added typed migration plan generation with assessment, pilot, shadow, and cutover phase gates.
 - Added explicit source-to-target mapping manifests and `openexit map`.
+- Added embedded JSON Schema validation for project, inventory, assessment, mapping, migration plan, and validation report manifests.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
 
 ## 0.1.0 - 2026-05-24

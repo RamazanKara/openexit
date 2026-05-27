@@ -110,7 +110,7 @@ Included in the current implementation:
 - OpenTelemetry Collector sketch.
 - ArgoCD starter manifest.
 - Typed migration plan manifest and phase-gate Markdown plan.
-- Validation report with YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
+- Validation report with embedded JSON Schema checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.
@@ -143,7 +143,7 @@ OpenExit is intentionally conservative:
 
 ## Risk Coverage
 
-The assessment engine includes dashboard, monitor, SLO, cost, scale, identity, edge, repository, and AI provider risk rules from the implementation plan. Findings have stable IDs, severity, affected assets, evidence refs, and recommendations. `openexit map` writes a typed mapping manifest under `mapping/`; `generate --all` refreshes mapping and writes a typed migration plan under `assessment/` with assessment, pilot, shadow, and cutover phase gates.
+The assessment engine includes dashboard, monitor, SLO, cost, scale, identity, edge, repository, and AI provider risk rules from the implementation plan. Findings have stable IDs, severity, affected assets, evidence refs, and recommendations. `openexit map` writes a typed mapping manifest under `mapping/`; `generate --all` refreshes mapping and writes a typed migration plan under `assessment/` with assessment, pilot, shadow, and cutover phase gates. `openexit validate` checks generated manifests against embedded public JSON Schemas as well as typed consistency rules.
 
 ## Release Process
 

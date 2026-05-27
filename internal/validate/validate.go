@@ -54,6 +54,7 @@ func Run(projectDir string, strict bool) (*Report, error) {
 		Status:      "passed",
 		GeneratedAt: time.Now().UTC(),
 	}
+	schemaValidator, schemaErr := newSchemaValidator()
 	add := func(name, status, message string, critical bool) {
 		report.Checks = append(report.Checks, Check{Name: name, Status: status, Message: message, Critical: critical})
 		if status == "failed" && (critical || strict) {
@@ -89,6 +90,11 @@ func Run(projectDir string, strict bool) (*Report, error) {
 	}
 	addYAMLChecks(projectDir, add)
 	addJSONChecks(projectDir, add)
+	if schemaErr != nil {
+		add("jsonschema-compiler", "failed", schemaErr.Error(), true)
+	} else {
+		addSchemaChecks(projectDir, schemaValidator, add)
+	}
 	addExternalChecks(projectDir, add)
 	if inv != nil && a != nil {
 		if cfgErr == nil {
@@ -110,6 +116,9 @@ func Run(projectDir string, strict bool) (*Report, error) {
 		addMigrationPlanArtifactChecks(projectDir, p, add)
 	}
 	addSecretScan(projectDir, add)
+	if schemaErr == nil {
+		addValidationReportSchemaCheck(schemaValidator, report, add)
+	}
 	sort.SliceStable(report.Checks, func(i, j int) bool { return report.Checks[i].Name < report.Checks[j].Name })
 	if err := writeReport(projectDir, report); err != nil {
 		return report, err

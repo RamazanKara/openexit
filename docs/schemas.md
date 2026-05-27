@@ -1,6 +1,6 @@
 # Schemas
 
-OpenExit schemas live under `schemas/` and mirror the typed Go manifests. The CLI performs typed validation plus YAML/JSON parse checks.
+OpenExit schemas live under `schemas/` and mirror the typed Go manifests. Release binaries embed these public Draft 7 JSON Schemas, and `openexit validate` checks project, inventory, assessment, mapping, migration-plan, and validation-report manifests against the embedded copies in addition to typed consistency checks and YAML/JSON parse checks.
 
 Project manifests must use one of the supported source/target pairs: Datadog to Grafana LGTM, GitHub Enterprise to Forgejo, Okta/Auth0 to Keycloak/Zitadel, Cloudflare/Akamai to Varnish/HAProxy/Coraza, or OpenAI/Anthropic to vLLM/LiteLLM.
 

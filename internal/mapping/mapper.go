@@ -90,9 +90,13 @@ func Build(inv *inventory.Inventory, a *assessment.Assessment, generatedAt time.
 			Project:     a.Metadata.Project,
 			GeneratedAt: generatedAt.UTC(),
 		},
-		Source:     Endpoint{Type: inv.Source.Type},
-		Target:     Endpoint{Type: a.Target.Type},
-		TargetType: a.Target.Type,
+		Source:           Endpoint{Type: inv.Source.Type},
+		Target:           Endpoint{Type: a.Target.Type},
+		TargetType:       a.Target.Type,
+		DashboardDrafts:  []DashboardMap{},
+		AlertRuleDrafts:  []AlertRuleMap{},
+		UnsupportedItems: []Unsupported{},
+		ManualReview:     []ManualReview{},
 	}
 	switch inv.Source.Type {
 	case "datadog":
@@ -108,6 +112,7 @@ func Build(inv *inventory.Inventory, a *assessment.Assessment, generatedAt time.
 }
 
 func Write(projectDir string, result *MappingResult) error {
+	ensureNonNilLists(result)
 	if err := Validate(result); err != nil {
 		return err
 	}
@@ -130,6 +135,24 @@ func Write(projectDir string, result *MappingResult) error {
 		return err
 	}
 	return os.WriteFile(filepath.Join(dir, "mapping-summary.md"), []byte(RenderMarkdown(result)), 0o644)
+}
+
+func ensureNonNilLists(result *MappingResult) {
+	if result == nil {
+		return
+	}
+	if result.DashboardDrafts == nil {
+		result.DashboardDrafts = []DashboardMap{}
+	}
+	if result.AlertRuleDrafts == nil {
+		result.AlertRuleDrafts = []AlertRuleMap{}
+	}
+	if result.UnsupportedItems == nil {
+		result.UnsupportedItems = []Unsupported{}
+	}
+	if result.ManualReview == nil {
+		result.ManualReview = []ManualReview{}
+	}
 }
 
 func Validate(result *MappingResult) error {

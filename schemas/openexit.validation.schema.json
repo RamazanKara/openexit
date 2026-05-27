@@ -3,11 +3,24 @@
   "$id": "https://openexit.dev/schemas/openexit.validation.schema.json",
   "title": "OpenExit Validation Report",
   "type": "object",
-  "required": ["apiVersion", "kind", "status", "checks"],
+  "required": ["apiVersion", "kind", "status", "generatedAt", "checks"],
   "properties": {
     "apiVersion": { "const": "openexit.dev/v1alpha1" },
     "kind": { "const": "ValidationReport" },
     "status": { "enum": ["passed", "failed"] },
-    "checks": { "type": "array" }
+    "generatedAt": { "type": "string" },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "status", "critical"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["passed", "failed", "warning"] },
+          "message": { "type": "string" },
+          "critical": { "type": "boolean" }
+        }
+      }
+    }
   }
 }

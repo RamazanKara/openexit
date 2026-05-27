@@ -129,6 +129,45 @@ func TestValidationRejectsMismatchedProjectManifest(t *testing.T) {
 	}
 }
 
+func TestValidationRejectsProjectSchemaViolation(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "schema-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "grafana-lgtm"},
+		{"map", "--project", projectDir},
+		{"generate", "--project", projectDir, "--all"},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	configPath := filepath.Join(projectDir, "openexit.yaml")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	withoutAllowAI := strings.Replace(string(data), "    allowAI: false\n", "", 1)
+	if withoutAllowAI == string(data) {
+		t.Fatal("test fixture did not contain policy.allowAI")
+	}
+	if err := os.WriteFile(configPath, []byte(withoutAllowAI), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when project manifest violates JSON Schema")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "jsonschema-project") || !strings.Contains(string(report), "allowAI") {
+		t.Fatalf("expected schema failure in validation report, got:\n%s", string(report))
+	}
+}
+
 func TestCollectRejectsMismatchedProjectSource(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "mismatch-collect")
 	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
