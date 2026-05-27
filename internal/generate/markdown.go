@@ -1254,6 +1254,7 @@ func writeEdgeVCLCandidates(ctx *Context) error {
 	fmt.Fprintln(&b, "sub vcl_recv {")
 	for _, rule := range ctx.Inventory.Assets.CacheRules {
 		pattern := vclRegex(rule.Pattern)
+		fmt.Fprintf(&b, "    # cache-rule %s evidence=%s\n", sanitizeConfigValue(rule.ID), rule.EvidenceRef)
 		if strings.EqualFold(rule.Action, "bypass") {
 			fmt.Fprintf(&b, "    if (req.url ~ %q) { return (pass); }\n", pattern)
 			continue
@@ -1264,6 +1265,7 @@ func writeEdgeVCLCandidates(ctx *Context) error {
 	}
 	for _, rule := range ctx.Inventory.Assets.PageRules {
 		if rule.Enabled && containsString(rule.Actions, "cache_everything") {
+			fmt.Fprintf(&b, "    # page-rule %s evidence=%s\n", sanitizeConfigValue(rule.ID), rule.EvidenceRef)
 			fmt.Fprintf(&b, "    if (req.http.host + req.url ~ %q) { unset req.http.Cookie; }\n", vclRegex(rule.Target))
 		}
 	}
@@ -1272,6 +1274,7 @@ func writeEdgeVCLCandidates(ctx *Context) error {
 	fmt.Fprintln(&b, "sub vcl_backend_response {")
 	for _, rule := range ctx.Inventory.Assets.CacheRules {
 		if strings.EqualFold(rule.Action, "cache") && rule.EdgeTTL > 0 {
+			fmt.Fprintf(&b, "    # cache-rule %s evidence=%s\n", sanitizeConfigValue(rule.ID), rule.EvidenceRef)
 			fmt.Fprintf(&b, "    if (bereq.url ~ %q) { set beresp.ttl = %ds; }\n", vclRegex(rule.Pattern), rule.EdgeTTL)
 		}
 	}
@@ -1296,6 +1299,7 @@ func writeVCLBackends(b *strings.Builder, origins []inventory.OriginConfig) {
 		if i == 0 {
 			name = "default"
 		}
+		fmt.Fprintf(b, "# origin %s evidence=%s\n", sanitizeConfigValue(origin.ID), origin.EvidenceRef)
 		fmt.Fprintf(b, "backend %s {\n", name)
 		fmt.Fprintf(b, "    .host = %q;\n", origin.Hostname)
 		fmt.Fprintf(b, "    .port = %q;\n", fmt.Sprintf("%d", origin.Port))
@@ -1326,6 +1330,7 @@ func writeEdgeHAProxyCandidates(ctx *Context) error {
 	}
 	for _, origin := range ctx.Inventory.Assets.Origins {
 		name := configIdentifier(origin.ID)
+		fmt.Fprintf(&b, "    # origin %s evidence=%s\n", sanitizeConfigValue(origin.ID), origin.EvidenceRef)
 		fmt.Fprintf(&b, "    acl host_%s hdr(host) -i %s\n", name, sanitizeConfigValue(origin.HostHeader))
 		fmt.Fprintf(&b, "    use_backend be_%s if host_%s\n", name, name)
 	}
@@ -1346,6 +1351,7 @@ func writeEdgeHAProxyCandidates(ctx *Context) error {
 		if origin.HealthCheck {
 			check = " check"
 		}
+		fmt.Fprintf(&b, "# origin %s evidence=%s\n", sanitizeConfigValue(origin.ID), origin.EvidenceRef)
 		fmt.Fprintf(&b, "backend be_%s\n", name)
 		fmt.Fprintf(&b, "    server %s %s:%d%s%s\n", name, sanitizeConfigValue(origin.Hostname), origin.Port, ssl, check)
 	}
@@ -1371,6 +1377,7 @@ func writeEdgeCorazaCandidates(ctx *Context) error {
 		if !rule.Enabled {
 			action = "pass,nolog"
 		}
+		fmt.Fprintf(&b, "# waf-rule %s evidence=%s\n", sanitizeConfigValue(rule.ID), rule.EvidenceRef)
 		fmt.Fprintf(&b, "SecRule REQUEST_URI \"@contains %s\" \"id:%d,phase:2,%s,msg:'%s'\"\n", corazaMatchValue(rule.Expression), 100000+i, action, sanitizeConfigValue(rule.Name))
 	}
 	for i, rule := range ctx.Inventory.Assets.BotRules {
@@ -1381,6 +1388,7 @@ func writeEdgeCorazaCandidates(ctx *Context) error {
 		if !rule.Enabled {
 			action = "pass,nolog"
 		}
+		fmt.Fprintf(&b, "# bot-rule %s evidence=%s\n", sanitizeConfigValue(rule.ID), rule.EvidenceRef)
 		fmt.Fprintf(&b, "SecRule REQUEST_HEADERS:User-Agent \"@rx .+\" \"id:%d,phase:1,%s,msg:'%s'\"\n", 110000+i, action, sanitizeConfigValue(rule.Name))
 	}
 	if err := os.WriteFile(filepath.Join(dir, "coraza-rules.candidate.conf"), []byte(b.String()), 0o644); err != nil {

@@ -116,7 +116,7 @@ Included in the current implementation:
 - OpenTelemetry Collector sketch.
 - ArgoCD starter manifest.
 - Typed migration plan manifest and phase-gate Markdown plan.
-- Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, and identity realm/client candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
+- Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, and edge VCL/HAProxy/Coraza candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export.
 - Evidence bundle path-safety checks that reject symlinks in exported project sections.
 - No-op assist provider and explicit opt-in LiteLLM assist.
@@ -162,7 +162,7 @@ GitHub Enterprise to Forgejo collects repository, team, branch protection, Actio
 
 Okta/Auth0 to Keycloak/Zitadel collects applications, SAML/OIDC client metadata, groups, policies, MFA settings, redirect URIs, owners, and break-glass account metadata from live Okta/Auth0 APIs or local fixtures. It generates identity migration risk, validated realm/client candidate config, break-glass, cutover, and rollback artifacts.
 
-Cloudflare/Akamai to Varnish/HAProxy/Coraza collects DNS records, WAF rules, cache rules, redirects, origins, TLS settings, bot rules, and page rules from live Cloudflare/Akamai APIs or local fixtures. The Akamai collector uses read-only EdgeGrid-authenticated calls for Edge DNS, Property Manager, and optional AppSec metadata. It generates VCL, HAProxy, Coraza, cache parity, and WAF enforcement review artifacts.
+Cloudflare/Akamai to Varnish/HAProxy/Coraza collects DNS records, WAF rules, cache rules, redirects, origins, TLS settings, bot rules, and page rules from live Cloudflare/Akamai APIs or local fixtures. The Akamai collector uses read-only EdgeGrid-authenticated calls for Edge DNS, Property Manager, and optional AppSec metadata. It generates validated VCL, HAProxy, Coraza, cache parity, and WAF enforcement review artifacts.
 
 OpenAI/Anthropic to vLLM/LiteLLM collects model usage classes, token volumes, latency expectations, sensitive prompt categories, tool usage, and fallback behavior from local fixtures. It can also collect model-grouped aggregate OpenAI completions usage, aggregate Anthropic Messages API usage, available model metadata where exposed, server web-search tool metadata, and hourly peak estimates from live provider APIs without storing prompts or credentials. The path generates self-hosted LLM readiness, LiteLLM routing, vLLM sizing, evaluation, and data sensitivity artifacts.
 

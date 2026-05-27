@@ -16,7 +16,7 @@ Release-blocking v0.1 requirements:
 - Markdown handover artifacts.
 - Grafana, Prometheus, OpenTelemetry, and ArgoCD candidate generators.
 - Typed migration plan manifest with assessment, pilot, shadow, and cutover phase gates.
-- Validation engine with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, and identity realm/client candidate checks, YAML/JSON parsing, evidence refs, secret scan, optional promtool, and optional kubeconform.
+- Validation engine with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, and edge VCL/HAProxy/Coraza candidate checks, YAML/JSON parsing, evidence refs, secret scan, optional promtool, and optional kubeconform.
 - Evidence bundle export with checksums and OpenExit version metadata.
 - No-op AI assist and optional external assist behind explicit opt-in.
 - Documentation, examples, CI, release draft workflow, and reproducible release artifacts.
@@ -53,6 +53,7 @@ The AI provider path is complete for local fixture assessment workflows and incl
 - [ ] `validation/validation-report.md` includes `argocd-candidate: passed` for the Datadog definition-of-done pipeline.
 - [ ] `validation/validation-report.md` includes `forgejo-migration-candidate: passed` for the GitHub Enterprise to Forgejo pipeline.
 - [ ] `validation/validation-report.md` includes `identity-realm-client-candidate: passed` for the Okta/Auth0 to Keycloak/Zitadel pipeline.
+- [ ] `validation/validation-report.md` includes `edge-candidates: passed` for the Cloudflare/Akamai to Varnish/HAProxy/Coraza pipeline.
 - [ ] `CHANGELOG.md` has a `0.1.0` section.
 - [ ] Exported bundle README includes version, commit, build date, bundle timestamp, and candidate warning.
 - [ ] Export refuses symlinks in exported project sections, including when `--force` is used.

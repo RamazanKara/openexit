@@ -618,20 +618,7 @@ func TestValidationRejectsBrokenIdentityClientCandidate(t *testing.T) {
 
 func TestEdgeFixturePipeline(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "edge-demo")
-	fixturePath := filepath.Join("..", "..", "testdata", "edge", "small.json")
-
-	commands := [][]string{
-		{"init", projectDir, "--source", "edge", "--target", "varnish-haproxy-coraza"},
-		{"collect", "edge-fixture", "--project", projectDir, "--input", fixturePath},
-		{"assess", "--project", projectDir, "--target", "varnish-haproxy-coraza"},
-		{"generate", "--project", projectDir, "--all"},
-		{"validate", "--project", projectDir},
-	}
-	for _, args := range commands {
-		if err := executeForTest(args...); err != nil {
-			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
-		}
-	}
+	runEdgeFixturePipeline(t, projectDir)
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
 		"mapping/openexit.mapping.yaml",
@@ -667,6 +654,67 @@ func TestEdgeFixturePipeline(t *testing.T) {
 		if !strings.Contains(string(assessmentData), id) {
 			t.Fatalf("expected assessment finding %s", id)
 		}
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "edge-candidates: passed") {
+		t.Fatalf("expected edge candidate validation marker, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsBrokenEdgeVCLCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "edge-demo")
+	runEdgeFixturePipeline(t, projectDir)
+	candidatePath := filepath.Join(projectDir, "generated-config", "edge", "varnish", "default.candidate.vcl")
+	data, err := os.ReadFile(candidatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "set beresp.ttl = 86400s", "set beresp.ttl = 60s", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain VCL edge TTL")
+	}
+	if err := os.WriteFile(candidatePath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when VCL TTL drifts from inventory")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "edge-candidates") || !strings.Contains(string(report), "edge TTL") {
+		t.Fatalf("expected edge candidate TTL failure in validation report, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsBrokenEdgeHAProxyCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "edge-demo")
+	runEdgeFixturePipeline(t, projectDir)
+	candidatePath := filepath.Join(projectDir, "generated-config", "edge", "haproxy", "haproxy.candidate.cfg")
+	data, err := os.ReadFile(candidatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "ssl verify none sni str(api-origin.example.com)", "ssl verify required sni str(api-origin.example.com)", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain HAProxy TLS verify marker")
+	}
+	if err := os.WriteFile(candidatePath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when HAProxy TLS verification drifts from inventory")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "edge-candidates") || !strings.Contains(string(report), "TLS verify none") {
+		t.Fatalf("expected edge candidate TLS verification failure in validation report, got:\n%s", string(report))
 	}
 }
 
@@ -763,6 +811,23 @@ func runIdentityFixturePipeline(t *testing.T, projectDir string) {
 		{"init", projectDir, "--source", "identity", "--target", "keycloak-zitadel"},
 		{"collect", "identity-fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "keycloak-zitadel"},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+}
+
+func runEdgeFixturePipeline(t *testing.T, projectDir string) {
+	t.Helper()
+	fixturePath := filepath.Join("..", "..", "testdata", "edge", "small.json")
+	commands := [][]string{
+		{"init", projectDir, "--source", "edge", "--target", "varnish-haproxy-coraza"},
+		{"collect", "edge-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "varnish-haproxy-coraza"},
 		{"generate", "--project", projectDir, "--all"},
 		{"validate", "--project", projectDir},
 	}

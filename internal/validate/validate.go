@@ -110,6 +110,7 @@ func Run(projectDir string, strict bool) (*Report, error) {
 		addOpenTelemetryCandidateChecks(projectDir, inv, add)
 		addForgejoMigrationCandidateChecks(projectDir, inv, a, add)
 		addIdentityRealmClientCandidateChecks(projectDir, inv, a, add)
+		addEdgeCandidateChecks(projectDir, inv, add)
 		addEvidenceChecks(projectDir, inv, a, add)
 	}
 	if p, err := loadMigrationPlan(projectDir); err != nil {

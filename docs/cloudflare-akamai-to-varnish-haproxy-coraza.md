@@ -50,4 +50,6 @@ Generated artifacts:
 - `cache-parity-report.md`
 - `waf-enforcement-risk-report.md`
 
+Validation checks edge candidates for OpenExit review markers, absence of secret-like content, Varnish backend/cache/page-rule coverage, HAProxy redirect/origin/TLS/health-check coverage, Coraza WAF/bot-rule coverage, and preserved evidence refs.
+
 The assessment flags wildcard and high-TTL DNS records, observe-only or managed WAF rules, challenge actions, cache-key parity issues, redirect pattern translation, origin TLS gaps, low TLS versions, disabled HSTS, and coupled page-rule behavior.
