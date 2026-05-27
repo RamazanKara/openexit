@@ -124,6 +124,24 @@ openexit generate --project ./cloudflare-live --all
 openexit validate --project ./cloudflare-live
 ```
 
+The same path can collect read-only live Akamai metadata. The collector reads EdgeGrid credentials from `~/.edgerc` or the `AKAMAI_HOST`, `AKAMAI_CLIENT_TOKEN`, `AKAMAI_ACCESS_TOKEN`, and `AKAMAI_CLIENT_SECRET` environment variables. It records Edge DNS recordsets, Property Manager hostnames and rules, and optional AppSec custom-rule metadata without storing credential values.
+
+```bash
+openexit init ./akamai-live --source edge --target varnish-haproxy-coraza
+openexit collect akamai \
+  --project ./akamai-live \
+  --zone example.com \
+  --property-id prp_12345 \
+  --contract-id ctr_1-ABCDEF \
+  --group-id grp_12345 \
+  --security-config-id 12345:7
+openexit assess --project ./akamai-live --target varnish-haproxy-coraza
+openexit generate --project ./akamai-live --all
+openexit validate --project ./akamai-live
+```
+
+Use repeatable `--zone`, `--property-id`, and `--security-config-id` flags to scope collection. Use `--discover-properties` with `--contract-id` and `--group-id` to list accessible Property Manager properties before collection, and `--account-switch-key` when the API client needs to act against another account.
+
 The OpenAI/Anthropic to vLLM/LiteLLM fixture path uses local JSON metadata:
 
 ```bash

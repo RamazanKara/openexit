@@ -109,6 +109,7 @@ func newCollectCommand() *cobra.Command {
 	collectCmd.AddCommand(newCollectAuth0Command())
 	collectCmd.AddCommand(newCollectIdentityFixtureCommand())
 	collectCmd.AddCommand(newCollectCloudflareCommand())
+	collectCmd.AddCommand(newCollectAkamaiCommand())
 	collectCmd.AddCommand(newCollectEdgeFixtureCommand())
 	collectCmd.AddCommand(newCollectOpenAICommand())
 	collectCmd.AddCommand(newCollectAnthropicCommand())
@@ -271,6 +272,58 @@ func newCollectCloudflareCommand() *cobra.Command {
 	cmd.Flags().StringVar(&tokenEnv, "token-env", "CLOUDFLARE_API_TOKEN", "Environment variable containing a read-only Cloudflare API token")
 	cmd.Flags().StringVar(&baseURL, "base-url", "https://api.cloudflare.com/client/v4", "Cloudflare API base URL")
 	_ = cmd.MarkFlagRequired("zone-id")
+	return cmd
+}
+
+func newCollectAkamaiCommand() *cobra.Command {
+	var project, edgerc, section, baseURL, contractID, groupID, accountSwitchKey string
+	var hostEnv, clientTokenEnv, accessTokenEnv, clientSecretEnv, accountSwitchKeyEnv string
+	var zones, propertyIDs, securityConfigIDs []string
+	var discoverProperties, discoverSecurityConfigs bool
+	var securityVersion int
+	cmd := &cobra.Command{
+		Use:   "akamai",
+		Short: "Collect read-only Akamai edge inventory",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCollector(cmd.Context(), cmd, project, "edge", edge.AkamaiCollector{}, map[string]string{
+				"edgerc":                    edgerc,
+				"edgerc-section":            section,
+				"base-url":                  baseURL,
+				"host-env":                  hostEnv,
+				"client-token-env":          clientTokenEnv,
+				"access-token-env":          accessTokenEnv,
+				"client-secret-env":         clientSecretEnv,
+				"account-switch-key-env":    accountSwitchKeyEnv,
+				"account-switch-key":        accountSwitchKey,
+				"contract-id":               contractID,
+				"group-id":                  groupID,
+				"zones":                     strings.Join(zones, "\n"),
+				"property-ids":              strings.Join(propertyIDs, "\n"),
+				"security-config-ids":       strings.Join(securityConfigIDs, "\n"),
+				"discover-properties":       strconv.FormatBool(discoverProperties),
+				"discover-security-configs": strconv.FormatBool(discoverSecurityConfigs),
+				"security-version":          strconv.Itoa(securityVersion),
+			})
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().StringArrayVar(&zones, "zone", nil, "Akamai Edge DNS zone to inventory; repeatable")
+	cmd.Flags().StringArrayVar(&propertyIDs, "property-id", nil, "Akamai Property Manager property ID to inventory; repeatable")
+	cmd.Flags().StringVar(&contractID, "contract-id", "", "Optional Akamai contract ID for Property Manager calls")
+	cmd.Flags().StringVar(&groupID, "group-id", "", "Optional Akamai group ID for Property Manager calls")
+	cmd.Flags().BoolVar(&discoverProperties, "discover-properties", false, "List accessible Property Manager properties before collection")
+	cmd.Flags().StringArrayVar(&securityConfigIDs, "security-config-id", nil, "Akamai AppSec config ID or ID:version to inventory; repeatable")
+	cmd.Flags().IntVar(&securityVersion, "security-version", 0, "Default AppSec config version when --security-config-id omits one")
+	cmd.Flags().BoolVar(&discoverSecurityConfigs, "discover-security-configs", false, "List accessible AppSec security configs before collection")
+	cmd.Flags().StringVar(&edgerc, "edgerc", "~/.edgerc", "Akamai EdgeGrid credential file")
+	cmd.Flags().StringVar(&section, "edgerc-section", "default", "Akamai EdgeGrid credential section")
+	cmd.Flags().StringVar(&baseURL, "base-url", "", "Akamai API base URL; defaults to the host in EdgeGrid credentials")
+	cmd.Flags().StringVar(&accountSwitchKey, "account-switch-key", "", "Optional Akamai account switch key")
+	cmd.Flags().StringVar(&hostEnv, "host-env", "AKAMAI_HOST", "Environment variable containing the Akamai API host")
+	cmd.Flags().StringVar(&clientTokenEnv, "client-token-env", "AKAMAI_CLIENT_TOKEN", "Environment variable containing the Akamai client token")
+	cmd.Flags().StringVar(&accessTokenEnv, "access-token-env", "AKAMAI_ACCESS_TOKEN", "Environment variable containing the Akamai access token")
+	cmd.Flags().StringVar(&clientSecretEnv, "client-secret-env", "AKAMAI_CLIENT_SECRET", "Environment variable containing the Akamai client secret")
+	cmd.Flags().StringVar(&accountSwitchKeyEnv, "account-switch-key-env", "AKAMAI_ACCOUNT_KEY", "Environment variable containing an optional Akamai account switch key")
 	return cmd
 }
 
