@@ -21,6 +21,7 @@ Release-blocking v0.1 requirements:
 - Evidence bundle export with checksums, a schema-backed machine-readable manifest, and OpenExit version metadata.
 - Offline evidence bundle verification for archive path safety, manifest schema, manifest digests, and checksums.
 - Machine-readable release manifest generation and offline release artifact verification for OS/architecture binaries and `SHA256SUMS`.
+- Verified release installer for Linux/macOS `amd64` and `arm64` downloads.
 - No-op AI assist and optional external assist behind explicit opt-in.
 - Documentation, examples, CI, release draft workflow, and reproducible release artifacts.
 
@@ -37,11 +38,12 @@ The AI provider path is complete for local fixture assessment workflows and incl
 
 - [ ] `git status --short --branch` is clean and on the intended release branch.
 - [ ] GitHub Actions CI passes the same `make release-check VERSION=0.1.0-ci` gate used for local release readiness.
-- [ ] `make release-check VERSION=0.1.0` passes locally, including verification, CLI smoke pipelines, bundle verification, release artifact builds, and checksum count checks.
+- [ ] `make release-check VERSION=0.1.0` passes locally, including verification, CLI smoke pipelines, bundle verification, release artifact builds, installer smoke, and checksum count checks.
 - [ ] `make verify VERSION=0.1.0` passes, including CLI smoke pipelines.
 - [ ] `make lint` runs `gofmt`, `golangci-lint`, and `go vet`.
-- [ ] `make release-dist VERSION=0.1.0` produces binaries, `dist/SHA256SUMS`, and `dist/RELEASE_MANIFEST.json`.
+- [ ] `make release-dist VERSION=0.1.0` produces binaries, `dist/SHA256SUMS`, `dist/RELEASE_MANIFEST.json`, and `dist/install.sh`.
 - [ ] `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums` passes and fails when a release binary is tampered with.
+- [ ] `OPENEXIT_VERSION=0.1.0 OPENEXIT_BASE_URL=$PWD/dist BIN_DIR=$(mktemp -d)/bin sh scripts/install.sh` installs a verified local release binary and `openexit version` reports `0.1.0`.
 - [ ] `make example VERSION=0.1.0-dev` refreshes `examples/datadog-to-grafana/output/` and exports `examples/datadog-to-grafana/openexit-example.zip`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `map`, `generate --all`, `validate`, `export`.

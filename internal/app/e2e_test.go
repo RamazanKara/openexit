@@ -178,6 +178,14 @@ func TestReleaseManifestAndVerifyCommands(t *testing.T) {
 		}
 	}
 
+	out, err = executeForTestWithOutput("verify-release", manifestPath, "--dist", distDir, "--require-checksums", "--artifact", manifest.Artifacts[0].Path)
+	if err != nil {
+		t.Fatalf("openexit verify-release --artifact failed: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "artifacts: 1") {
+		t.Fatalf("expected single-artifact verification, got:\n%s", out)
+	}
+
 	jsonOut, err := executeForTestWithOutput("verify-release", manifestPath, "--dist", distDir, "--require-checksums", "--json")
 	if err != nil {
 		t.Fatalf("openexit verify-release --json failed: %v\n%s", err, jsonOut)

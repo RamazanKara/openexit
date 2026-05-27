@@ -25,6 +25,16 @@ make build
 
 `openexit demo` uses built-in redacted fixture data, runs the deterministic workflow, validates the output, and writes `./demo/openexit-demo.zip`.
 
+## Install Release Binary
+
+```bash
+curl -fsSL https://github.com/RamazanKara/openexit/releases/latest/download/install.sh | sh
+openexit doctor
+openexit demo ./demo
+```
+
+The installer detects Linux or macOS plus `amd64` or `arm64`, downloads the matching release binary, verifies it against `SHA256SUMS`, verifies that artifact against `RELEASE_MANIFEST.json`, and installs `openexit` into `/usr/local/bin` when writable or `~/.local/bin` otherwise. Set `OPENEXIT_VERSION=v0.1.0` for a specific release or `BIN_DIR=/path/to/bin` for a custom install location.
+
 ## Install From Source
 
 ```bash
@@ -77,7 +87,7 @@ make example VERSION=0.1.0-dev
 - `openexit export --project <project-dir> --format zip --out <file>`
 - `openexit verify-bundle <file> [--json]`
 - `openexit release-manifest [--dist dist --out dist/RELEASE_MANIFEST.json]`
-- `openexit verify-release <manifest.json> [--dist dist] [--require-checksums] [--json]`
+- `openexit verify-release <manifest.json> [--dist dist] [--artifact <name>] [--require-checksums] [--json]`
 - `openexit assist summarize --project <project-dir> --provider noop`
 
 The Datadog, GitHub, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic collectors are read-only. API tokens are read from environment variables or local credential files, are not printed, and are not stored.
@@ -127,6 +137,7 @@ Included in the current implementation:
 - Offline evidence bundle verification for manifest schema, checksums, digest/size metadata, and archive path safety.
 - Release artifact manifest generation with per-binary OS/architecture metadata, size, and SHA-256 digests.
 - Offline release artifact verification against `RELEASE_MANIFEST.json` and optional `SHA256SUMS`.
+- Release installer script that selects the current platform binary and verifies it before installation.
 - Evidence bundle path-safety checks that reject symlinks in exported project sections.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.

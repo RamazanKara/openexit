@@ -974,6 +974,7 @@ func newReleaseManifestCommand() *cobra.Command {
 
 func newVerifyReleaseCommand() *cobra.Command {
 	var distDir string
+	var artifacts []string
 	var jsonOutput, requireChecksums bool
 	cmd := &cobra.Command{
 		Use:   "verify-release <manifest.json>",
@@ -984,6 +985,7 @@ func newVerifyReleaseCommand() *cobra.Command {
 				ManifestPath:     args[0],
 				DistDir:          distDir,
 				RequireChecksums: requireChecksums,
+				Artifacts:        artifacts,
 			})
 			if jsonOutput {
 				enc := json.NewEncoder(cmd.OutOrStdout())
@@ -998,6 +1000,7 @@ func newVerifyReleaseCommand() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&distDir, "dist", "", "Release artifact directory; defaults to the manifest directory")
+	cmd.Flags().StringArrayVar(&artifacts, "artifact", nil, "Verify only a named artifact path; repeatable")
 	cmd.Flags().BoolVar(&requireChecksums, "require-checksums", false, "Require and verify SHA256SUMS alongside the manifest")
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Write machine-readable release verification report")
 	return cmd

@@ -70,6 +70,7 @@ type VerifyOptions struct {
 	ManifestPath     string
 	DistDir          string
 	RequireChecksums bool
+	Artifacts        []string
 }
 
 type VerificationReport struct {
@@ -201,8 +202,13 @@ func Verify(opts VerifyOptions) (*VerificationReport, error) {
 	report.GeneratedAt = manifest.GeneratedAt
 
 	seen := map[string]struct{}{}
+	filters := artifactFilters(opts.Artifacts, report)
+	matchedFilters := map[string]struct{}{}
 	checksums := readChecksums(filepath.Join(distDir, ChecksumFileName), report, opts.RequireChecksums)
 	for _, artifact := range manifest.Artifacts {
+		if len(filters) > 0 && !artifactSelected(artifact, filters, matchedFilters) {
+			continue
+		}
 		result := ArtifactVerification{
 			Name:   artifact.Name,
 			OS:     artifact.OS,
@@ -222,11 +228,13 @@ func Verify(opts VerifyOptions) (*VerificationReport, error) {
 			resultError(&result, "duplicate artifact path")
 		}
 		seen[artifact.Path] = struct{}{}
+		actualDigest := ""
 		if result.Status == "passed" {
 			info, digest, err := fileDigest(filepath.Join(distDir, filepath.FromSlash(artifact.Path)))
 			if err != nil {
 				resultError(&result, err.Error())
 			} else {
+				actualDigest = digest
 				if info.Size() != artifact.Size {
 					resultError(&result, "size mismatch")
 				}
@@ -241,6 +249,8 @@ func Verify(opts VerifyOptions) (*VerificationReport, error) {
 				resultError(&result, "missing SHA256SUMS entry")
 			} else if digest != artifact.SHA256 {
 				resultError(&result, "SHA256SUMS digest mismatch")
+			} else if actualDigest != "" && digest != actualDigest {
+				resultError(&result, "SHA256SUMS digest mismatch")
 			}
 		}
 		if result.Status != "passed" {
@@ -249,6 +259,23 @@ func Verify(opts VerifyOptions) (*VerificationReport, error) {
 			}
 		}
 		report.Artifacts = append(report.Artifacts, result)
+	}
+	if len(filters) > 0 {
+		for filter := range filters {
+			if _, ok := matchedFilters[filter]; !ok {
+				reportError(report, "manifest has no artifact "+filter)
+			}
+		}
+	}
+	if len(report.Artifacts) == 0 {
+		reportError(report, "manifest has no artifacts to verify")
+	}
+	if checksums != nil && len(filters) == 0 {
+		for rel := range checksums {
+			if _, ok := seen[rel]; !ok {
+				reportError(report, "SHA256SUMS entry not present in manifest "+rel)
+			}
+		}
 	}
 	return finishReport(report)
 }
@@ -337,17 +364,40 @@ func readChecksums(path string, report *VerificationReport, require bool) map[st
 			reportError(report, "duplicate SHA256SUMS entry "+rel)
 			continue
 		}
-		_, actual, err := fileDigest(filepath.Join(filepath.Dir(path), filepath.FromSlash(rel)))
-		if err != nil {
-			reportError(report, "SHA256SUMS "+rel+": "+err.Error())
-			continue
-		}
-		if actual != digest {
-			reportError(report, "SHA256SUMS digest mismatch for "+rel)
-		}
 		checksums[rel] = digest
 	}
 	return checksums
+}
+
+func artifactFilters(artifacts []string, report *VerificationReport) map[string]struct{} {
+	if len(artifacts) == 0 {
+		return nil
+	}
+	filters := map[string]struct{}{}
+	for _, artifact := range artifacts {
+		artifact = strings.TrimSpace(artifact)
+		if artifact == "" {
+			reportError(report, "empty artifact filter")
+			continue
+		}
+		if err := safeArtifactPath(artifact); err != nil {
+			reportError(report, "artifact filter "+artifact+": "+err.Error())
+			continue
+		}
+		filters[artifact] = struct{}{}
+	}
+	return filters
+}
+
+func artifactSelected(artifact Artifact, filters, matched map[string]struct{}) bool {
+	selected := false
+	for _, candidate := range []string{artifact.Path, artifact.Name} {
+		if _, ok := filters[candidate]; ok {
+			matched[candidate] = struct{}{}
+			selected = true
+		}
+	}
+	return selected
 }
 
 func safeArtifactPath(rel string) error {

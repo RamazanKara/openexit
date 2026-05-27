@@ -13,7 +13,7 @@ EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
 EXAMPLE_DIR ?= examples/datadog-to-grafana/output
 EXAMPLE_BUNDLE ?= examples/datadog-to-grafana/openexit-example.zip
 
-.PHONY: build test fmt fmt-check lint golangci-lint smoke example example-smoke verify release-dist release-check clean
+.PHONY: build test fmt fmt-check lint golangci-lint smoke example example-smoke verify release-dist install-smoke release-check clean
 
 build:
 	mkdir -p $(dir $(BINARY))
@@ -130,10 +130,19 @@ release-dist:
 	done
 	cd dist && sha256sum openexit_* > SHA256SUMS
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit release-manifest --dist dist --out dist/$(RELEASE_MANIFEST) $(foreach target,$(PLATFORMS),--platform $(target))
+	cp scripts/install.sh dist/install.sh
+	chmod +x dist/install.sh
 
-release-check: verify release-dist
+install-smoke: release-dist
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	OPENEXIT_VERSION=$(VERSION) OPENEXIT_BASE_URL=$(CURDIR)/dist BIN_DIR="$$tmp/bin" sh scripts/install.sh; \
+	"$$tmp/bin/openexit" version | grep -q 'version: $(VERSION)'
+
+release-check: verify release-dist install-smoke
 	@test -s dist/SHA256SUMS
 	@test -s dist/$(RELEASE_MANIFEST)
+	@test -x dist/install.sh
 	@expected=$$(printf '%s\n' $(PLATFORMS) | wc -w | tr -d ' '); \
 	actual=$$(wc -l < dist/SHA256SUMS | tr -d ' '); \
 	if [ "$$actual" != "$$expected" ]; then \
