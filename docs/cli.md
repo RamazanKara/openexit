@@ -39,6 +39,8 @@ The checked-in Datadog example can be refreshed with `make example VERSION=0.1.0
 
 `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums` verifies release binaries after download or before publishing. It validates the manifest schema, rejects unsafe artifact paths, recomputes file sizes and SHA-256 digests, and verifies `SHA256SUMS` when required. Use repeatable `--artifact <name>` to verify only the current platform artifact after download, or `--json` to feed the verification report into a release gate.
 
+`openexit completion bash|zsh|fish|powershell` prints shell completion scripts. Release artifacts also include `openexit.bash`, `_openexit`, `openexit.fish`, and `openexit.ps1` so package managers and manual installs can wire completion without rebuilding from source.
+
 Generate individual artifacts with `openexit generate --artifact <name>`. The primary Datadog path supports `mapping`, `assessment`, `risk-register`, `manual-review`, `cost-drivers`, `target-architecture`, `acceptance-criteria`, `rollback-plan`, `runbook`, `restore-drill-checklist`, `alert-shadowing-plan`, `migration-plan`, `grafana-dashboards`, `prometheus-rules`, `opentelemetry`, and `argocd`. The GitHub Enterprise path also supports `forgejo-migration-candidate`; the identity path also supports `realm-client-candidate`; the edge path also supports `vcl-candidates`, `haproxy-candidates`, and `coraza-rule-candidates`; the AI provider path also supports `litellm-config-candidate`.
 
 The GitHub Enterprise to Forgejo fixture path uses local JSON metadata:

@@ -238,6 +238,35 @@ func TestDoctorCommandReportsRuntimeReadiness(t *testing.T) {
 	}
 }
 
+func TestCompletionCommandGeneratesShellScripts(t *testing.T) {
+	tests := []struct {
+		shell  string
+		marker string
+	}{
+		{shell: "bash", marker: "__openexit_get_completion_results"},
+		{shell: "zsh", marker: "#compdef openexit"},
+		{shell: "fish", marker: "__openexit_perform_completion"},
+		{shell: "powershell", marker: "__openexitCompleterBlock"},
+	}
+	for _, tt := range tests {
+		out, err := executeForTestWithOutput("completion", tt.shell)
+		if err != nil {
+			t.Fatalf("openexit completion %s failed: %v\n%s", tt.shell, err, out)
+		}
+		if !strings.Contains(out, tt.marker) {
+			t.Fatalf("expected completion marker %q for %s, got:\n%s", tt.marker, tt.shell, out)
+		}
+	}
+
+	out, err := executeForTestWithOutput("completion", "elvish")
+	if err == nil {
+		t.Fatalf("expected unsupported shell to fail, got:\n%s", out)
+	}
+	if !strings.Contains(err.Error(), "unsupported shell") {
+		t.Fatalf("expected unsupported shell error, got: %v", err)
+	}
+}
+
 func TestStatusReportsPipelineReadiness(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "demo")
 	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")

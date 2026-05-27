@@ -132,6 +132,10 @@ release-dist:
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit release-manifest --dist dist --out dist/$(RELEASE_MANIFEST) $(foreach target,$(PLATFORMS),--platform $(target))
 	cp scripts/install.sh dist/install.sh
 	chmod +x dist/install.sh
+	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion bash > dist/openexit.bash
+	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion zsh > dist/_openexit
+	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion fish > dist/openexit.fish
+	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion powershell > dist/openexit.ps1
 
 install-smoke: release-dist
 	tmp=$$(mktemp -d); \
@@ -143,6 +147,10 @@ release-check: verify release-dist install-smoke
 	@test -s dist/SHA256SUMS
 	@test -s dist/$(RELEASE_MANIFEST)
 	@test -x dist/install.sh
+	@test -s dist/openexit.bash
+	@test -s dist/_openexit
+	@test -s dist/openexit.fish
+	@test -s dist/openexit.ps1
 	@expected=$$(printf '%s\n' $(PLATFORMS) | wc -w | tr -d ' '); \
 	actual=$$(wc -l < dist/SHA256SUMS | tr -d ' '); \
 	if [ "$$actual" != "$$expected" ]; then \

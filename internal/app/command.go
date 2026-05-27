@@ -53,6 +53,7 @@ func NewRootCommand() *cobra.Command {
 	root.AddCommand(newVerifyBundleCommand())
 	root.AddCommand(newReleaseManifestCommand())
 	root.AddCommand(newVerifyReleaseCommand())
+	root.AddCommand(newCompletionCommand(root))
 	root.AddCommand(newAssistCommand())
 	return root
 }
@@ -1029,6 +1030,31 @@ func writeReleaseVerification(w io.Writer, report *openrelease.VerificationRepor
 	for _, message := range report.Errors {
 		_, _ = fmt.Fprintf(w, "error: %s\n", message)
 	}
+}
+
+func newCompletionCommand(root *cobra.Command) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "completion [bash|zsh|fish|powershell]",
+		Short: "Generate shell completion scripts",
+		Long: "Generate shell completion scripts for OpenExit.\n\n" +
+			"Load the generated script from your shell profile or install the release-provided completion assets.",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			switch args[0] {
+			case "bash":
+				return root.GenBashCompletionV2(cmd.OutOrStdout(), true)
+			case "zsh":
+				return root.GenZshCompletion(cmd.OutOrStdout())
+			case "fish":
+				return root.GenFishCompletion(cmd.OutOrStdout(), true)
+			case "powershell":
+				return root.GenPowerShellCompletionWithDesc(cmd.OutOrStdout())
+			default:
+				return fmt.Errorf("unsupported shell %q; expected bash, zsh, fish, or powershell", args[0])
+			}
+		},
+	}
+	return cmd
 }
 
 func newAssistCommand() *cobra.Command {
