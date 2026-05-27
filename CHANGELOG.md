@@ -27,6 +27,7 @@
 - Added best-effort live Datadog integration installation metadata collection.
 - Added a reproducible Datadog example refresh target and checked-in full example output.
 - Added fixture integration evidence refs and validation coverage for integration evidence.
+- Added Forgejo migration candidate validation for the GitHub Enterprise assessment path.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
 
 ## 0.1.0 - 2026-05-24

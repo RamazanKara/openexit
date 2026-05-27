@@ -108,6 +108,7 @@ func Run(projectDir string, strict bool) (*Report, error) {
 			addPrometheusRuleCandidateChecks(projectDir, inv, mappingResult, add)
 		}
 		addOpenTelemetryCandidateChecks(projectDir, inv, add)
+		addForgejoMigrationCandidateChecks(projectDir, inv, a, add)
 		addEvidenceChecks(projectDir, inv, a, add)
 	}
 	if p, err := loadMigrationPlan(projectDir); err != nil {

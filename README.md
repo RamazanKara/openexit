@@ -116,7 +116,7 @@ Included in the current implementation:
 - OpenTelemetry Collector sketch.
 - ArgoCD starter manifest.
 - Typed migration plan manifest and phase-gate Markdown plan.
-- Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, and ArgoCD candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
+- Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, and Forgejo migration candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export.
 - Evidence bundle path-safety checks that reject symlinks in exported project sections.
 - No-op assist provider and explicit opt-in LiteLLM assist.
@@ -158,7 +158,7 @@ The release checklist lives in `docs/release.md`. A release build should pass `m
 
 ## Assessment Paths
 
-GitHub Enterprise to Forgejo collects repository, team, branch protection, Actions workflow, secret metadata, runner, deploy key, and GitHub App installation metadata from live GitHub/GitHub Enterprise APIs or local fixtures. It generates Forgejo migration assessment, CI compatibility, branch protection mapping, runner migration, repository ownership reports, and a Forgejo migration candidate YAML.
+GitHub Enterprise to Forgejo collects repository, team, branch protection, Actions workflow, secret metadata, runner, deploy key, and GitHub App installation metadata from live GitHub/GitHub Enterprise APIs or local fixtures. It generates Forgejo migration assessment, CI compatibility, branch protection mapping, runner migration, repository ownership reports, and a validated Forgejo migration candidate YAML.
 
 Okta/Auth0 to Keycloak/Zitadel collects applications, SAML/OIDC client metadata, groups, policies, MFA settings, redirect URIs, owners, and break-glass account metadata from live Okta/Auth0 APIs or local fixtures. It generates identity migration risk, realm/client candidate config, break-glass, cutover, and rollback artifacts.
 

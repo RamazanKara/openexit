@@ -43,4 +43,6 @@ Generated target candidate:
 
 - `generated-config/forgejo/migration-candidate.yaml`
 
+Validation checks the Forgejo migration candidate for source/target metadata, non-production safety flags, absence of credentials, repository/team/branch-protection/workflow/secret/runner/deploy-key/app coverage, preserved evidence refs, expected runner/deploy-key target actions, and non-low manual-review findings.
+
 The assessment flags branch protection gaps, GitHub-hosted runner dependency, GitHub-specific Actions usage, unknown secret consumers, offline runners, write-capable deploy keys, GitHub Pages/Packages/Discussions usage, and GitHub App webhook review.

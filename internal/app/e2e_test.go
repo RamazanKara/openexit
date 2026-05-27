@@ -413,20 +413,7 @@ func TestAssessRejectsMismatchedProjectTarget(t *testing.T) {
 
 func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "ghe-demo")
-	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
-
-	commands := [][]string{
-		{"init", projectDir, "--source", "github-enterprise", "--target", "forgejo"},
-		{"collect", "github-fixture", "--project", projectDir, "--input", fixturePath},
-		{"assess", "--project", projectDir, "--target", "forgejo"},
-		{"generate", "--project", projectDir, "--all"},
-		{"validate", "--project", projectDir},
-	}
-	for _, args := range commands {
-		if err := executeForTest(args...); err != nil {
-			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
-		}
-	}
+	runGitHubEnterpriseFixturePipeline(t, projectDir)
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
 		"mapping/openexit.mapping.yaml",
@@ -463,6 +450,67 @@ func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
 		if !strings.Contains(string(assessmentData), id) {
 			t.Fatalf("expected assessment finding %s", id)
 		}
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "forgejo-migration-candidate: passed") {
+		t.Fatalf("expected Forgejo candidate validation marker, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsProductionReadyForgejoCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "ghe-demo")
+	runGitHubEnterpriseFixturePipeline(t, projectDir)
+	candidatePath := filepath.Join(projectDir, "generated-config", "forgejo", "migration-candidate.yaml")
+	data, err := os.ReadFile(candidatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "productionReady: false", "productionReady: true", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain productionReady marker")
+	}
+	if err := os.WriteFile(candidatePath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when Forgejo candidate is marked production ready")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "forgejo-migration-candidate") || !strings.Contains(string(report), "productionReady") {
+		t.Fatalf("expected Forgejo candidate productionReady failure in validation report, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsBrokenForgejoRepositoryCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "ghe-demo")
+	runGitHubEnterpriseFixturePipeline(t, projectDir)
+	candidatePath := filepath.Join(projectDir, "generated-config", "forgejo", "migration-candidate.yaml")
+	data, err := os.ReadFile(candidatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "targetRepository: platform/api", "targetRepository: platform/api-drifted", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain targetRepository metadata")
+	}
+	if err := os.WriteFile(candidatePath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when Forgejo repository candidate drifts from inventory")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "forgejo-migration-candidate") || !strings.Contains(string(report), "targetRepository") {
+		t.Fatalf("expected Forgejo candidate targetRepository failure in validation report, got:\n%s", string(report))
 	}
 }
 
@@ -640,6 +688,23 @@ func TestExportRefusesInvalidProjectWithoutForce(t *testing.T) {
 	}
 	if _, statErr := os.Stat(bundlePath); statErr == nil {
 		t.Fatal("export wrote a bundle despite validation failure")
+	}
+}
+
+func runGitHubEnterpriseFixturePipeline(t *testing.T, projectDir string) {
+	t.Helper()
+	fixturePath := filepath.Join("..", "..", "testdata", "github-enterprise", "small.json")
+	commands := [][]string{
+		{"init", projectDir, "--source", "github-enterprise", "--target", "forgejo"},
+		{"collect", "github-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "forgejo"},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
 	}
 }
 
