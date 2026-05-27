@@ -25,6 +25,7 @@ import (
 	"github.com/RamazanKara/openexit/internal/inventory"
 	"github.com/RamazanKara/openexit/internal/mapping"
 	openrelease "github.com/RamazanKara/openexit/internal/release"
+	opensbom "github.com/RamazanKara/openexit/internal/sbom"
 	"github.com/RamazanKara/openexit/internal/validate"
 	"github.com/RamazanKara/openexit/internal/version"
 	"github.com/spf13/cobra"
@@ -54,6 +55,7 @@ func NewRootCommand() *cobra.Command {
 	root.AddCommand(newReleaseManifestCommand())
 	root.AddCommand(newVerifyReleaseCommand())
 	root.AddCommand(newCompletionCommand(root))
+	root.AddCommand(newSBOMCommand())
 	root.AddCommand(newAssistCommand())
 	return root
 }
@@ -1056,6 +1058,38 @@ func newCompletionCommand(root *cobra.Command) *cobra.Command {
 			}
 		},
 	}
+	return cmd
+}
+
+func newSBOMCommand() *cobra.Command {
+	var out string
+	cmd := &cobra.Command{
+		Use:   "sbom",
+		Short: "Generate a CycloneDX JSON SBOM for this OpenExit binary",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			bom, err := opensbom.Generate(opensbom.Options{
+				Name:    version.Name,
+				Version: version.Version,
+				Commit:  version.Commit,
+				Date:    version.Date,
+			})
+			if err != nil {
+				return err
+			}
+			if out == "" {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				return enc.Encode(bom)
+			}
+			if err := opensbom.Write(out, bom); err != nil {
+				return err
+			}
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "sbom: %s\n", out)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "components: %d\n", len(bom.Components))
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&out, "out", "", "Write SBOM to file instead of stdout")
 	return cmd
 }
 

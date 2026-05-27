@@ -51,7 +51,7 @@ Release candidates can be built locally with:
 make release-check VERSION=0.1.0
 ```
 
-This runs the release gate, writes OS/architecture binaries, writes `dist/SHA256SUMS`, writes `dist/RELEASE_MANIFEST.json`, and verifies the release artifacts.
+This runs the release gate, writes OS/architecture binaries, writes `dist/SHA256SUMS`, writes `dist/RELEASE_MANIFEST.json`, writes `dist/SBOM.cdx.json`, and verifies the release artifacts.
 
 Refresh the checked-in Datadog example project with:
 
@@ -89,6 +89,7 @@ make example VERSION=0.1.0-dev
 - `openexit release-manifest [--dist dist --out dist/RELEASE_MANIFEST.json]`
 - `openexit verify-release <manifest.json> [--dist dist] [--artifact <name>] [--require-checksums] [--json]`
 - `openexit completion [bash|zsh|fish|powershell]`
+- `openexit sbom [--out SBOM.cdx.json]`
 - `openexit assist summarize --project <project-dir> --provider noop`
 
 The Datadog, GitHub, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic collectors are read-only. API tokens are read from environment variables or local credential files, are not printed, and are not stored.
@@ -140,6 +141,7 @@ Included in the current implementation:
 - Offline release artifact verification for binaries and auxiliary assets against `RELEASE_MANIFEST.json` and optional `SHA256SUMS`.
 - Release installer script that selects the current platform binary and verifies it before installation.
 - Shell completion generation for Bash, Zsh, Fish, and PowerShell, including release-provided completion assets.
+- CycloneDX JSON SBOM generation for the OpenExit binary and Go module dependencies.
 - Evidence bundle path-safety checks that reject symlinks in exported project sections.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.

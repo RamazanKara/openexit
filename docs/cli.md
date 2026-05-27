@@ -41,6 +41,8 @@ The checked-in Datadog example can be refreshed with `make example VERSION=0.1.0
 
 `openexit completion bash|zsh|fish|powershell` prints shell completion scripts. Release artifacts also include `openexit.bash`, `_openexit`, `openexit.fish`, and `openexit.ps1` so package managers and manual installs can wire completion without rebuilding from source.
 
+`openexit sbom --out SBOM.cdx.json` writes a CycloneDX JSON SBOM for the current OpenExit binary. It records the stamped OpenExit version, commit, build date, Go toolchain version, and Go module dependencies reported by the binary build info. Release builds include `SBOM.cdx.json` and cover it with both `RELEASE_MANIFEST.json` and `SHA256SUMS`.
+
 Generate individual artifacts with `openexit generate --artifact <name>`. The primary Datadog path supports `mapping`, `assessment`, `risk-register`, `manual-review`, `cost-drivers`, `target-architecture`, `acceptance-criteria`, `rollback-plan`, `runbook`, `restore-drill-checklist`, `alert-shadowing-plan`, `migration-plan`, `grafana-dashboards`, `prometheus-rules`, `opentelemetry`, and `argocd`. The GitHub Enterprise path also supports `forgejo-migration-candidate`; the identity path also supports `realm-client-candidate`; the edge path also supports `vcl-candidates`, `haproxy-candidates`, and `coraza-rule-candidates`; the AI provider path also supports `litellm-config-candidate`.
 
 The GitHub Enterprise to Forgejo fixture path uses local JSON metadata:

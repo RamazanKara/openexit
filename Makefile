@@ -7,7 +7,8 @@ LDFLAGS := -s -w -X github.com/RamazanKara/openexit/internal/version.Version=$(V
 GOFILES := $(shell find . -name '*.go' -not -path './bin/*' -not -path './dist/*')
 PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 RELEASE_MANIFEST ?= RELEASE_MANIFEST.json
-RELEASE_ASSETS ?= install.sh openexit.bash _openexit openexit.fish openexit.ps1
+RELEASE_SBOM ?= SBOM.cdx.json
+RELEASE_ASSETS ?= install.sh openexit.bash _openexit openexit.fish openexit.ps1 $(RELEASE_SBOM)
 GOLANGCI_LINT_VERSION ?= v2.12.2
 GOLANGCI_LINT ?= bin/golangci-lint
 EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
@@ -135,6 +136,7 @@ release-dist:
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion zsh > dist/_openexit
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion fish > dist/openexit.fish
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion powershell > dist/openexit.ps1
+	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit sbom --out dist/$(RELEASE_SBOM)
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit release-manifest --dist dist --out dist/$(RELEASE_MANIFEST) $(foreach target,$(PLATFORMS),--platform $(target)) $(foreach asset,$(RELEASE_ASSETS),--asset $(asset))
 	cd dist && sha256sum openexit_* $(RELEASE_ASSETS) > SHA256SUMS
 
@@ -152,6 +154,7 @@ release-check: verify release-dist install-smoke
 	@test -s dist/_openexit
 	@test -s dist/openexit.fish
 	@test -s dist/openexit.ps1
+	@test -s dist/$(RELEASE_SBOM)
 	@expected=$$(printf '%s\n' $(PLATFORMS) $(RELEASE_ASSETS) | wc -w | tr -d ' '); \
 	actual=$$(wc -l < dist/SHA256SUMS | tr -d ' '); \
 	if [ "$$actual" != "$$expected" ]; then \

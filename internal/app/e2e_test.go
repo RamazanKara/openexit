@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	openrelease "github.com/RamazanKara/openexit/internal/release"
+	opensbom "github.com/RamazanKara/openexit/internal/sbom"
 	publicschemas "github.com/RamazanKara/openexit/schemas"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
@@ -268,6 +269,36 @@ func TestCompletionCommandGeneratesShellScripts(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unsupported shell") {
 		t.Fatalf("expected unsupported shell error, got: %v", err)
+	}
+}
+
+func TestSBOMCommandGeneratesCycloneDXJSON(t *testing.T) {
+	out, err := executeForTestWithOutput("sbom")
+	if err != nil {
+		t.Fatalf("openexit sbom failed: %v\n%s", err, out)
+	}
+	var bom opensbom.BOM
+	if err := json.Unmarshal([]byte(out), &bom); err != nil {
+		t.Fatalf("decode SBOM JSON: %v\n%s", err, out)
+	}
+	if bom.BOMFormat != opensbom.BOMFormat || bom.SpecVersion != opensbom.SpecVersion || bom.Metadata.Component.Name != "openexit" {
+		t.Fatalf("unexpected SBOM: %+v", bom)
+	}
+
+	path := filepath.Join(t.TempDir(), "SBOM.cdx.json")
+	out, err = executeForTestWithOutput("sbom", "--out", path)
+	if err != nil {
+		t.Fatalf("openexit sbom --out failed: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "components:") {
+		t.Fatalf("expected SBOM summary, got:\n%s", out)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(data, &bom); err != nil {
+		t.Fatalf("decode written SBOM JSON: %v\n%s", err, string(data))
 	}
 }
 
