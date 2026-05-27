@@ -58,9 +58,7 @@ API surface used:
 ```bash
 openexit init ./ai-demo --source ai-provider --target vllm-litellm
 openexit collect ai-fixture --project ./ai-demo --input ./testdata/ai-provider/small.json
-openexit assess --project ./ai-demo --target vllm-litellm
-openexit generate --project ./ai-demo --all
-openexit validate --project ./ai-demo
+openexit run --project ./ai-demo
 ```
 
 ## Live OpenAI Demo
@@ -75,9 +73,7 @@ openexit collect openai \
   --owner platform-ai \
   --fallback-strategy manual-queue \
   --fallback-manual-queue
-openexit assess --project ./openai-live --target vllm-litellm
-openexit generate --project ./openai-live --all
-openexit validate --project ./openai-live
+openexit run --project ./openai-live
 ```
 
 ## Live Anthropic Demo
@@ -93,9 +89,7 @@ openexit collect anthropic \
   --owner platform-ai \
   --fallback-strategy manual-queue \
   --fallback-manual-queue
-openexit assess --project ./anthropic-live --target vllm-litellm
-openexit generate --project ./anthropic-live --all
-openexit validate --project ./anthropic-live
+openexit run --project ./anthropic-live
 ```
 
 ## Generated Artifacts

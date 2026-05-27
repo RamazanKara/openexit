@@ -108,6 +108,48 @@ func TestStatusReportsPipelineReadiness(t *testing.T) {
 	}
 }
 
+func TestRunCommandCompletesCollectedProject(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	bundlePath := filepath.Join(t.TempDir(), "openexit-run.zip")
+	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
+
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	out, err := executeForTestWithOutput("run", "--project", projectDir, "--export", "--out", bundlePath)
+	if err != nil {
+		t.Fatalf("openexit run failed: %v\n%s", err, out)
+	}
+	for _, marker := range []string{
+		"run: assess datadog -> grafana-lgtm",
+		"run: map",
+		"run: generate --all",
+		"run: validate",
+		"validation status: passed",
+		"export-ready: yes",
+		"exported " + bundlePath,
+	} {
+		if !strings.Contains(out, marker) {
+			t.Fatalf("expected run output marker %q, got:\n%s", marker, out)
+		}
+	}
+	for _, rel := range expectedProjectFiles() {
+		path := filepath.Join(projectDir, filepath.FromSlash(rel))
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("expected generated file %s: %v", rel, err)
+		}
+	}
+	if err := assertBundle(bundlePath, expectedBundleFiles()); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCLICommandFailuresAreActionable(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "demo")
 	if err := executeForTest("init", projectDir); err != nil {

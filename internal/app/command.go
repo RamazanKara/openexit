@@ -40,6 +40,7 @@ func NewRootCommand() *cobra.Command {
 	root.AddCommand(newVersionCommand())
 	root.AddCommand(newInitCommand())
 	root.AddCommand(newStatusCommand())
+	root.AddCommand(newRunCommand())
 	root.AddCommand(newCollectCommand())
 	root.AddCommand(newAssessCommand())
 	root.AddCommand(newMapCommand())
@@ -108,6 +109,93 @@ func newStatusCommand() *cobra.Command {
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Write machine-readable project status")
 	return cmd
+}
+
+func newRunCommand() *cobra.Command {
+	var project, out string
+	var exportBundle, strict bool
+	cmd := &cobra.Command{
+		Use:   "run",
+		Short: "Run the deterministic pipeline for a collected project",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := runProjectWorkflow(cmd.Context(), cmd.OutOrStdout(), workflowOptions{
+				ProjectDir: project,
+				Strict:     strict,
+				Export:     exportBundle,
+				Out:        out,
+			})
+			return err
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().BoolVar(&strict, "strict", false, "Treat validation warnings as failures")
+	cmd.Flags().BoolVar(&exportBundle, "export", false, "Export an evidence bundle after validation passes")
+	cmd.Flags().StringVar(&out, "out", "", "Output bundle path when --export is set; defaults to openexit-evidence.zip")
+	return cmd
+}
+
+type workflowOptions struct {
+	ProjectDir string
+	Strict     bool
+	Export     bool
+	Out        string
+}
+
+func runProjectWorkflow(ctx context.Context, w io.Writer, opts workflowOptions) (*ProjectStatus, error) {
+	if opts.ProjectDir == "" {
+		opts.ProjectDir = "."
+	}
+	cfg, err := LoadProjectConfig(opts.ProjectDir)
+	if err != nil {
+		return nil, err
+	}
+	_, _ = fmt.Fprintf(w, "run: assess %s -> %s\n", cfg.Source.Type, cfg.Target.Type)
+	a, err := runAssessment(ctx, opts.ProjectDir, cfg.Target.Type)
+	if err != nil {
+		return nil, err
+	}
+	_, _ = fmt.Fprintf(w, "assessment written with %d findings\n", len(a.Findings))
+
+	_, _ = fmt.Fprintln(w, "run: map")
+	if err := writeMapping(opts.ProjectDir); err != nil {
+		return nil, err
+	}
+	result, err := loadMappingManifest(opts.ProjectDir)
+	if err != nil {
+		return nil, err
+	}
+	_, _ = fmt.Fprintf(w, "mapping written: %d dashboard drafts, %d alert rule drafts, %d manual review items\n", len(result.DashboardDrafts), len(result.AlertRuleDrafts), len(result.ManualReview))
+
+	_, _ = fmt.Fprintln(w, "run: generate --all")
+	if err := generate.GenerateAll(opts.ProjectDir); err != nil {
+		return nil, err
+	}
+	_, _ = fmt.Fprintln(w, "generated all artifacts")
+
+	_, _ = fmt.Fprintln(w, "run: validate")
+	report, validationErr := validate.Run(opts.ProjectDir, opts.Strict)
+	if report != nil {
+		_, _ = fmt.Fprintf(w, "validation status: %s\n", report.Status)
+	}
+	status, statusErr := CheckProject(opts.ProjectDir)
+	if statusErr != nil {
+		return status, statusErr
+	}
+	writeProjectStatus(w, status)
+	if validationErr != nil {
+		return status, validationErr
+	}
+	if opts.Export {
+		if opts.Out == "" {
+			opts.Out = "openexit-evidence.zip"
+		}
+		_, _ = fmt.Fprintf(w, "run: export %s\n", opts.Out)
+		if err := openexport.Bundle(openexport.Options{ProjectDir: opts.ProjectDir, Format: "zip", Out: opts.Out}); err != nil {
+			return status, err
+		}
+		_, _ = fmt.Fprintf(w, "exported %s\n", opts.Out)
+	}
+	return status, nil
 }
 
 func writeProjectStatus(w io.Writer, status *ProjectStatus) {
@@ -626,28 +714,8 @@ func newAssessCommand() *cobra.Command {
 		Use:   "assess",
 		Short: "Analyze inventory and write an assessment manifest",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := LoadProjectConfig(project)
+			result, err := runAssessment(cmd.Context(), project, target)
 			if err != nil {
-				return err
-			}
-			if target == "" {
-				target = cfg.Target.Type
-			}
-			inv, err := loadInventoryManifest(project)
-			if err != nil {
-				return err
-			}
-			if cfg.Source.Type != inv.Source.Type {
-				return fmt.Errorf("project source %q does not match inventory source %q; collect inventory for the configured source or update openexit.yaml", cfg.Source.Type, inv.Source.Type)
-			}
-			if target != cfg.Target.Type {
-				return fmt.Errorf("assessment target %q does not match project target %q; use --target %s or update openexit.yaml", target, cfg.Target.Type, cfg.Target.Type)
-			}
-			result, err := assessment.Run(cmd.Context(), inv, target, time.Now().UTC())
-			if err != nil {
-				return err
-			}
-			if err := writeAssessmentManifest(project, result); err != nil {
 				return err
 			}
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "assessment written with %d findings\n", len(result.Findings))
@@ -657,6 +725,34 @@ func newAssessCommand() *cobra.Command {
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
 	cmd.Flags().StringVar(&target, "target", "", "Target migration platform")
 	return cmd
+}
+
+func runAssessment(ctx context.Context, project, target string) (*assessment.Assessment, error) {
+	cfg, err := LoadProjectConfig(project)
+	if err != nil {
+		return nil, err
+	}
+	if target == "" {
+		target = cfg.Target.Type
+	}
+	inv, err := loadInventoryManifest(project)
+	if err != nil {
+		return nil, err
+	}
+	if cfg.Source.Type != inv.Source.Type {
+		return nil, fmt.Errorf("project source %q does not match inventory source %q; collect inventory for the configured source or update openexit.yaml", cfg.Source.Type, inv.Source.Type)
+	}
+	if target != cfg.Target.Type {
+		return nil, fmt.Errorf("assessment target %q does not match project target %q; use --target %s or update openexit.yaml", target, cfg.Target.Type, cfg.Target.Type)
+	}
+	result, err := assessment.Run(ctx, inv, target, time.Now().UTC())
+	if err != nil {
+		return nil, err
+	}
+	if err := writeAssessmentManifest(project, result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func newMapCommand() *cobra.Command {
