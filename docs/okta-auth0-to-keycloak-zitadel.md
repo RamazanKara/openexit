@@ -61,4 +61,6 @@ Generated artifacts:
 - `identity-cutover-plan.md`
 - `identity-rollback-plan.md`
 
+Validation checks the identity realm/client candidate for source/target metadata, non-production safety flags, absence of credentials, realm provider metadata, application/client coverage, group coverage, policy coverage, MFA settings, break-glass account metadata, and preserved evidence refs.
+
 The assessment flags missing owners, missing group mappings, insecure redirect URIs, OIDC implicit grant usage, SAML signing metadata gaps, MFA policy gaps, weak MFA factors, and break-glass account issues.

@@ -852,11 +852,15 @@ func writeIdentityRealmClientCandidate(ctx *Context) error {
 			"name":     inventory.Slug(ctx.Assessment.Metadata.Project),
 			"provider": ctx.Inventory.Source.Site,
 		},
-		"clients":            identityClientCandidates(ctx.Inventory.Assets.IdentityApps),
-		"groups":             identityGroupCandidates(ctx.Inventory.Assets.IdentityGroups),
-		"policies":           identityPolicyCandidates(ctx.Inventory.Assets.IdentityPolicies),
-		"mfaSettings":        identityMFACandidates(ctx.Inventory.Assets.MFASettings),
-		"breakGlassAccounts": identityBreakGlassCandidates(ctx.Inventory.Assets.BreakGlassAccounts),
+		"clients":                identityClientCandidates(ctx.Inventory.Assets.IdentityApps),
+		"groups":                 identityGroupCandidates(ctx.Inventory.Assets.IdentityGroups),
+		"policies":               identityPolicyCandidates(ctx.Inventory.Assets.IdentityPolicies),
+		"mfaSettings":            identityMFACandidates(ctx.Inventory.Assets.MFASettings),
+		"breakGlassAccounts":     identityBreakGlassCandidates(ctx.Inventory.Assets.BreakGlassAccounts),
+		"humanReviewRequired":    true,
+		"credentialsIncluded":    false,
+		"productionReady":        false,
+		"candidateGeneratedFrom": "redacted-openexit-inventory",
 	}
 	data, err := yaml.Marshal(candidate)
 	if err != nil {
@@ -865,7 +869,7 @@ func writeIdentityRealmClientCandidate(ctx *Context) error {
 	if err := os.WriteFile(filepath.Join(dir, "realm-client-candidate.yaml"), data, 0o644); err != nil {
 		return err
 	}
-	readme := "# Identity Candidate Config\n\nThis directory contains deterministic Keycloak/Zitadel candidate configuration derived from redacted identity inventory. Review every client, redirect URI, policy, and break-glass account before use.\n"
+	readme := "# Identity Candidate Config\n\nThis directory contains deterministic Keycloak/Zitadel candidate configuration derived from redacted identity inventory. It contains no client secrets, user passwords, MFA secrets, or token values, and it is not production-ready. Review every client, redirect URI, policy, MFA setting, and break-glass account before use.\n"
 	return os.WriteFile(filepath.Join(dir, "README.md"), []byte(readme), 0o644)
 }
 

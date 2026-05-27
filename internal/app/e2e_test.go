@@ -516,20 +516,7 @@ func TestValidationRejectsBrokenForgejoRepositoryCandidate(t *testing.T) {
 
 func TestIdentityFixturePipeline(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "identity-demo")
-	fixturePath := filepath.Join("..", "..", "testdata", "identity", "small.json")
-
-	commands := [][]string{
-		{"init", projectDir, "--source", "identity", "--target", "keycloak-zitadel"},
-		{"collect", "identity-fixture", "--project", projectDir, "--input", fixturePath},
-		{"assess", "--project", projectDir, "--target", "keycloak-zitadel"},
-		{"generate", "--project", projectDir, "--all"},
-		{"validate", "--project", projectDir},
-	}
-	for _, args := range commands {
-		if err := executeForTest(args...); err != nil {
-			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
-		}
-	}
+	runIdentityFixturePipeline(t, projectDir)
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
 		"mapping/openexit.mapping.yaml",
@@ -565,6 +552,67 @@ func TestIdentityFixturePipeline(t *testing.T) {
 		if !strings.Contains(string(assessmentData), id) {
 			t.Fatalf("expected assessment finding %s", id)
 		}
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "identity-realm-client-candidate: passed") {
+		t.Fatalf("expected identity candidate validation marker, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsProductionReadyIdentityCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "identity-demo")
+	runIdentityFixturePipeline(t, projectDir)
+	candidatePath := filepath.Join(projectDir, "generated-config", "identity", "realm-client-candidate.yaml")
+	data, err := os.ReadFile(candidatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "productionReady: false", "productionReady: true", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain productionReady marker")
+	}
+	if err := os.WriteFile(candidatePath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when identity candidate is marked production ready")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "identity-realm-client-candidate") || !strings.Contains(string(report), "productionReady") {
+		t.Fatalf("expected identity candidate productionReady failure in validation report, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsBrokenIdentityClientCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "identity-demo")
+	runIdentityFixturePipeline(t, projectDir)
+	candidatePath := filepath.Join(projectDir, "generated-config", "identity", "realm-client-candidate.yaml")
+	data, err := os.ReadFile(candidatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "clientId: api-web", "clientId: api-web-drifted", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain clientId metadata")
+	}
+	if err := os.WriteFile(candidatePath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when identity client candidate drifts from inventory")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "identity-realm-client-candidate") || !strings.Contains(string(report), "clientId") {
+		t.Fatalf("expected identity candidate clientId failure in validation report, got:\n%s", string(report))
 	}
 }
 
@@ -698,6 +746,23 @@ func runGitHubEnterpriseFixturePipeline(t *testing.T, projectDir string) {
 		{"init", projectDir, "--source", "github-enterprise", "--target", "forgejo"},
 		{"collect", "github-fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "forgejo"},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+}
+
+func runIdentityFixturePipeline(t *testing.T, projectDir string) {
+	t.Helper()
+	fixturePath := filepath.Join("..", "..", "testdata", "identity", "small.json")
+	commands := [][]string{
+		{"init", projectDir, "--source", "identity", "--target", "keycloak-zitadel"},
+		{"collect", "identity-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "keycloak-zitadel"},
 		{"generate", "--project", projectDir, "--all"},
 		{"validate", "--project", projectDir},
 	}
