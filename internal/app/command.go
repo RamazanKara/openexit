@@ -929,7 +929,7 @@ func writeBundleVerification(w io.Writer, report *openexport.VerificationReport)
 
 func newReleaseManifestCommand() *cobra.Command {
 	var distDir, out, manifestVersion, commit, date string
-	var platforms []string
+	var platforms, assets []string
 	cmd := &cobra.Command{
 		Use:   "release-manifest",
 		Short: "Write a machine-readable OpenExit release artifact manifest",
@@ -952,6 +952,7 @@ func newReleaseManifestCommand() *cobra.Command {
 				Commit:    commit,
 				Date:      date,
 				Platforms: platforms,
+				Assets:    assets,
 			})
 			if err != nil {
 				return err
@@ -970,6 +971,7 @@ func newReleaseManifestCommand() *cobra.Command {
 	cmd.Flags().StringVar(&commit, "commit", "", "Release commit; defaults to the stamped CLI commit")
 	cmd.Flags().StringVar(&date, "date", "", "Release build date; defaults to the stamped CLI date")
 	cmd.Flags().StringArrayVar(&platforms, "platform", nil, "Release target os/arch; repeatable and defaults to the standard release matrix")
+	cmd.Flags().StringArrayVar(&assets, "asset", nil, "Additional non-binary release asset path under --dist; repeatable")
 	return cmd
 }
 

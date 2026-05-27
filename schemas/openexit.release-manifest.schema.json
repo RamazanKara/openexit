@@ -24,10 +24,11 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["name", "os", "arch", "path", "size", "sha256"],
+        "required": ["name", "type", "path", "size", "sha256"],
         "additionalProperties": false,
         "properties": {
           "name": { "type": "string", "minLength": 1 },
+          "type": { "enum": ["binary", "asset"] },
           "os": { "type": "string", "minLength": 1 },
           "arch": { "type": "string", "minLength": 1 },
           "path": {
@@ -37,7 +38,16 @@
           },
           "size": { "type": "integer", "minimum": 0 },
           "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "type": { "const": "binary" } },
+              "required": ["type"]
+            },
+            "then": { "required": ["os", "arch"] }
+          }
+        ]
       }
     }
   }

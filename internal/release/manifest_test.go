@@ -16,6 +16,7 @@ func TestGenerateWriteAndVerifyManifest(t *testing.T) {
 	platforms := []string{"linux/amd64", "windows/amd64"}
 	writeArtifact(t, distDir, ArtifactName(version, "linux", "amd64"), "linux binary")
 	writeArtifact(t, distDir, ArtifactName(version, "windows", "amd64"), "windows binary")
+	writeArtifact(t, distDir, "install.sh", "#!/bin/sh\n")
 
 	manifest, err := Generate(ManifestOptions{
 		DistDir:     distDir,
@@ -23,13 +24,24 @@ func TestGenerateWriteAndVerifyManifest(t *testing.T) {
 		Commit:      "abc123",
 		Date:        "2026-05-27T00:00:00Z",
 		Platforms:   platforms,
+		Assets:      []string{"install.sh"},
 		GeneratedAt: time.Date(2026, 5, 27, 1, 2, 3, 0, time.UTC),
 	})
 	if err != nil {
 		t.Fatalf("generate manifest: %v", err)
 	}
-	if len(manifest.Artifacts) != 2 || manifest.Build.Version != version {
+	if len(manifest.Artifacts) != 3 || manifest.Build.Version != version {
 		t.Fatalf("unexpected manifest: %+v", manifest)
+	}
+	seenTypes := map[string]bool{}
+	for _, artifact := range manifest.Artifacts {
+		seenTypes[artifact.Type] = true
+		if artifact.Type == ArtifactAsset && (artifact.OS != "" || artifact.Arch != "") {
+			t.Fatalf("asset should not have os/arch metadata: %+v", artifact)
+		}
+	}
+	if !seenTypes[ArtifactBinary] || !seenTypes[ArtifactAsset] {
+		t.Fatalf("expected binary and asset entries, got %+v", manifest.Artifacts)
 	}
 	manifestPath := filepath.Join(distDir, DefaultManifest)
 	if err := Write(manifestPath, manifest); err != nil {
@@ -43,7 +55,7 @@ func TestGenerateWriteAndVerifyManifest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("verify release: %v", err)
 	}
-	if report.Status != "passed" || len(report.Artifacts) != 2 || report.ChecksumEntries != 2 {
+	if report.Status != "passed" || len(report.Artifacts) != 3 || report.ChecksumEntries != 3 {
 		t.Fatalf("unexpected verification report: %+v", report)
 	}
 }
@@ -53,12 +65,14 @@ func TestVerifyManifestRejectsTamperedArtifact(t *testing.T) {
 	version := "1.2.3"
 	name := ArtifactName(version, "linux", "amd64")
 	writeArtifact(t, distDir, name, "original binary")
+	writeArtifact(t, distDir, "install.sh", "#!/bin/sh\n")
 	manifest, err := Generate(ManifestOptions{
 		DistDir:   distDir,
 		Version:   version,
 		Commit:    "abc123",
 		Date:      "2026-05-27T00:00:00Z",
 		Platforms: []string{"linux/amd64"},
+		Assets:    []string{"install.sh"},
 	})
 	if err != nil {
 		t.Fatalf("generate manifest: %v", err)
@@ -81,6 +95,16 @@ func TestVerifyManifestRejectsTamperedArtifact(t *testing.T) {
 		if !strings.Contains(joined, marker) {
 			t.Fatalf("expected marker %q in errors: %s", marker, joined)
 		}
+	}
+
+	writeArtifact(t, distDir, name, "original binary")
+	writeArtifact(t, distDir, "install.sh", "#!/bin/sh\necho tampered\n")
+	report, err = Verify(VerifyOptions{ManifestPath: manifestPath, DistDir: distDir, RequireChecksums: true})
+	if err == nil {
+		t.Fatalf("expected auxiliary asset tampering to fail, got report %+v", report)
+	}
+	if !strings.Contains(strings.Join(report.Errors, "\n"), "install.sh") {
+		t.Fatalf("expected install.sh tamper error, got %+v", report.Errors)
 	}
 }
 

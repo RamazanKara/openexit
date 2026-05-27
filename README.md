@@ -136,8 +136,8 @@ Included in the current implementation:
 - Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export with README, checksums, and a schema-backed machine-readable manifest.
 - Offline evidence bundle verification for manifest schema, checksums, digest/size metadata, and archive path safety.
-- Release artifact manifest generation with per-binary OS/architecture metadata, size, and SHA-256 digests.
-- Offline release artifact verification against `RELEASE_MANIFEST.json` and optional `SHA256SUMS`.
+- Release artifact manifest generation with binary OS/architecture metadata, auxiliary asset metadata, sizes, and SHA-256 digests.
+- Offline release artifact verification for binaries and auxiliary assets against `RELEASE_MANIFEST.json` and optional `SHA256SUMS`.
 - Release installer script that selects the current platform binary and verifies it before installation.
 - Shell completion generation for Bash, Zsh, Fish, and PowerShell, including release-provided completion assets.
 - Evidence bundle path-safety checks that reject symlinks in exported project sections.

@@ -133,6 +133,9 @@ func TestReleaseManifestAndVerifyCommands(t *testing.T) {
 			t.Fatalf("write artifact %s: %v", name, err)
 		}
 	}
+	if err := os.WriteFile(filepath.Join(distDir, "install.sh"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatalf("write install asset: %v", err)
+	}
 	manifestPath := filepath.Join(distDir, openrelease.DefaultManifest)
 
 	args := []string{
@@ -146,11 +149,12 @@ func TestReleaseManifestAndVerifyCommands(t *testing.T) {
 	for _, platform := range platforms {
 		args = append(args, "--platform", platform)
 	}
+	args = append(args, "--asset", "install.sh")
 	out, err := executeForTestWithOutput(args...)
 	if err != nil {
 		t.Fatalf("openexit release-manifest failed: %v\n%s", err, out)
 	}
-	if !strings.Contains(out, "artifacts: 2") {
+	if !strings.Contains(out, "artifacts: 3") {
 		t.Fatalf("expected release-manifest artifact count, got:\n%s", out)
 	}
 	manifestData, err := os.ReadFile(manifestPath)
@@ -172,7 +176,7 @@ func TestReleaseManifestAndVerifyCommands(t *testing.T) {
 	if err != nil {
 		t.Fatalf("openexit verify-release failed: %v\n%s", err, out)
 	}
-	for _, marker := range []string{"status: passed", "build: version=9.9.9-test", "artifacts: 2", "checksums: 2"} {
+	for _, marker := range []string{"status: passed", "build: version=9.9.9-test", "artifacts: 3", "checksums: 3"} {
 		if !strings.Contains(out, marker) {
 			t.Fatalf("expected verify-release marker %q, got:\n%s", marker, out)
 		}
@@ -194,7 +198,7 @@ func TestReleaseManifestAndVerifyCommands(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOut), &report); err != nil {
 		t.Fatalf("decode verify-release JSON: %v\n%s", err, jsonOut)
 	}
-	if report.Status != "passed" || len(report.Artifacts) != 2 || report.ChecksumEntries != 2 {
+	if report.Status != "passed" || len(report.Artifacts) != 3 || report.ChecksumEntries != 3 {
 		t.Fatalf("unexpected verify-release JSON report: %+v", report)
 	}
 }

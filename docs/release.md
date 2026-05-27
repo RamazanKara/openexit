@@ -20,7 +20,7 @@ Release-blocking v0.1 requirements:
 - Validation engine with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence refs, secret scan, optional promtool, and optional kubeconform.
 - Evidence bundle export with checksums, a schema-backed machine-readable manifest, and OpenExit version metadata.
 - Offline evidence bundle verification for archive path safety, manifest schema, manifest digests, and checksums.
-- Machine-readable release manifest generation and offline release artifact verification for OS/architecture binaries and `SHA256SUMS`.
+- Machine-readable release manifest generation and offline release artifact verification for OS/architecture binaries, auxiliary release assets, and `SHA256SUMS`.
 - Verified release installer for Linux/macOS `amd64` and `arm64` downloads.
 - Shell completion generation and release completion assets for Bash, Zsh, Fish, and PowerShell.
 - No-op AI assist and optional external assist behind explicit opt-in.
@@ -43,7 +43,7 @@ The AI provider path is complete for local fixture assessment workflows and incl
 - [ ] `make verify VERSION=0.1.0` passes, including CLI smoke pipelines.
 - [ ] `make lint` runs `gofmt`, `golangci-lint`, and `go vet`.
 - [ ] `make release-dist VERSION=0.1.0` produces binaries, `dist/SHA256SUMS`, `dist/RELEASE_MANIFEST.json`, `dist/install.sh`, and completion assets `openexit.bash`, `_openexit`, `openexit.fish`, and `openexit.ps1`.
-- [ ] `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums` passes and fails when a release binary is tampered with.
+- [ ] `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums` passes and covers binaries, `install.sh`, and completion assets; it fails when a release artifact is tampered with.
 - [ ] `OPENEXIT_VERSION=0.1.0 OPENEXIT_BASE_URL=$PWD/dist BIN_DIR=$(mktemp -d)/bin sh scripts/install.sh` installs a verified local release binary and `openexit version` reports `0.1.0`.
 - [ ] `make example VERSION=0.1.0-dev` refreshes `examples/datadog-to-grafana/output/` and exports `examples/datadog-to-grafana/openexit-example.zip`.
 - [ ] Datadog definition-of-done pipeline passes:
@@ -73,7 +73,7 @@ The AI provider path is complete for local fixture assessment workflows and incl
 - [ ] Exported bundle README includes version, commit, build date, bundle timestamp, and candidate warning.
 - [ ] Exported bundle `manifest.json` includes build metadata, project source/target, validation totals, and per-file SHA-256 digests, and validates against `schemas/openexit.evidence-bundle.schema.json`.
 - [ ] `openexit verify-bundle <zip>` passes for exported bundles and fails when an archived file is tampered with.
-- [ ] Release manifest validates against `schemas/openexit.release-manifest.schema.json` and includes version, commit, build date, generation time, OS/architecture metadata, sizes, and SHA-256 digests.
+- [ ] Release manifest validates against `schemas/openexit.release-manifest.schema.json` and includes version, commit, build date, generation time, artifact type, binary OS/architecture metadata, sizes, and SHA-256 digests.
 - [ ] Export refuses symlinks in exported project sections, including when `--force` is used.
 - [ ] No credentials, tokens, passwords, or private keys are present in fixtures, generated files, docs, or bundles.
 - [ ] Draft release notes have been reviewed.

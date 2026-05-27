@@ -7,6 +7,7 @@ LDFLAGS := -s -w -X github.com/RamazanKara/openexit/internal/version.Version=$(V
 GOFILES := $(shell find . -name '*.go' -not -path './bin/*' -not -path './dist/*')
 PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 RELEASE_MANIFEST ?= RELEASE_MANIFEST.json
+RELEASE_ASSETS ?= install.sh openexit.bash _openexit openexit.fish openexit.ps1
 GOLANGCI_LINT_VERSION ?= v2.12.2
 GOLANGCI_LINT ?= bin/golangci-lint
 EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
@@ -128,14 +129,14 @@ release-dist:
 		echo "building $$out"; \
 		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o "$$out" ./cmd/openexit; \
 	done
-	cd dist && sha256sum openexit_* > SHA256SUMS
-	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit release-manifest --dist dist --out dist/$(RELEASE_MANIFEST) $(foreach target,$(PLATFORMS),--platform $(target))
 	cp scripts/install.sh dist/install.sh
 	chmod +x dist/install.sh
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion bash > dist/openexit.bash
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion zsh > dist/_openexit
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion fish > dist/openexit.fish
 	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit completion powershell > dist/openexit.ps1
+	$(GO) run -trimpath -ldflags "$(LDFLAGS)" ./cmd/openexit release-manifest --dist dist --out dist/$(RELEASE_MANIFEST) $(foreach target,$(PLATFORMS),--platform $(target)) $(foreach asset,$(RELEASE_ASSETS),--asset $(asset))
+	cd dist && sha256sum openexit_* $(RELEASE_ASSETS) > SHA256SUMS
 
 install-smoke: release-dist
 	tmp=$$(mktemp -d); \
@@ -151,7 +152,7 @@ release-check: verify release-dist install-smoke
 	@test -s dist/_openexit
 	@test -s dist/openexit.fish
 	@test -s dist/openexit.ps1
-	@expected=$$(printf '%s\n' $(PLATFORMS) | wc -w | tr -d ' '); \
+	@expected=$$(printf '%s\n' $(PLATFORMS) $(RELEASE_ASSETS) | wc -w | tr -d ' '); \
 	actual=$$(wc -l < dist/SHA256SUMS | tr -d ' '); \
 	if [ "$$actual" != "$$expected" ]; then \
 		echo "expected $$expected release checksums, got $$actual"; \

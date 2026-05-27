@@ -24,6 +24,8 @@ const (
 	Kind             = "ReleaseManifest"
 	DefaultManifest  = "RELEASE_MANIFEST.json"
 	ChecksumFileName = "SHA256SUMS"
+	ArtifactBinary   = "binary"
+	ArtifactAsset    = "asset"
 )
 
 var DefaultPlatforms = []string{
@@ -50,8 +52,9 @@ type Build struct {
 
 type Artifact struct {
 	Name   string `json:"name"`
-	OS     string `json:"os"`
-	Arch   string `json:"arch"`
+	Type   string `json:"type"`
+	OS     string `json:"os,omitempty"`
+	Arch   string `json:"arch,omitempty"`
 	Path   string `json:"path"`
 	Size   int64  `json:"size"`
 	SHA256 string `json:"sha256"`
@@ -63,6 +66,7 @@ type ManifestOptions struct {
 	Commit      string
 	Date        string
 	Platforms   []string
+	Assets      []string
 	GeneratedAt time.Time
 }
 
@@ -86,6 +90,7 @@ type VerificationReport struct {
 
 type ArtifactVerification struct {
 	Name   string   `json:"name"`
+	Type   string   `json:"type"`
 	OS     string   `json:"os"`
 	Arch   string   `json:"arch"`
 	Path   string   `json:"path"`
@@ -142,9 +147,30 @@ func Generate(opts ManifestOptions) (*Manifest, error) {
 		}
 		manifest.Artifacts = append(manifest.Artifacts, Artifact{
 			Name:   name,
+			Type:   ArtifactBinary,
 			OS:     osName,
 			Arch:   arch,
 			Path:   name,
+			Size:   info.Size(),
+			SHA256: digest,
+		})
+	}
+	for _, asset := range opts.Assets {
+		asset = strings.TrimSpace(asset)
+		if asset == "" {
+			return nil, errors.New("asset path is required")
+		}
+		if err := safeArtifactPath(asset); err != nil {
+			return nil, fmt.Errorf("asset %s: %w", asset, err)
+		}
+		info, digest, err := fileDigest(filepath.Join(distDir, filepath.FromSlash(asset)))
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", asset, err)
+		}
+		manifest.Artifacts = append(manifest.Artifacts, Artifact{
+			Name:   path.Base(asset),
+			Type:   ArtifactAsset,
+			Path:   asset,
 			Size:   info.Size(),
 			SHA256: digest,
 		})
@@ -211,6 +237,7 @@ func Verify(opts VerifyOptions) (*VerificationReport, error) {
 		}
 		result := ArtifactVerification{
 			Name:   artifact.Name,
+			Type:   artifact.Type,
 			OS:     artifact.OS,
 			Arch:   artifact.Arch,
 			Path:   artifact.Path,
@@ -223,6 +250,12 @@ func Verify(opts VerifyOptions) (*VerificationReport, error) {
 		}
 		if artifact.Name == "" {
 			resultError(&result, "name is required")
+		}
+		if artifact.Type == "" {
+			resultError(&result, "type is required")
+		}
+		if artifact.Type == ArtifactBinary && (artifact.OS == "" || artifact.Arch == "") {
+			resultError(&result, "binary artifact requires os and arch")
 		}
 		if _, exists := seen[artifact.Path]; exists {
 			resultError(&result, "duplicate artifact path")
