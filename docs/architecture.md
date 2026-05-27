@@ -3,10 +3,10 @@
 OpenExit uses a deterministic pipeline:
 
 ```text
-Collect -> Normalize -> Analyze -> Map -> Generate -> Validate -> Export
+Collect -> Normalize -> Analyze -> Map -> Generate -> Plan -> Validate -> Export
 ```
 
-The core engine is written in Go. The primary Datadog live-collector path targets Grafana LGTM with Prometheus-compatible alerting and OpenTelemetry Collector or Alloy sketches.
+The core engine is written in Go. The primary Datadog live-collector path targets Grafana LGTM with Prometheus-compatible alerting and OpenTelemetry Collector or Alloy sketches. `generate --all` also writes a typed migration plan that groups required artifacts into assessment, pilot, shadow, and cutover phase gates.
 
 GitHub Enterprise to Forgejo keeps the same local-first collect, normalize, analyze, generate, validate, export pipeline. It supports fixture import and a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
 

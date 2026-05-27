@@ -14,6 +14,7 @@ import (
 	"github.com/RamazanKara/openexit/internal/assessment"
 	"github.com/RamazanKara/openexit/internal/evidence"
 	"github.com/RamazanKara/openexit/internal/inventory"
+	migrationplan "github.com/RamazanKara/openexit/internal/plan"
 	"gopkg.in/yaml.v3"
 )
 
@@ -87,6 +88,16 @@ func Run(projectDir string, strict bool) (*Report, error) {
 			addProjectConsistencyChecks(cfg, inv, a, add)
 		}
 		addEvidenceChecks(projectDir, inv, a, add)
+	}
+	if p, err := loadMigrationPlan(projectDir); err != nil {
+		if os.IsNotExist(err) {
+			add("migration-plan", "warning", "migration plan not generated; run openexit generate --all or openexit generate --artifact migration-plan", false)
+		} else {
+			add("migration-plan", "failed", err.Error(), true)
+		}
+	} else {
+		add("migration-plan", "passed", "", true)
+		addMigrationPlanArtifactChecks(projectDir, p, add)
 	}
 	addSecretScan(projectDir, add)
 	sort.SliceStable(report.Checks, func(i, j int) bool { return report.Checks[i].Name < report.Checks[j].Name })
@@ -205,6 +216,21 @@ func loadAssessment(projectDir string) (*assessment.Assessment, error) {
 	return &a, nil
 }
 
+func loadMigrationPlan(projectDir string) (*migrationplan.Plan, error) {
+	data, err := os.ReadFile(filepath.Join(projectDir, "assessment", "openexit.migration-plan.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	var p migrationplan.Plan
+	if err := yaml.Unmarshal(data, &p); err != nil {
+		return nil, err
+	}
+	if err := migrationplan.Validate(&p); err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
 func addYAMLChecks(projectDir string, add func(string, string, string, bool)) {
 	files := append(globRecursive(projectDir, ".yaml"), globRecursive(projectDir, ".yml")...)
 	sort.Strings(files)
@@ -286,6 +312,33 @@ func addProjectConsistencyChecks(cfg *projectManifest, inv *inventory.Inventory,
 		return
 	}
 	add("project-manifest-consistency", "passed", "", true)
+}
+
+func addMigrationPlanArtifactChecks(projectDir string, p *migrationplan.Plan, add func(string, string, string, bool)) {
+	seen := map[string]struct{}{}
+	var missing []string
+	for _, phase := range p.Phases {
+		for _, rel := range phase.RequiredArtifacts {
+			rel = strings.TrimSpace(rel)
+			if rel == "" {
+				continue
+			}
+			if _, ok := seen[rel]; ok {
+				continue
+			}
+			seen[rel] = struct{}{}
+			info, err := os.Stat(filepath.Join(projectDir, filepath.FromSlash(rel)))
+			if err != nil || info.IsDir() {
+				missing = append(missing, rel)
+			}
+		}
+	}
+	if len(missing) > 0 {
+		sort.Strings(missing)
+		add("migration-plan-artifacts", "failed", "required artifacts missing: "+strings.Join(missing, ", "), true)
+		return
+	}
+	add("migration-plan-artifacts", "passed", "", true)
 }
 
 func addEvidenceChecks(projectDir string, inv *inventory.Inventory, a *assessment.Assessment, add func(string, string, string, bool)) {

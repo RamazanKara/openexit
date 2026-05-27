@@ -10,6 +10,7 @@ import (
 
 	"github.com/RamazanKara/openexit/internal/assessment"
 	"github.com/RamazanKara/openexit/internal/inventory"
+	migrationplan "github.com/RamazanKara/openexit/internal/plan"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,6 +36,10 @@ func Generate(projectDir string, artifacts []string) error {
 			}
 		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report", "identity-migration-risk-register", "break-glass-checklist", "identity-cutover-plan", "identity-rollback-plan", "cache-parity-report", "waf-enforcement-risk-report", "self-hosted-llm-readiness-report", "vllm-sizing-assumptions", "evaluation-plan", "data-sensitivity-report":
 			if err := writeMarkdown(ctx, artifact); err != nil {
+				return err
+			}
+		case "migration-plan":
+			if err := writeMigrationPlan(ctx); err != nil {
 				return err
 			}
 		case "forgejo-migration-candidate":
@@ -113,7 +118,10 @@ func GenerateAll(projectDir string) error {
 				return err
 			}
 		}
-		return writeForgejoMigrationCandidate(ctx)
+		if err := writeForgejoMigrationCandidate(ctx); err != nil {
+			return err
+		}
+		return writeMigrationPlan(ctx)
 	}
 	if ctx.Inventory.Source.Type == "identity" {
 		for _, artifact := range identityMarkdownArtifacts {
@@ -121,7 +129,10 @@ func GenerateAll(projectDir string) error {
 				return err
 			}
 		}
-		return writeIdentityRealmClientCandidate(ctx)
+		if err := writeIdentityRealmClientCandidate(ctx); err != nil {
+			return err
+		}
+		return writeMigrationPlan(ctx)
 	}
 	if ctx.Inventory.Source.Type == "edge" {
 		for _, artifact := range edgeMarkdownArtifacts {
@@ -129,7 +140,10 @@ func GenerateAll(projectDir string) error {
 				return err
 			}
 		}
-		return writeEdgeCandidateConfigs(ctx)
+		if err := writeEdgeCandidateConfigs(ctx); err != nil {
+			return err
+		}
+		return writeMigrationPlan(ctx)
 	}
 	if ctx.Inventory.Source.Type == "ai-provider" {
 		for _, artifact := range aiMarkdownArtifacts {
@@ -137,7 +151,10 @@ func GenerateAll(projectDir string) error {
 				return err
 			}
 		}
-		return writeAILiteLLMConfigCandidate(ctx)
+		if err := writeAILiteLLMConfigCandidate(ctx); err != nil {
+			return err
+		}
+		return writeMigrationPlan(ctx)
 	}
 	if err := Grafana(ctx); err != nil {
 		return err
@@ -148,7 +165,10 @@ func GenerateAll(projectDir string) error {
 	if err := OpenTelemetry(ctx); err != nil {
 		return err
 	}
-	return ArgoCD(ctx)
+	if err := ArgoCD(ctx); err != nil {
+		return err
+	}
+	return writeMigrationPlan(ctx)
 }
 
 func loadContext(projectDir string) (*Context, error) {
@@ -237,6 +257,14 @@ func writeMarkdown(ctx *Context, artifact string) error {
 	writeGeneratedBy(&b)
 	path := filepath.Join(ctx.ProjectDir, "assessment", artifact+".md")
 	return os.WriteFile(path, b.Bytes(), 0o644)
+}
+
+func writeMigrationPlan(ctx *Context) error {
+	p, err := migrationplan.Build(ctx.ProjectDir, ctx.Inventory, ctx.Assessment, ctx.Assessment.Metadata.GeneratedAt)
+	if err != nil {
+		return err
+	}
+	return migrationplan.Write(ctx.ProjectDir, p)
 }
 
 func writeCommonHeader(b *bytes.Buffer, ctx *Context) {

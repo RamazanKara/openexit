@@ -183,6 +183,8 @@ func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
 		"assessment/openexit.assessment.yaml",
+		"assessment/openexit.migration-plan.yaml",
+		"assessment/migration-plan.md",
 		"assessment/forgejo-migration-assessment.md",
 		"assessment/ci-compatibility-report.md",
 		"assessment/branch-protection-mapping.md",
@@ -233,6 +235,8 @@ func TestIdentityFixturePipeline(t *testing.T) {
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
 		"assessment/openexit.assessment.yaml",
+		"assessment/openexit.migration-plan.yaml",
+		"assessment/migration-plan.md",
 		"assessment/identity-migration-risk-register.md",
 		"assessment/break-glass-checklist.md",
 		"assessment/identity-cutover-plan.md",
@@ -282,6 +286,8 @@ func TestEdgeFixturePipeline(t *testing.T) {
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
 		"assessment/openexit.assessment.yaml",
+		"assessment/openexit.migration-plan.yaml",
+		"assessment/migration-plan.md",
 		"assessment/cache-parity-report.md",
 		"assessment/waf-enforcement-risk-report.md",
 		"generated-config/edge/varnish/default.candidate.vcl",
@@ -331,6 +337,8 @@ func TestAIProviderFixturePipeline(t *testing.T) {
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
 		"assessment/openexit.assessment.yaml",
+		"assessment/openexit.migration-plan.yaml",
+		"assessment/migration-plan.md",
 		"assessment/self-hosted-llm-readiness-report.md",
 		"assessment/vllm-sizing-assumptions.md",
 		"assessment/evaluation-plan.md",
@@ -391,6 +399,9 @@ func expectedProjectFiles() []string {
 		"inventory/openexit.inventory.json",
 		"assessment/openexit.assessment.yaml",
 		"assessment/openexit.assessment.json",
+		"assessment/openexit.migration-plan.yaml",
+		"assessment/openexit.migration-plan.json",
+		"assessment/migration-plan.md",
 		"assessment/assessment.md",
 		"assessment/risk-register.md",
 		"assessment/manual-review.md",

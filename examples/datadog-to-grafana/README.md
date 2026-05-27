@@ -14,4 +14,4 @@ make build VERSION=0.1.0-dev
 ./bin/openexit export --project ./demo --format zip --out ./openexit-demo.zip
 ```
 
-The generated files are candidates only. Review every dashboard, alert rule, collector sketch, and runbook before operational use.
+The generated files are candidates only. Review every dashboard, alert rule, collector sketch, migration-plan phase gate, and runbook before operational use.

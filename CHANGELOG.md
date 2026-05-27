@@ -14,6 +14,8 @@
 - Added a read-only Akamai collector for Edge DNS, Property Manager rule-tree, hostname, origin, cache, redirect, TLS/HSTS, Bot Manager, and optional AppSec custom-rule metadata.
 - Added a read-only OpenAI collector for aggregate model usage, token volumes, available model metadata, and peak throughput estimates.
 - Added a read-only Anthropic collector for aggregate Messages API usage, token volumes, server web-search tool metadata, filters, and peak throughput estimates.
+- Added typed migration plan generation with assessment, pilot, shadow, and cutover phase gates.
+- Opted CI and release workflows into Node.js 24 action runtime.
 
 ## 0.1.0 - 2026-05-24
 
