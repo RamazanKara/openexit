@@ -27,6 +27,8 @@ The CI test suite also runs this definition-of-done pipeline against the fixture
 
 `openexit validate` performs typed consistency checks, embedded JSON Schema validation, Grafana dashboard candidate validation, Prometheus alert-rule candidate validation, OpenTelemetry collector candidate validation, ArgoCD candidate validation, YAML/JSON parse checks, evidence reference checks, secret scanning, and optional external tool checks when `promtool` or `kubeconform` are installed.
 
+`openexit export` refuses to package symlinks from exported project sections, even with `--force`, so evidence bundles cannot accidentally include files from outside the project tree.
+
 Generate individual artifacts with `openexit generate --artifact <name>`. The primary Datadog path supports `mapping`, `assessment`, `risk-register`, `manual-review`, `cost-drivers`, `target-architecture`, `acceptance-criteria`, `rollback-plan`, `runbook`, `restore-drill-checklist`, `alert-shadowing-plan`, `migration-plan`, `grafana-dashboards`, `prometheus-rules`, `opentelemetry`, and `argocd`. The GitHub Enterprise path also supports `forgejo-migration-candidate`.
 
 The GitHub Enterprise to Forgejo fixture path uses local JSON metadata:

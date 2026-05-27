@@ -112,6 +112,7 @@ Included in the current implementation:
 - Typed migration plan manifest and phase-gate Markdown plan.
 - Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, and ArgoCD candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export.
+- Evidence bundle path-safety checks that reject symlinks in exported project sections.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.
 - Okta/Auth0 to Keycloak/Zitadel assessment path with fixture import and live Okta/Auth0 identity inventory collection.

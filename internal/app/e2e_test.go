@@ -45,7 +45,7 @@ func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, marker := range []string{"jsonschema-project: passed", "grafana-dashboard-candidates: passed", "prometheus-rule-candidates: passed", "opentelemetry-candidate: passed", "argocd-candidate: passed"} {
+	for _, marker := range []string{"jsonschema-project: passed", "project-path-safety: passed", "grafana-dashboard-candidates: passed", "prometheus-rule-candidates: passed", "opentelemetry-candidate: passed", "argocd-candidate: passed"} {
 		if !strings.Contains(string(report), marker) {
 			t.Fatalf("expected validation report marker %q, got:\n%s", marker, string(report))
 		}
@@ -108,6 +108,48 @@ func TestValidationScansGeneratedTextArtifacts(t *testing.T) {
 	}
 	if err := executeForTest("validate", "--project", projectDir); err == nil {
 		t.Fatal("expected validation to fail when generated text artifact contains a secret-like value")
+	}
+}
+
+func TestValidationAndExportRejectSymlinkedBundleInputs(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "symlink-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "grafana-lgtm"},
+		{"map", "--project", projectDir},
+		{"generate", "--project", projectDir, "--all"},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	outside := filepath.Join(t.TempDir(), "outside-secret.txt")
+	if err := os.WriteFile(outside, []byte("external material must not enter bundle\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	linkPath := filepath.Join(projectDir, "evidence", "outside-secret.txt")
+	if err := os.Symlink(outside, linkPath); err != nil {
+		t.Skipf("symlink not available on this platform: %v", err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when export scope contains a symlink")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "project-path-safety") || !strings.Contains(string(report), "symlink not allowed") {
+		t.Fatalf("expected path safety failure in validation report, got:\n%s", string(report))
+	}
+	bundlePath := filepath.Join(t.TempDir(), "symlink.zip")
+	if err := executeForTest("export", "--project", projectDir, "--format", "zip", "--out", bundlePath, "--force"); err == nil {
+		t.Fatal("expected forced export to reject symlinked bundle input")
+	}
+	if _, err := os.Stat(bundlePath); err == nil {
+		t.Fatal("export wrote a bundle despite symlinked bundle input")
 	}
 }
 

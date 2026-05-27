@@ -95,6 +95,7 @@ func Run(projectDir string, strict bool) (*Report, error) {
 	} else {
 		addSchemaChecks(projectDir, schemaValidator, add)
 	}
+	addProjectPathSafetyChecks(projectDir, add)
 	addExternalChecks(projectDir, add)
 	addArgoCDCandidateChecks(projectDir, add)
 	if inv != nil && a != nil {
@@ -350,6 +351,52 @@ func addProjectConsistencyChecks(cfg *projectManifest, inv *inventory.Inventory,
 		return
 	}
 	add("project-manifest-consistency", "passed", "", true)
+}
+
+func addProjectPathSafetyChecks(projectDir string, add func(string, string, string, bool)) {
+	include := map[string]bool{
+		"openexit.yaml":    true,
+		"inventory":        true,
+		"assessment":       true,
+		"mapping":          true,
+		"generated-config": true,
+		"validation":       true,
+		"evidence":         true,
+	}
+	var problems []string
+	err := filepath.WalkDir(projectDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			problems = append(problems, err.Error())
+			return nil
+		}
+		rel, relErr := filepath.Rel(projectDir, path)
+		if relErr != nil || rel == "." {
+			return nil
+		}
+		top := strings.Split(filepath.ToSlash(rel), "/")[0]
+		if !include[top] {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.Type()&os.ModeSymlink != 0 {
+			problems = append(problems, "symlink not allowed in export scope: "+filepath.ToSlash(rel))
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		problems = append(problems, err.Error())
+	}
+	if len(problems) > 0 {
+		sort.Strings(problems)
+		add("project-path-safety", "failed", strings.Join(problems, "; "), true)
+		return
+	}
+	add("project-path-safety", "passed", "", true)
 }
 
 func addMappingConsistencyChecks(inv *inventory.Inventory, a *assessment.Assessment, result *openmapping.MappingResult, add func(string, string, string, bool)) {

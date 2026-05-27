@@ -64,6 +64,9 @@ func bundleFiles(projectDir string) ([]string, error) {
 		if err != nil || rel == "." {
 			return err
 		}
+		if d.Type()&os.ModeSymlink != 0 {
+			return fmt.Errorf("refusing to export symlink %s", rel)
+		}
 		top := strings.Split(filepath.ToSlash(rel), "/")[0]
 		if !include[top] {
 			if d.IsDir() {
