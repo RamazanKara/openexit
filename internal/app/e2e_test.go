@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
@@ -49,6 +50,61 @@ func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
 		if !strings.Contains(string(report), marker) {
 			t.Fatalf("expected validation report marker %q, got:\n%s", marker, string(report))
 		}
+	}
+}
+
+func TestStatusReportsPipelineReadiness(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
+
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "grafana-lgtm"},
+		{"map", "--project", projectDir},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+
+	out, err := executeForTestWithOutput("status", "--project", projectDir)
+	if err != nil {
+		t.Fatalf("openexit status failed: %v", err)
+	}
+	for _, marker := range []string{
+		"source: datadog",
+		"target: grafana-lgtm",
+		"layout: ok",
+		"inventory: present",
+		"assessment: present",
+		"mapping: present",
+		"generated: present",
+		"validation: passed",
+		"export-ready: yes",
+		"next: openexit export",
+	} {
+		if !strings.Contains(out, marker) {
+			t.Fatalf("expected status marker %q, got:\n%s", marker, out)
+		}
+	}
+
+	jsonOut, err := executeForTestWithOutput("status", "--project", projectDir, "--json")
+	if err != nil {
+		t.Fatalf("openexit status --json failed: %v", err)
+	}
+	var status ProjectStatus
+	if err := json.Unmarshal([]byte(jsonOut), &status); err != nil {
+		t.Fatalf("decode status JSON: %v\n%s", err, jsonOut)
+	}
+	if !status.ReadyForExport || status.Validation.Status != "passed" {
+		t.Fatalf("expected export-ready passed status, got %+v", status)
+	}
+	if status.Inventory.Assets["dashboards"] != 1 || status.Generated.Candidates == 0 || len(status.NextActions) != 1 {
+		t.Fatalf("unexpected status summary: %+v", status)
 	}
 }
 
@@ -909,6 +965,16 @@ func executeForTest(args ...string) error {
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
 	return cmd.Execute()
+}
+
+func executeForTestWithOutput(args ...string) (string, error) {
+	cmd := NewRootCommand()
+	var out bytes.Buffer
+	cmd.SetArgs(args)
+	cmd.SetOut(&out)
+	cmd.SetErr(io.Discard)
+	err := cmd.Execute()
+	return out.String(), err
 }
 
 func expectedProjectFiles() []string {

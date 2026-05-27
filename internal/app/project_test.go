@@ -3,6 +3,7 @@ package app
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -27,6 +28,15 @@ func TestInitProjectIdempotentAndStatus(t *testing.T) {
 	}
 	if !status.ConfigOK || len(status.Missing) != 0 {
 		t.Fatalf("unexpected status: %+v", status)
+	}
+	if status.Source != "datadog" || status.Target != "grafana-lgtm" || status.Layout != "ok" {
+		t.Fatalf("unexpected project endpoints: %+v", status)
+	}
+	if status.ReadyForExport {
+		t.Fatal("newly initialized project should not be export-ready")
+	}
+	if status.Inventory.Present || len(status.NextActions) != 1 || !strings.Contains(status.NextActions[0], "openexit collect fixture") {
+		t.Fatalf("expected collect next action, got %+v", status.NextActions)
 	}
 }
 

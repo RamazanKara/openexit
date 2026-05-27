@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -79,23 +81,150 @@ func newInitCommand() *cobra.Command {
 
 func newStatusCommand() *cobra.Command {
 	var project string
+	var jsonOutput bool
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Validate an OpenExit project layout",
+		Short: "Show OpenExit project readiness",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			status, err := CheckProject(project)
+			if jsonOutput {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				if encErr := enc.Encode(status); encErr != nil {
+					return encErr
+				}
+				return err
+			}
 			if err != nil {
 				return err
 			}
+			writeProjectStatus(cmd.OutOrStdout(), status)
 			if len(status.Missing) > 0 {
 				return fmt.Errorf("project is missing required directories: %s", strings.Join(status.Missing, ", "))
 			}
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "project ok: %s\n", status.ProjectDir)
 			return nil
 		},
 	}
 	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Write machine-readable project status")
 	return cmd
+}
+
+func writeProjectStatus(w io.Writer, status *ProjectStatus) {
+	_, _ = fmt.Fprintf(w, "project: %s\n", status.ProjectDir)
+	_, _ = fmt.Fprintf(w, "source: %s\n", status.Source)
+	_, _ = fmt.Fprintf(w, "target: %s\n", status.Target)
+	if len(status.Missing) > 0 {
+		_, _ = fmt.Fprintf(w, "layout: missing %s\n", strings.Join(status.Missing, ", "))
+	} else {
+		_, _ = fmt.Fprintln(w, "layout: ok")
+	}
+	_, _ = fmt.Fprintf(w, "inventory: %s\n", formatInventoryStatus(status.Inventory))
+	_, _ = fmt.Fprintf(w, "assessment: %s\n", formatAssessmentStatus(status.Assessment))
+	_, _ = fmt.Fprintf(w, "mapping: %s\n", formatMappingStatus(status.Mapping))
+	_, _ = fmt.Fprintf(w, "generated: %s\n", formatGeneratedStatus(status.Generated))
+	_, _ = fmt.Fprintf(w, "validation: %s\n", formatValidationStatus(status.Validation))
+	if status.ReadyForExport {
+		_, _ = fmt.Fprintln(w, "export-ready: yes")
+	} else {
+		_, _ = fmt.Fprintln(w, "export-ready: no")
+	}
+	for _, action := range status.NextActions {
+		_, _ = fmt.Fprintf(w, "next: %s\n", action)
+	}
+}
+
+func formatInventoryStatus(status InventoryStatus) string {
+	if !status.Present {
+		return "missing"
+	}
+	text := "present"
+	if counts := formatCounts(status.Assets); counts != "" {
+		text += " (" + counts + ")"
+	}
+	if status.Warnings > 0 {
+		text += fmt.Sprintf(" warnings=%d", status.Warnings)
+	}
+	if status.Error != "" {
+		text += " error=" + status.Error
+	}
+	return text
+}
+
+func formatAssessmentStatus(status AssessmentStatus) string {
+	if !status.Present {
+		return "missing"
+	}
+	parts := []string{fmt.Sprintf("findings=%d", status.Findings)}
+	if severity := formatCounts(status.Severity); severity != "" {
+		parts = append(parts, severity)
+	}
+	if status.Score > 0 {
+		parts = append(parts, fmt.Sprintf("score=%d", status.Score))
+	}
+	if status.Level != "" {
+		parts = append(parts, "level="+status.Level)
+	}
+	if status.Warnings > 0 {
+		parts = append(parts, fmt.Sprintf("warnings=%d", status.Warnings))
+	}
+	text := "present (" + strings.Join(parts, " ") + ")"
+	if status.Error != "" {
+		text += " error=" + status.Error
+	}
+	return text
+}
+
+func formatMappingStatus(status MappingStatus) string {
+	if !status.Present {
+		return "missing"
+	}
+	text := fmt.Sprintf("present (dashboardDrafts=%d alertRuleDrafts=%d unsupportedItems=%d manualReview=%d)", status.DashboardDrafts, status.AlertRuleDrafts, status.UnsupportedItems, status.ManualReview)
+	if status.Error != "" {
+		text += " error=" + status.Error
+	}
+	return text
+}
+
+func formatGeneratedStatus(status GeneratedStatus) string {
+	if !status.Present {
+		if status.Error != "" {
+			return "missing error=" + status.Error
+		}
+		return "missing"
+	}
+	text := fmt.Sprintf("present (files=%d candidates=%d)", status.Files, status.Candidates)
+	if status.Error != "" {
+		text += " error=" + status.Error
+	}
+	return text
+}
+
+func formatValidationStatus(status ValidationStatus) string {
+	if !status.Present {
+		return "missing"
+	}
+	text := fmt.Sprintf("%s (checks=%d passed=%d failed=%d warnings=%d)", status.Status, status.Checks, status.Passed, status.Failed, status.Warnings)
+	if status.Error != "" {
+		text += " error=" + status.Error
+	}
+	return text
+}
+
+func formatCounts(counts map[string]int) string {
+	if len(counts) == 0 {
+		return ""
+	}
+	keys := make([]string, 0, len(counts))
+	for key := range counts {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, key := range keys {
+		parts = append(parts, fmt.Sprintf("%s=%d", key, counts[key]))
+	}
+	return strings.Join(parts, " ")
 }
 
 func newCollectCommand() *cobra.Command {

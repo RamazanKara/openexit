@@ -31,6 +31,7 @@
 - Added identity realm/client candidate validation for the Okta/Auth0 assessment path.
 - Added edge VCL, HAProxy, and Coraza candidate validation for the Cloudflare/Akamai assessment path.
 - Added LiteLLM/vLLM config candidate validation for the OpenAI/Anthropic assessment path.
+- Added project readiness status with pipeline summaries, export readiness, next actions, and `--json` output.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
 
 ## 0.1.0 - 2026-05-24

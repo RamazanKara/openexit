@@ -57,7 +57,7 @@ make example VERSION=0.1.0-dev
 
 - `openexit version`
 - `openexit init <project-dir> [--source <type> --target <type>]`
-- `openexit status --project <project-dir>`
+- `openexit status --project <project-dir> [--json]`
 - `openexit collect fixture --project <project-dir> --input <file>`
 - `openexit collect github --project <project-dir> --owner <org> [--base-url https://github.example.com/api/v3] [--token-env GITHUB_TOKEN] [--repo owner/name]`
 - `openexit collect github-fixture --project <project-dir> --input <file>`
@@ -98,6 +98,7 @@ Fixture workflows run the full local OpenExit workflow with sample or customer-p
 Included in the current implementation:
 
 - CLI skeleton and project init/status.
+- Project readiness status with pipeline counts, validation state, export readiness, and JSON output for automation.
 - Typed project, inventory, assessment, mapping, and validation manifests.
 - Fixture-based Datadog inventory import.
 - Read-only Datadog collection for dashboards, monitors, SLOs, installed integration metadata, and referenced metric/tag metadata.
