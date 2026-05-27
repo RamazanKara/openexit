@@ -95,7 +95,9 @@
     {
       "name": "release-bot",
       "repositories": ["platform/api"],
+      "repositorySelection": "selected",
       "permissions": ["contents:write", "pull_requests:write"],
+      "events": ["deployment", "pull_request"],
       "webhookEnabled": true
     }
   ]

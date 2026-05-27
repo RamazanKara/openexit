@@ -42,7 +42,7 @@ openexit generate --project ./ghe-demo --all
 openexit validate --project ./ghe-demo
 ```
 
-The same path can collect read-only live GitHub or GitHub Enterprise metadata. Set the token in an environment variable; OpenExit reads it at runtime and does not write it into project files.
+The same path can collect read-only live GitHub or GitHub Enterprise metadata. Set the token in an environment variable; OpenExit reads it at runtime and does not write it into project files. Organization GitHub App installation metadata is collected when the token can read organization administration metadata; otherwise OpenExit records a warning and continues collecting repository-scoped metadata.
 
 ```bash
 export GITHUB_TOKEN=<read-only-token>

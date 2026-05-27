@@ -163,11 +163,13 @@ func normalizeFixtureWithRawPath(projectDir string, fixture *Fixture, inv *inven
 			return err
 		}
 		inv.Assets.GitHubApps = append(inv.Assets.GitHubApps, inventory.GitHubApp{
-			Name:           app.Name,
-			Repositories:   append([]string{}, app.Repositories...),
-			Permissions:    append([]string{}, app.Permissions...),
-			WebhookEnabled: app.WebhookEnabled,
-			EvidenceRef:    "evidence://github-enterprise/github-app/" + evidenceID,
+			Name:                app.Name,
+			Repositories:        append([]string{}, app.Repositories...),
+			RepositorySelection: app.RepositorySelection,
+			Permissions:         append([]string{}, app.Permissions...),
+			Events:              append([]string{}, app.Events...),
+			WebhookEnabled:      app.WebhookEnabled,
+			EvidenceRef:         "evidence://github-enterprise/github-app/" + evidenceID,
 		})
 	}
 	sortInventory(inv)

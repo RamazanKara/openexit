@@ -239,11 +239,13 @@ type DeployKey struct {
 }
 
 type GitHubApp struct {
-	Name           string   `json:"name" yaml:"name"`
-	Repositories   []string `json:"repositories,omitempty" yaml:"repositories,omitempty"`
-	Permissions    []string `json:"permissions,omitempty" yaml:"permissions,omitempty"`
-	WebhookEnabled bool     `json:"webhookEnabled" yaml:"webhookEnabled"`
-	EvidenceRef    string   `json:"evidenceRef" yaml:"evidenceRef"`
+	Name                string   `json:"name" yaml:"name"`
+	Repositories        []string `json:"repositories,omitempty" yaml:"repositories,omitempty"`
+	RepositorySelection string   `json:"repositorySelection,omitempty" yaml:"repositorySelection,omitempty"`
+	Permissions         []string `json:"permissions,omitempty" yaml:"permissions,omitempty"`
+	Events              []string `json:"events,omitempty" yaml:"events,omitempty"`
+	WebhookEnabled      bool     `json:"webhookEnabled" yaml:"webhookEnabled"`
+	EvidenceRef         string   `json:"evidenceRef" yaml:"evidenceRef"`
 }
 
 type IdentityApp struct {

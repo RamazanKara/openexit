@@ -115,9 +115,14 @@ func (LiveCollector) Collect(ctx context.Context, req collector.CollectRequest) 
 		if err != nil {
 			warnings = append(warnings, optionalWarning("collect organization secrets", err))
 		}
+		apps, err := collectOrgGitHubApps(ctx, client, owner)
+		if err != nil {
+			warnings = append(warnings, optionalWarning("collect organization GitHub Apps", err))
+		}
 		fixture.Teams = append(fixture.Teams, teams...)
 		fixture.Runners = append(fixture.Runners, runners...)
 		fixture.Secrets = append(fixture.Secrets, secrets...)
+		fixture.GitHubApps = append(fixture.GitHubApps, apps...)
 	} else {
 		warnings = append(warnings, "organization-only metadata was skipped because --owner-type=user")
 	}
@@ -171,6 +176,15 @@ type githubRunner struct {
 type githubDeployKey struct {
 	Title    string `json:"title"`
 	ReadOnly bool   `json:"read_only"`
+}
+
+type githubAppInstallation struct {
+	ID                  int64             `json:"id"`
+	AppID               int64             `json:"app_id"`
+	AppSlug             string            `json:"app_slug"`
+	RepositorySelection string            `json:"repository_selection"`
+	Permissions         map[string]string `json:"permissions"`
+	Events              []string          `json:"events"`
 }
 
 func collectGitHubRepositories(ctx context.Context, client *Client, owner, ownerType string) ([]githubRepository, error) {
@@ -394,6 +408,46 @@ func collectOrgSecrets(ctx context.Context, client *Client, owner string, workfl
 		})
 	}
 	return out, nil
+}
+
+func collectOrgGitHubApps(ctx context.Context, client *Client, owner string) ([]FixtureGitHubApp, error) {
+	installations, err := getPagedObjectArray[githubAppInstallation](ctx, client, "/orgs/"+url.PathEscape(owner)+"/installations", nil, "installations")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]FixtureGitHubApp, 0, len(installations))
+	for _, installation := range installations {
+		name := strings.TrimSpace(installation.AppSlug)
+		if name == "" {
+			if installation.AppID > 0 {
+				name = "github-app-" + strconv.FormatInt(installation.AppID, 10)
+			} else {
+				name = "github-app-installation-" + strconv.FormatInt(installation.ID, 10)
+			}
+		}
+		out = append(out, FixtureGitHubApp{
+			Name:                name,
+			RepositorySelection: strings.TrimSpace(installation.RepositorySelection),
+			Permissions:         githubAppPermissions(installation.Permissions),
+			Events:              uniqueSortedStrings(installation.Events),
+			WebhookEnabled:      len(installation.Events) > 0,
+		})
+	}
+	return out, nil
+}
+
+func githubAppPermissions(permissions map[string]string) []string {
+	out := make([]string, 0, len(permissions))
+	for name, level := range permissions {
+		name = strings.TrimSpace(name)
+		level = strings.TrimSpace(level)
+		if name == "" || level == "" {
+			continue
+		}
+		out = append(out, name+":"+level)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func getContentFile(ctx context.Context, client *Client, owner, repo, filePath, ref string) (string, error) {

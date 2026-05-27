@@ -678,12 +678,14 @@ func forgejoAppCandidates(apps []inventory.GitHubApp) []map[string]any {
 	out := make([]map[string]any, 0, len(apps))
 	for _, app := range apps {
 		out = append(out, map[string]any{
-			"name":           app.Name,
-			"repositories":   sortedStrings(app.Repositories),
-			"permissions":    sortedStrings(app.Permissions),
-			"webhookEnabled": app.WebhookEnabled,
-			"targetAction":   "map-to-forgejo-integration-or-replace",
-			"evidenceRef":    app.EvidenceRef,
+			"name":                app.Name,
+			"repositories":        sortedStrings(app.Repositories),
+			"repositorySelection": app.RepositorySelection,
+			"permissions":         sortedStrings(app.Permissions),
+			"events":              sortedStrings(app.Events),
+			"webhookEnabled":      app.WebhookEnabled,
+			"targetAction":        "map-to-forgejo-integration-or-replace",
+			"evidenceRef":         app.EvidenceRef,
 		})
 	}
 	return out

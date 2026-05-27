@@ -13,7 +13,7 @@ Collected metadata:
 - deploy keys metadata
 - GitHub Apps metadata
 
-The live collector gathers repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy key metadata. It does not collect secret values, it does not write to GitHub, and GitHub App metadata remains fixture-only.
+The live collector gathers repository, team, branch protection, Actions workflow, secret metadata, runner, deploy key, and GitHub App installation metadata. It does not collect secret values and it does not write to GitHub. GitHub App installation collection is best-effort because GitHub requires an organization owner token with organization administration read access.
 
 Live collection:
 

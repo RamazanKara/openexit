@@ -75,8 +75,10 @@ type FixtureDeployKey struct {
 }
 
 type FixtureGitHubApp struct {
-	Name           string   `json:"name"`
-	Repositories   []string `json:"repositories"`
-	Permissions    []string `json:"permissions"`
-	WebhookEnabled bool     `json:"webhookEnabled"`
+	Name                string   `json:"name"`
+	Repositories        []string `json:"repositories"`
+	RepositorySelection string   `json:"repositorySelection,omitempty"`
+	Permissions         []string `json:"permissions"`
+	Events              []string `json:"events,omitempty"`
+	WebhookEnabled      bool     `json:"webhookEnabled"`
 }

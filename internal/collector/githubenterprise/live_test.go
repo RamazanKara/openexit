@@ -105,6 +105,22 @@ jobs:
 				"total_count": 1,
 				"secrets":     []map[string]any{{"name": "ORG_SHARED_SECRET"}},
 			})
+		case "/orgs/acme/installations":
+			writeJSON(t, w, map[string]any{
+				"total_count": 1,
+				"installations": []map[string]any{{
+					"id":                   25381,
+					"app_id":               2218,
+					"app_slug":             "release-bot",
+					"repository_selection": "selected",
+					"permissions": map[string]string{
+						"contents":      "write",
+						"metadata":      "read",
+						"pull_requests": "write",
+					},
+					"events": []string{"pull_request", "workflow_run"},
+				}},
+			})
 		default:
 			http.NotFound(w, r)
 		}
@@ -154,8 +170,56 @@ jobs:
 	if inv.Assets.DeployKeys[0].Title != "deploy-prod" || inv.Assets.DeployKeys[0].ReadOnly {
 		t.Fatalf("unexpected deploy key metadata: %+v", inv.Assets.DeployKeys[0])
 	}
+	app := inv.Assets.GitHubApps[0]
+	if app.Name != "release-bot" || app.RepositorySelection != "selected" || !app.WebhookEnabled || !containsAll(app.Permissions, "contents:write", "metadata:read", "pull_requests:write") || !containsAll(app.Events, "pull_request", "workflow_run") {
+		t.Fatalf("unexpected GitHub App metadata: %+v", app)
+	}
 	if _, err := os.Stat(filepath.Join(projectDir, "evidence", "github-enterprise", "raw-api-collection.json")); err != nil {
 		t.Fatalf("expected raw API collection evidence: %v", err)
+	}
+}
+
+func TestLiveCollectorWarnsWhenGitHubAppsUnavailable(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/orgs/acme/repos":
+			writeJSON(t, w, []map[string]any{})
+		case "/orgs/acme/teams":
+			writeJSON(t, w, []map[string]any{})
+		case "/orgs/acme/actions/runners":
+			writeJSON(t, w, map[string]any{"total_count": 0, "runners": []map[string]any{}})
+		case "/orgs/acme/actions/secrets":
+			writeJSON(t, w, map[string]any{"total_count": 0, "secrets": []map[string]any{}})
+		case "/orgs/acme/installations":
+			w.WriteHeader(http.StatusForbidden)
+			writeJSON(t, w, map[string]any{"message": "Resource not accessible by token"})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	t.Setenv("GITHUB_TOKEN", "test-token")
+	inv, err := LiveCollector{}.Collect(context.Background(), collector.CollectRequest{
+		ProjectDir: t.TempDir(),
+		Project:    "demo",
+		Source:     "github-enterprise",
+		Options: map[string]string{
+			"owner":      "acme",
+			"owner-type": "org",
+			"base-url":   server.URL,
+			"token-env":  "GITHUB_TOKEN",
+		},
+	})
+	if err != nil {
+		t.Fatalf("collect live github inventory: %v", err)
+	}
+	if len(inv.Assets.GitHubApps) != 0 {
+		t.Fatalf("expected app inventory to be skipped: %+v", inv.Assets.GitHubApps)
+	}
+	if len(inv.Warnings) == 0 || !strings.Contains(strings.Join(inv.Warnings, "\n"), "collect organization GitHub Apps") {
+		t.Fatalf("expected GitHub Apps warning, got %+v", inv.Warnings)
 	}
 }
 
