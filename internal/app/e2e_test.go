@@ -121,6 +121,45 @@ func TestVerifyBundleCommandRejectsTampering(t *testing.T) {
 	}
 }
 
+func TestDoctorCommandReportsRuntimeReadiness(t *testing.T) {
+	out, err := executeForTestWithOutput("doctor")
+	if err != nil {
+		t.Fatalf("openexit doctor failed: %v\n%s", err, out)
+	}
+	for _, marker := range []string{
+		"status:",
+		"version-metadata:",
+		"schema-bundle: passed",
+		"promtool:",
+		"kubeconform:",
+	} {
+		if !strings.Contains(out, marker) {
+			t.Fatalf("expected doctor marker %q, got:\n%s", marker, out)
+		}
+	}
+
+	jsonOut, err := executeForTestWithOutput("doctor", "--json")
+	if err != nil {
+		t.Fatalf("openexit doctor --json failed: %v\n%s", err, jsonOut)
+	}
+	var report DoctorReport
+	if err := json.Unmarshal([]byte(jsonOut), &report); err != nil {
+		t.Fatalf("decode doctor JSON: %v\n%s", err, jsonOut)
+	}
+	if report.Status == "" || len(report.Checks) < 4 {
+		t.Fatalf("unexpected doctor report: %+v", report)
+	}
+	seen := map[string]bool{}
+	for _, check := range report.Checks {
+		seen[check.Name] = true
+	}
+	for _, name := range []string{"version-metadata", "schema-bundle", "promtool", "kubeconform"} {
+		if !seen[name] {
+			t.Fatalf("doctor report missing check %s: %+v", name, report)
+		}
+	}
+}
+
 func TestStatusReportsPipelineReadiness(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "demo")
 	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")

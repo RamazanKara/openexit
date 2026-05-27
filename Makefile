@@ -37,6 +37,7 @@ golangci-lint:
 smoke:
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
+	$(BINARY) doctor; \
 	$(BINARY) demo "$$tmp/builtin-demo" --out "$$tmp/builtin-demo.zip"; \
 	test -s "$$tmp/builtin-demo.zip"; \
 	$(BINARY) verify-bundle "$$tmp/builtin-demo.zip"; \

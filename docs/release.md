@@ -9,6 +9,7 @@ The implementation plan names Datadog to Grafana LGTM, Prometheus-compatible ale
 Release-blocking v0.1 requirements:
 
 - CLI skeleton, project init, built-in demo, workflow runner, readiness status, version command.
+- Runtime doctor for version metadata, embedded schemas, and optional validator availability.
 - Datadog fixture collector and read-only live Datadog collector.
 - Inventory and assessment manifests with typed validation.
 - Source-to-target mapping manifest with candidate paths and manual-review entries.
@@ -44,6 +45,7 @@ The AI provider path is complete for local fixture assessment workflows and incl
   `init`, `collect fixture`, `assess`, `map`, `generate --all`, `validate`, `export`.
 - [ ] GitHub, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic fixture/live-collector test coverage pass, and supported fixture provider pipelines validate.
 - [ ] `openexit version` prints name, version, commit, and date from release build flags.
+- [ ] `openexit doctor` reports passing version/schema checks and warns, rather than crashes, when optional validators are absent.
 - [ ] `openexit demo <demo>` creates a complete sample project and evidence bundle from built-in fixture data without repository-local `testdata/`.
 - [ ] `openexit run --project <demo> --export --out <zip>` completes a collected project through assessment, mapping, generation, validation, status reporting, and bundle export.
 - [ ] `openexit status --project <demo>` reports inventory, assessment, mapping, generated artifacts, validation status, export readiness, and matching `--json` output.

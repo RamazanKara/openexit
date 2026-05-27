@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added `openexit doctor` for local runtime diagnostics covering version metadata, embedded schemas, and optional validator availability.
 - Added preview support for fixture-based OpenAI/Anthropic to vLLM/LiteLLM assessment.
 - Added explicit source/target project initialization and validation consistency checks for all assessment paths.
 - Clarified fixture-only paths as feature-complete local assessment workflows instead of unfinished versioned scaffolds.

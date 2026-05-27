@@ -11,6 +11,8 @@ make build VERSION=0.1.0
 ./bin/openexit version
 ```
 
+`openexit doctor` checks the local CLI runtime before a project run. It verifies version metadata, embedded schema compilation, and optional validator availability for `promtool` and `kubeconform`. Missing optional validators are warnings by default; pass `--strict` to make warnings fail, or `--json` for automation.
+
 The minimum local demo is:
 
 ```bash

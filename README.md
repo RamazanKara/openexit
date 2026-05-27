@@ -52,6 +52,7 @@ make example VERSION=0.1.0-dev
 ## Commands
 
 - `openexit version`
+- `openexit doctor [--json] [--strict]`
 - `openexit init <project-dir> [--source <type> --target <type>]`
 - `openexit demo <project-dir> [--source <type>] [--out <file>] [--force]`
 - `openexit status --project <project-dir> [--json]`
@@ -97,6 +98,7 @@ Fixture workflows run the full local OpenExit workflow with sample or customer-p
 Included in the current implementation:
 
 - CLI skeleton and project init/status.
+- Runtime doctor for version metadata, embedded schemas, and optional validator availability.
 - Built-in demo project generation for release binaries without repository-local fixture files.
 - Project readiness status with pipeline counts, validation state, export readiness, and JSON output for automation.
 - One-command deterministic workflow runner for collected projects, with optional evidence bundle export.
