@@ -41,6 +41,15 @@ func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
 	if err := assertBundle(bundlePath, expectedBundleFiles()); err != nil {
 		t.Fatal(err)
 	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, marker := range []string{"jsonschema-project: passed", "grafana-dashboard-candidates: passed"} {
+		if !strings.Contains(string(report), marker) {
+			t.Fatalf("expected validation report marker %q, got:\n%s", marker, string(report))
+		}
+	}
 }
 
 func TestCLICommandFailuresAreActionable(t *testing.T) {
@@ -165,6 +174,45 @@ func TestValidationRejectsProjectSchemaViolation(t *testing.T) {
 	}
 	if !strings.Contains(string(report), "jsonschema-project") || !strings.Contains(string(report), "allowAI") {
 		t.Fatalf("expected schema failure in validation report, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsProductionReadyGrafanaCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "grafana-demo")
+	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
+	commands := [][]string{
+		{"init", projectDir},
+		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "grafana-lgtm"},
+		{"map", "--project", projectDir},
+		{"generate", "--project", projectDir, "--all"},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+	dashboardPath := filepath.Join(projectDir, "generated-config", "grafana", "dashboards", "production-api-overview.candidate.json")
+	data, err := os.ReadFile(dashboardPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), `"productionReady": "false"`, `"productionReady": "true"`, 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain productionReady metadata")
+	}
+	if err := os.WriteFile(dashboardPath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when a Grafana candidate is marked production ready")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "grafana-dashboard-candidates") || !strings.Contains(string(report), "productionReady") {
+		t.Fatalf("expected Grafana candidate failure in validation report, got:\n%s", string(report))
 	}
 }
 

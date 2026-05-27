@@ -19,6 +19,8 @@ sum(last_5m):sum:trace.http.request.errors{env:prod}.as_count() > 10
 
 The generated PromQL remains a candidate and includes review annotations. Complex Datadog functions are not converted automatically; the source query is preserved with a `vector(0)` placeholder so the missing work is visible.
 
+Validation checks Grafana dashboard candidate JSON against OpenExit's migration safety contract: mapped dashboard paths must exist, source metadata must match inventory, candidate dashboards must stay marked `productionReady=false`, panels must preserve source query hints, and unsupported widgets must be documented in the Grafana README.
+
 ## Live Collection
 
 The live Datadog collector stores redacted evidence for dashboards, monitors, and SLOs. Evidence refs in generated assessments resolve to local files under `evidence/datadog/`.

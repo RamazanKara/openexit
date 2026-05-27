@@ -17,6 +17,7 @@
 - Added typed migration plan generation with assessment, pilot, shadow, and cutover phase gates.
 - Added explicit source-to-target mapping manifests and `openexit map`.
 - Added embedded JSON Schema validation for project, inventory, assessment, mapping, migration plan, and validation report manifests.
+- Added Grafana dashboard candidate validation for mapping, source metadata, candidate safety flags, panels, and unsupported-widget notes.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
 
 ## 0.1.0 - 2026-05-24

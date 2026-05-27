@@ -25,7 +25,7 @@ openexit export --project ./demo --format zip --out ./openexit-demo.zip
 
 The CI test suite also runs this definition-of-done pipeline against the fixture inventory and checks that the generated project layout and export bundle contain the expected artifacts. Bundle checksums are verified against the archived file bytes.
 
-`openexit validate` performs typed consistency checks, embedded JSON Schema validation, YAML/JSON parse checks, evidence reference checks, secret scanning, and optional external tool checks when `promtool` or `kubeconform` are installed.
+`openexit validate` performs typed consistency checks, embedded JSON Schema validation, Grafana dashboard candidate validation, YAML/JSON parse checks, evidence reference checks, secret scanning, and optional external tool checks when `promtool` or `kubeconform` are installed.
 
 Generate individual artifacts with `openexit generate --artifact <name>`. The primary Datadog path supports `mapping`, `assessment`, `risk-register`, `manual-review`, `cost-drivers`, `target-architecture`, `acceptance-criteria`, `rollback-plan`, `runbook`, `restore-drill-checklist`, `alert-shadowing-plan`, `migration-plan`, `grafana-dashboards`, `prometheus-rules`, `opentelemetry`, and `argocd`. The GitHub Enterprise path also supports `forgejo-migration-candidate`.
 
