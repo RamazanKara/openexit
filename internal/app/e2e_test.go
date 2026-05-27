@@ -720,20 +720,7 @@ func TestValidationRejectsBrokenEdgeHAProxyCandidate(t *testing.T) {
 
 func TestAIProviderFixturePipeline(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "ai-demo")
-	fixturePath := filepath.Join("..", "..", "testdata", "ai-provider", "small.json")
-
-	commands := [][]string{
-		{"init", projectDir, "--source", "ai-provider", "--target", "vllm-litellm"},
-		{"collect", "ai-fixture", "--project", projectDir, "--input", fixturePath},
-		{"assess", "--project", projectDir, "--target", "vllm-litellm"},
-		{"generate", "--project", projectDir, "--all"},
-		{"validate", "--project", projectDir},
-	}
-	for _, args := range commands {
-		if err := executeForTest(args...); err != nil {
-			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
-		}
-	}
+	runAIProviderFixturePipeline(t, projectDir)
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
 		"mapping/openexit.mapping.yaml",
@@ -769,6 +756,67 @@ func TestAIProviderFixturePipeline(t *testing.T) {
 		if !strings.Contains(string(assessmentData), id) {
 			t.Fatalf("expected assessment finding %s", id)
 		}
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "litellm-config-candidate: passed") {
+		t.Fatalf("expected LiteLLM candidate validation marker, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsProductionReadyLiteLLMCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "ai-demo")
+	runAIProviderFixturePipeline(t, projectDir)
+	candidatePath := filepath.Join(projectDir, "generated-config", "ai", "litellm", "config.candidate.yaml")
+	data, err := os.ReadFile(candidatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "productionReady: false", "productionReady: true", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain productionReady marker")
+	}
+	if err := os.WriteFile(candidatePath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when LiteLLM candidate is marked production ready")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "litellm-config-candidate") || !strings.Contains(string(report), "productionReady") {
+		t.Fatalf("expected LiteLLM candidate productionReady failure in validation report, got:\n%s", string(report))
+	}
+}
+
+func TestValidationRejectsBrokenLiteLLMRouteCandidate(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "ai-demo")
+	runAIProviderFixturePipeline(t, projectDir)
+	candidatePath := filepath.Join(projectDir, "generated-config", "ai", "litellm", "config.candidate.yaml")
+	data, err := os.ReadFile(candidatePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	corrupt := strings.Replace(string(data), "model: vllm/support-chat-replacement-for-gpt-4o", "model: vllm/support-chat-unreviewed", 1)
+	if corrupt == string(data) {
+		t.Fatal("test fixture did not contain LiteLLM model route")
+	}
+	if err := os.WriteFile(candidatePath, []byte(corrupt), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := executeForTest("validate", "--project", projectDir); err == nil {
+		t.Fatal("expected validation to fail when LiteLLM route drifts from inventory")
+	}
+	report, err := os.ReadFile(filepath.Join(projectDir, "validation", "validation-report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(report), "litellm-config-candidate") || !strings.Contains(string(report), "litellm_params") {
+		t.Fatalf("expected LiteLLM route failure in validation report, got:\n%s", string(report))
 	}
 }
 
@@ -828,6 +876,23 @@ func runEdgeFixturePipeline(t *testing.T, projectDir string) {
 		{"init", projectDir, "--source", "edge", "--target", "varnish-haproxy-coraza"},
 		{"collect", "edge-fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "varnish-haproxy-coraza"},
+		{"generate", "--project", projectDir, "--all"},
+		{"validate", "--project", projectDir},
+	}
+	for _, args := range commands {
+		if err := executeForTest(args...); err != nil {
+			t.Fatalf("openexit %s failed: %v", strings.Join(args, " "), err)
+		}
+	}
+}
+
+func runAIProviderFixturePipeline(t *testing.T, projectDir string) {
+	t.Helper()
+	fixturePath := filepath.Join("..", "..", "testdata", "ai-provider", "small.json")
+	commands := [][]string{
+		{"init", projectDir, "--source", "ai-provider", "--target", "vllm-litellm"},
+		{"collect", "ai-fixture", "--project", projectDir, "--input", fixturePath},
+		{"assess", "--project", projectDir, "--target", "vllm-litellm"},
 		{"generate", "--project", projectDir, "--all"},
 		{"validate", "--project", projectDir},
 	}

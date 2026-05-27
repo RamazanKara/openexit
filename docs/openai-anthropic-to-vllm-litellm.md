@@ -106,4 +106,6 @@ openexit validate --project ./anthropic-live
 - `assessment/data-sensitivity-report.md`
 - `generated-config/ai/litellm/config.candidate.yaml`
 
+Validation checks the LiteLLM candidate for source/target metadata, non-production safety flags, absence of provider credentials, explicit LiteLLM/vLLM router policy, one route per captured usage class, preserved source models, owners, latency and fallback metadata, runtime credential placeholders, vLLM sizing assumptions, and evidence refs.
+
 All generated target files are candidates and require human review, model evaluation, load testing, data-control review, and tool-policy review before production use.
