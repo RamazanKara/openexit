@@ -20,6 +20,7 @@
 - Added Grafana dashboard candidate validation for mapping, source metadata, candidate safety flags, panels, and unsupported-widget notes.
 - Added Prometheus alert-rule candidate validation for mapping, source monitor metadata, candidate safety labels, review annotations, and manual placeholders.
 - Added OpenTelemetry Collector candidate validation for OTLP receivers, metric/trace pipelines, exporters, candidate warnings, and README production guidance.
+- Added ArgoCD candidate validation for Application shape, candidate labels, placeholder repository URL, and disabled automated sync.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
 
 ## 0.1.0 - 2026-05-24

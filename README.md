@@ -110,7 +110,7 @@ Included in the current implementation:
 - OpenTelemetry Collector sketch.
 - ArgoCD starter manifest.
 - Typed migration plan manifest and phase-gate Markdown plan.
-- Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, and OpenTelemetry collector candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
+- Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, and ArgoCD candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.

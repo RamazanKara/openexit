@@ -96,6 +96,7 @@ func Run(projectDir string, strict bool) (*Report, error) {
 		addSchemaChecks(projectDir, schemaValidator, add)
 	}
 	addExternalChecks(projectDir, add)
+	addArgoCDCandidateChecks(projectDir, add)
 	if inv != nil && a != nil {
 		if cfgErr == nil {
 			addProjectConsistencyChecks(cfg, inv, a, add)

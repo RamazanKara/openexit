@@ -25,6 +25,8 @@ Validation also checks Prometheus alert-rule candidates against mapping and inve
 
 Validation checks the OpenTelemetry Collector candidate for OTLP receivers, memory limiter and batch processors, metrics and traces pipelines, Mimir and Tempo placeholder exporters, candidate warnings, README production-change guidance, and absence of secret-like content.
 
+Validation checks the ArgoCD candidate for Application shape, OpenExit candidate labels, placeholder repository URL, destination, absence of automated sync, absence of secret-like content, and README review guidance.
+
 ## Live Collection
 
 The live Datadog collector stores redacted evidence for dashboards, monitors, and SLOs. Evidence refs in generated assessments resolve to local files under `evidence/datadog/`.
