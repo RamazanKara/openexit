@@ -1,0 +1,58 @@
+apiVersion: openexit.dev/v1alpha1
+kind: MigrationPlan
+metadata:
+    project: output
+    generatedAt: 2026-05-27T04:39:07.28825049Z
+source:
+    type: datadog
+target:
+    type: grafana-lgtm
+summary:
+    status: ready
+    requiredArtifacts: 16
+    missingArtifacts: 0
+phases:
+    - name: assessment
+      objective: Confirm inventory, findings, cost drivers, and manual-review scope.
+      status: ready
+      requiredArtifacts:
+        - assessment/assessment.md
+        - assessment/cost-drivers.md
+        - assessment/manual-review.md
+        - assessment/risk-register.md
+        - mapping/mapping-summary.md
+        - mapping/openexit.mapping.yaml
+      exitCriteria:
+        - All high-severity findings have owners.
+        - Evidence references resolve to redacted local evidence.
+    - name: pilot
+      objective: Prepare Grafana, Prometheus, OpenTelemetry, and ArgoCD candidates for a non-production pilot.
+      status: ready
+      requiredArtifacts:
+        - assessment/target-architecture.md
+        - generated-config/argocd/grafana-stack-application.candidate.yaml
+        - generated-config/grafana/README.md
+        - generated-config/opentelemetry/collector.candidate.yaml
+        - generated-config/prometheus/rules/datadog-monitor-candidates.yaml
+      exitCriteria:
+        - Candidate dashboards and alert rules are reviewed in a non-production target.
+        - Collector and GitOps sketches are reviewed by platform owners.
+    - name: shadow
+      objective: Run target alert and dashboard candidates alongside Datadog before cutover.
+      status: ready
+      requiredArtifacts:
+        - assessment/acceptance-criteria.md
+        - assessment/alert-shadowing-plan.md
+      exitCriteria:
+        - Alert shadowing covers representative incidents and quiet periods.
+        - Dashboard parity differences are accepted by owners.
+    - name: cutover
+      objective: Change operational routing only after rollback, runbook, and restore-drill checks are accepted.
+      status: ready
+      requiredArtifacts:
+        - assessment/restore-drill-checklist.md
+        - assessment/rollback-plan.md
+        - assessment/runbook.md
+      exitCriteria:
+        - Rollback path is tested.
+        - Source Datadog monitors remain available until target behavior is accepted.

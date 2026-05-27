@@ -1,0 +1,160 @@
+apiVersion: openexit.dev/v1alpha1
+kind: ValidationReport
+status: passed
+generatedAt: 2026-05-27T04:39:10.441900541Z
+checks:
+    - name: argocd-candidate
+      status: passed
+      critical: true
+    - name: argocd-kubeconform
+      status: warning
+      message: kubeconform not found; YAML parse still ran
+      critical: false
+    - name: assessment-schema
+      status: passed
+      critical: true
+    - name: evidence-ref-evidence://datadog/dashboard/abc-123
+      status: passed
+      critical: true
+    - name: evidence-ref-evidence://datadog/integration/kubernetes
+      status: passed
+      critical: true
+    - name: evidence-ref-evidence://datadog/monitor/123456
+      status: passed
+      critical: true
+    - name: evidence-ref-evidence://datadog/monitor/789012
+      status: passed
+      critical: true
+    - name: evidence-ref-evidence://datadog/slo/slo-123
+      status: passed
+      critical: true
+    - name: grafana-dashboard-candidates
+      status: passed
+      critical: true
+    - name: inventory-schema
+      status: passed
+      critical: true
+    - name: json-parse-assessment/openexit.assessment.json
+      status: passed
+      critical: true
+    - name: json-parse-assessment/openexit.migration-plan.json
+      status: passed
+      critical: true
+    - name: json-parse-evidence/datadog/dashboards/abc-123.json
+      status: passed
+      critical: true
+    - name: json-parse-evidence/datadog/integrations/kubernetes.json
+      status: passed
+      critical: true
+    - name: json-parse-evidence/datadog/monitors/123456.json
+      status: passed
+      critical: true
+    - name: json-parse-evidence/datadog/monitors/789012.json
+      status: passed
+      critical: true
+    - name: json-parse-evidence/datadog/raw-fixture.json
+      status: passed
+      critical: true
+    - name: json-parse-evidence/datadog/slos/slo-123.json
+      status: passed
+      critical: true
+    - name: json-parse-generated-config/grafana/dashboards/production-api-overview.candidate.json
+      status: passed
+      critical: true
+    - name: json-parse-inventory/openexit.inventory.json
+      status: passed
+      critical: true
+    - name: json-parse-mapping/openexit.mapping.json
+      status: passed
+      critical: true
+    - name: jsonschema-assessment-json
+      status: passed
+      critical: true
+    - name: jsonschema-assessment-yaml
+      status: passed
+      critical: true
+    - name: jsonschema-inventory-json
+      status: passed
+      critical: true
+    - name: jsonschema-inventory-yaml
+      status: passed
+      critical: true
+    - name: jsonschema-mapping-json
+      status: passed
+      critical: true
+    - name: jsonschema-mapping-yaml
+      status: passed
+      critical: true
+    - name: jsonschema-migration-plan-json
+      status: passed
+      critical: true
+    - name: jsonschema-migration-plan-yaml
+      status: passed
+      critical: true
+    - name: jsonschema-project
+      status: passed
+      critical: true
+    - name: jsonschema-validation-report
+      status: passed
+      critical: true
+    - name: mapping-consistency
+      status: passed
+      critical: true
+    - name: mapping-schema
+      status: passed
+      critical: true
+    - name: migration-plan
+      status: passed
+      critical: true
+    - name: migration-plan-artifacts
+      status: passed
+      critical: true
+    - name: opentelemetry-candidate
+      status: passed
+      critical: true
+    - name: project-config
+      status: passed
+      critical: true
+    - name: project-manifest-consistency
+      status: passed
+      critical: true
+    - name: project-path-safety
+      status: passed
+      critical: true
+    - name: prometheus-rule-candidates
+      status: passed
+      critical: true
+    - name: prometheus-rules-promtool
+      status: warning
+      message: promtool not found; YAML parse still ran
+      critical: false
+    - name: secret-scan
+      status: passed
+      critical: true
+    - name: yaml-parse-assessment/openexit.assessment.yaml
+      status: passed
+      critical: true
+    - name: yaml-parse-assessment/openexit.migration-plan.yaml
+      status: passed
+      critical: true
+    - name: yaml-parse-generated-config/argocd/grafana-stack-application.candidate.yaml
+      status: passed
+      critical: true
+    - name: yaml-parse-generated-config/opentelemetry/collector.candidate.yaml
+      status: passed
+      critical: true
+    - name: yaml-parse-generated-config/prometheus/rules/datadog-monitor-candidates.yaml
+      status: passed
+      critical: true
+    - name: yaml-parse-inventory/openexit.inventory.yaml
+      status: passed
+      critical: true
+    - name: yaml-parse-mapping/openexit.mapping.yaml
+      status: passed
+      critical: true
+    - name: yaml-parse-openexit.yaml
+      status: passed
+      critical: true
+    - name: yaml-parse-validation/openexit.validation.yaml
+      status: passed
+      critical: true

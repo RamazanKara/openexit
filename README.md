@@ -47,6 +47,12 @@ make release-dist VERSION=0.1.0
 
 This writes OS/architecture binaries and `dist/SHA256SUMS`.
 
+Refresh the checked-in Datadog example project with:
+
+```bash
+make example VERSION=0.1.0-dev
+```
+
 ## Commands
 
 - `openexit version`
@@ -148,7 +154,7 @@ The assessment engine includes dashboard, monitor, SLO, cost, scale, identity, e
 
 ## Release Process
 
-The release checklist lives in `docs/release.md`. A release build should pass `make verify`, `make release-dist VERSION=0.1.0`, the Datadog definition-of-done pipeline, and validation/export for every supported assessment path.
+The release checklist lives in `docs/release.md`. A release build should pass `make verify`, `make release-dist VERSION=0.1.0`, `make example VERSION=0.1.0-dev`, the Datadog definition-of-done pipeline, and validation/export for every supported assessment path.
 
 ## Assessment Paths
 

@@ -128,10 +128,19 @@ func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Invent
 		})
 	}
 	for _, integration := range fixture.Integrations {
+		evidenceID := safeID(integration.Name)
+		integrationBytes, err := json.MarshalIndent(integration, "", "  ")
+		if err != nil {
+			return err
+		}
+		if err := writeEvidence(projectDir, "datadog/integrations/"+evidenceID+".json", inventory.RedactBytes(integrationBytes)); err != nil {
+			return err
+		}
 		inv.Assets.Integrations = append(inv.Assets.Integrations, inventory.Integration{
-			Name:    integration.Name,
-			Enabled: integration.Enabled,
-			Tags:    append([]string{}, integration.Tags...),
+			Name:        integration.Name,
+			Enabled:     integration.Enabled,
+			Tags:        append([]string{}, integration.Tags...),
+			EvidenceRef: "evidence://datadog/integration/" + evidenceID,
 		})
 	}
 	for _, metric := range fixture.Metrics {

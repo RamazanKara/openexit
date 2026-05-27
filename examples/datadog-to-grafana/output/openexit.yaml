@@ -1,0 +1,17 @@
+apiVersion: openexit.dev/v1alpha1
+kind: Project
+metadata:
+    name: output
+source:
+    type: datadog
+target:
+    type: grafana-lgtm
+policy:
+    allowNetworkWrites: false
+    allowProductionWrites: false
+    allowAI: false
+assist:
+    enabled: false
+    provider: noop
+    model: ""
+    allowExternalProvider: false

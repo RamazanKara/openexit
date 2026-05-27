@@ -1,0 +1,9 @@
+{
+  "id": "slo-123",
+  "name": "API availability",
+  "target": 99.9,
+  "timeframe": "30d",
+  "sli": "",
+  "burnRateMonitorIds": null,
+  "dashboardRefs": null
+}

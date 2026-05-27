@@ -1,0 +1,210 @@
+apiVersion: openexit.dev/v1alpha1
+kind: Assessment
+metadata:
+    project: output
+    generatedAt: 2026-05-27T04:39:07.28825049Z
+source:
+    type: datadog
+target:
+    type: grafana-lgtm
+score:
+    value: 80
+    level: high
+    automationPotential: medium
+    manualReviewRequired: high
+    drivers:
+        - 1 unsupported dashboard widgets
+        - 3 high-severity manual review findings
+        - 1 assets missing clear ownership
+        - 1 SLOs require migration review
+        - retention requirements unknown
+        - logs or traces volume requirements unknown
+        - notification routing requires review
+findings:
+    - id: dd.cost.log-volume-unknown.001
+      severity: low
+      title: Log volume is unknown
+      description: The inventory does not include log volume assumptions needed for Loki sizing.
+      affectedAssets:
+        - inventory:logs
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+        - evidence://datadog/monitor/123456
+        - evidence://datadog/monitor/789012
+      recommendation: Capture daily ingest, retention, label strategy, and query expectations before target sizing.
+    - id: dd.cost.retention-unknown.001
+      severity: low
+      title: Retention requirements are not captured
+      description: Datadog inventory does not fully describe retention expectations for metrics, logs, or traces.
+      affectedAssets:
+        - inventory:retention
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+        - evidence://datadog/monitor/123456
+        - evidence://datadog/monitor/789012
+      recommendation: Document retention and volume assumptions before sizing Grafana LGTM components.
+    - id: dd.cost.trace-volume-unknown.001
+      severity: low
+      title: Trace volume is unknown
+      description: The inventory does not include trace volume assumptions needed for Tempo sizing.
+      affectedAssets:
+        - inventory:traces
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+        - evidence://datadog/monitor/123456
+        - evidence://datadog/monitor/789012
+      recommendation: Capture spans per second, retention, sampling policy, and search expectations before target sizing.
+    - id: dd.dashboard.unsupported-widget.001
+      severity: medium
+      title: Unsupported dashboard widgets found
+      description: Production API Overview has 1 widget(s) that need manual Grafana review.
+      affectedAssets:
+        - dashboard:abc-123
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+      recommendation: Generate a Grafana dashboard candidate and manually review unsupported widgets before parity sign-off.
+    - id: dd.monitor.anomaly-detection.001
+      severity: high
+      title: Anomaly detection monitor needs manual replacement
+      description: Datadog anomaly detection has no automatic PromQL equivalent.
+      affectedAssets:
+        - monitor:789012
+      evidenceRefs:
+        - evidence://datadog/monitor/789012
+      recommendation: Design an explicit Prometheus/Grafana alerting strategy and shadow it before cutover.
+    - id: dd.monitor.manual-routing-needed.001
+      severity: medium
+      title: Manual alert routing review is needed
+      description: OpenExit does not automatically map Datadog notification handles to target alert routes.
+      affectedAssets:
+        - monitor:789012
+      evidenceRefs:
+        - evidence://datadog/monitor/789012
+      recommendation: Create explicit target contact points and routing policies, then test them without production paging.
+    - id: dd.monitor.missing-owner.001
+      severity: medium
+      title: Monitor ownership is unclear
+      description: No team, owner, or service tag was found for this monitor.
+      affectedAssets:
+        - monitor:789012
+      evidenceRefs:
+        - evidence://datadog/monitor/789012
+      recommendation: Assign an alert owner before migrating routing or paging behavior.
+    - id: dd.monitor.missing-runbook.001
+      severity: low
+      title: Monitor has no runbook link
+      description: No runbook URL was found for this alert.
+      affectedAssets:
+        - monitor:789012
+      evidenceRefs:
+        - evidence://datadog/monitor/789012
+      recommendation: Add or confirm operational guidance before alert cutover.
+    - id: dd.monitor.query.translation.001
+      severity: high
+      title: Datadog-specific monitor query requires manual conversion
+      description: The monitor query uses Datadog syntax or functions that require PromQL review.
+      affectedAssets:
+        - monitor:123456
+      evidenceRefs:
+        - evidence://datadog/monitor/123456
+      recommendation: Create a PromQL candidate and require SRE review before alert shadowing.
+    - id: dd.monitor.unknown-notification-target.001
+      severity: medium
+      title: Notification target requires routing review
+      description: Notification target "@webhook-custom" is not recognized as a safe automatic route.
+      affectedAssets:
+        - monitor:789012
+      evidenceRefs:
+        - evidence://datadog/monitor/789012
+      recommendation: Map notification routing manually and test paging behavior during shadowing.
+    - id: dd.slo.burn-rate-alert-missing.001
+      severity: medium
+      title: SLO burn-rate alert mapping is missing
+      description: No burn-rate monitor mapping was captured for this SLO.
+      affectedAssets:
+        - slo:slo-123
+      evidenceRefs:
+        - evidence://datadog/slo/slo-123
+      recommendation: Create and shadow target burn-rate alerts before SLO cutover.
+    - id: dd.slo.dashboard-missing.001
+      severity: low
+      title: SLO dashboard mapping is missing
+      description: No dashboard reference was captured for this SLO.
+      affectedAssets:
+        - slo:slo-123
+      evidenceRefs:
+        - evidence://datadog/slo/slo-123
+      recommendation: Add or confirm target SLO dashboard coverage for migration readiness.
+    - id: dd.slo.target-needs-review.001
+      severity: medium
+      title: SLO target needs migration review
+      description: SLO migration requires mapping the SLI source, burn-rate alerts, dashboards, and ownership.
+      affectedAssets:
+        - slo:slo-123
+      evidenceRefs:
+        - evidence://datadog/slo/slo-123
+      recommendation: Review SLO semantics and create matching dashboards and burn-rate alerts before cutover.
+    - id: dd.slo.without-clear-sli.001
+      severity: medium
+      title: SLO has no clear SLI mapping
+      description: The inventory does not include a clear service level indicator query for this SLO.
+      affectedAssets:
+        - slo:slo-123
+      evidenceRefs:
+        - evidence://datadog/slo/slo-123
+      recommendation: Identify the target SLI query and validate it against the source SLO before migration.
+    - id: migration.alert-shadowing-required.001
+      severity: medium
+      title: Alert shadowing is required
+      description: Source monitors exist, so target alert candidates should run in shadow mode before cutover.
+      affectedAssets:
+        - inventory:monitors
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+        - evidence://datadog/monitor/123456
+        - evidence://datadog/monitor/789012
+      recommendation: Run alert candidates without production paging and compare behavior against Datadog over a representative period.
+    - id: migration.dashboard-parity-required.001
+      severity: medium
+      title: Dashboard parity review is required
+      description: Source dashboards exist, so generated Grafana candidates need owner review before migration sign-off.
+      affectedAssets:
+        - inventory:dashboards
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+        - evidence://datadog/monitor/123456
+        - evidence://datadog/monitor/789012
+      recommendation: Review candidate dashboards with service owners and record acceptable differences.
+    - id: migration.manual-query-review-required.001
+      severity: high
+      title: Manual query review is required
+      description: At least one source monitor query uses Datadog-specific syntax that should not be converted blindly.
+      affectedAssets:
+        - inventory:queries
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+        - evidence://datadog/monitor/123456
+        - evidence://datadog/monitor/789012
+      recommendation: Review query candidates with SRE owners and shadow target alert behavior before cutover.
+    - id: migration.notification-routing-review-required.001
+      severity: medium
+      title: Notification routing review is required
+      description: Datadog notification handles need explicit target contact point and routing policy mapping.
+      affectedAssets:
+        - inventory:notification-targets
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+        - evidence://datadog/monitor/123456
+        - evidence://datadog/monitor/789012
+      recommendation: Create target routing policies and test them before any production paging change.
+    - id: migration.oncall-ownership-unclear.001
+      severity: medium
+      title: On-call ownership is unclear
+      description: At least one dashboard or monitor lacks a team, owner, or service tag.
+      affectedAssets:
+        - inventory:ownership
+      evidenceRefs:
+        - evidence://datadog/dashboard/abc-123
+        - evidence://datadog/monitor/123456
+        - evidence://datadog/monitor/789012
+      recommendation: Assign owners before alert routing, dashboard parity review, and cutover planning.

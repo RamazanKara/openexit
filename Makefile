@@ -8,8 +8,11 @@ GOFILES := $(shell find . -name '*.go' -not -path './bin/*' -not -path './dist/*
 PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 GOLANGCI_LINT_VERSION ?= v2.12.2
 GOLANGCI_LINT ?= bin/golangci-lint
+EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
+EXAMPLE_DIR ?= examples/datadog-to-grafana/output
+EXAMPLE_BUNDLE ?= examples/datadog-to-grafana/openexit-example.zip
 
-.PHONY: build test fmt fmt-check lint golangci-lint smoke verify release-dist clean
+.PHONY: build test fmt fmt-check lint golangci-lint smoke example example-smoke verify release-dist clean
 
 build:
 	mkdir -p $(dir $(BINARY))
@@ -70,7 +73,37 @@ smoke:
 	$(BINARY) validate --project "$$tmp/ai-demo"; \
 	$(BINARY) export --project "$$tmp/ai-demo" --format zip --out "$$tmp/ai-demo.zip"
 
-verify: lint test build smoke
+example: build
+	rm -rf $(EXAMPLE_DIR)/openexit.yaml \
+		$(EXAMPLE_DIR)/inventory \
+		$(EXAMPLE_DIR)/assessment \
+		$(EXAMPLE_DIR)/mapping \
+		$(EXAMPLE_DIR)/generated-config \
+		$(EXAMPLE_DIR)/evidence \
+		$(EXAMPLE_DIR)/validation \
+		$(EXAMPLE_BUNDLE)
+	mkdir -p $(EXAMPLE_DIR)
+	$(BINARY) init $(EXAMPLE_DIR) --source datadog --target grafana-lgtm
+	$(BINARY) collect fixture --project $(EXAMPLE_DIR) --input $(EXAMPLE_INPUT)
+	$(BINARY) assess --project $(EXAMPLE_DIR) --target grafana-lgtm
+	$(BINARY) map --project $(EXAMPLE_DIR)
+	$(BINARY) generate --project $(EXAMPLE_DIR) --all
+	$(BINARY) validate --project $(EXAMPLE_DIR)
+	$(BINARY) export --project $(EXAMPLE_DIR) --format zip --out $(EXAMPLE_BUNDLE)
+
+example-smoke: build
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	$(BINARY) init "$$tmp/example" --source datadog --target grafana-lgtm; \
+	$(BINARY) collect fixture --project "$$tmp/example" --input ./$(EXAMPLE_INPUT); \
+	$(BINARY) assess --project "$$tmp/example" --target grafana-lgtm; \
+	$(BINARY) map --project "$$tmp/example"; \
+	$(BINARY) generate --project "$$tmp/example" --all; \
+	$(BINARY) validate --project "$$tmp/example"; \
+	$(BINARY) export --project "$$tmp/example" --format zip --out "$$tmp/openexit-example.zip"; \
+	test -s "$$tmp/openexit-example.zip"
+
+verify: lint test build smoke example-smoke
 
 release-dist:
 	rm -rf dist

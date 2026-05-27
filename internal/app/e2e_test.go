@@ -689,6 +689,7 @@ func expectedProjectFiles() []string {
 		"evidence/datadog/monitors/123456.json",
 		"evidence/datadog/monitors/789012.json",
 		"evidence/datadog/slos/slo-123.json",
+		"evidence/datadog/integrations/kubernetes.json",
 	}
 }
 

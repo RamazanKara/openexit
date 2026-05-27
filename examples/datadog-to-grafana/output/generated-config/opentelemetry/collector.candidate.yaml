@@ -1,0 +1,32 @@
+# OpenExit candidate OpenTelemetry Collector configuration.
+# Review endpoints, TLS, authentication, sizing, and deployment topology before production use.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  batch:
+
+exporters:
+  prometheusremotewrite:
+    endpoint: "http://mimir-nginx/api/v1/push"
+  otlp/tempo:
+    endpoint: "tempo-distributor:4317"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [prometheusremotewrite]
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp/tempo]

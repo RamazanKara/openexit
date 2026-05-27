@@ -1,0 +1,65 @@
+{
+  "title": "Production API Overview",
+  "tags": [
+    "openexit",
+    "candidate",
+    "source:datadog",
+    "env:prod",
+    "team:platform"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Candidate panel 1",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "description": "OpenExit candidate panel. Review Datadog query before production use: sum:trace.http.request.errors{env:prod}.as_count()",
+      "targets": [
+        {
+          "expr": "vector(0)",
+          "legendFormat": "manual review required",
+          "openexit_source_query": "sum:trace.http.request.errors{env:prod}.as_count()",
+          "refId": "A1"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Candidate panel 2",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "description": "OpenExit candidate panel. Review Datadog query before production use: avg:system.cpu.user{env:prod} by {service}",
+      "targets": [
+        {
+          "expr": "vector(0)",
+          "legendFormat": "manual review required",
+          "openexit_source_query": "avg:system.cpu.user{env:prod} by {service}",
+          "refId": "A2"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "openexit": {
+    "candidate": "true",
+    "evidenceRef": "evidence://datadog/dashboard/abc-123",
+    "productionReady": "false",
+    "source": "datadog",
+    "sourceDashboardID": "abc-123"
+  }
+}

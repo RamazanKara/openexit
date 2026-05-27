@@ -36,6 +36,7 @@ The AI provider path is complete for local fixture assessment workflows and incl
 - [ ] `make verify VERSION=0.1.0` passes, including CLI smoke pipelines.
 - [ ] `make lint` runs `gofmt`, `golangci-lint`, and `go vet`.
 - [ ] `make release-dist VERSION=0.1.0` produces binaries and `dist/SHA256SUMS`.
+- [ ] `make example VERSION=0.1.0-dev` refreshes `examples/datadog-to-grafana/output/` and exports `examples/datadog-to-grafana/openexit-example.zip`.
 - [ ] Datadog definition-of-done pipeline passes:
   `init`, `collect fixture`, `assess`, `map`, `generate --all`, `validate`, `export`.
 - [ ] GitHub, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic fixture/live-collector test coverage pass, and supported fixture provider pipelines validate.

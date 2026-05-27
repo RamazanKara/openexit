@@ -1,0 +1,55 @@
+# Validation Report
+
+Status: passed
+
+- argocd-candidate: passed
+- argocd-kubeconform: warning - kubeconform not found; YAML parse still ran
+- assessment-schema: passed
+- evidence-ref-evidence://datadog/dashboard/abc-123: passed
+- evidence-ref-evidence://datadog/integration/kubernetes: passed
+- evidence-ref-evidence://datadog/monitor/123456: passed
+- evidence-ref-evidence://datadog/monitor/789012: passed
+- evidence-ref-evidence://datadog/slo/slo-123: passed
+- grafana-dashboard-candidates: passed
+- inventory-schema: passed
+- json-parse-assessment/openexit.assessment.json: passed
+- json-parse-assessment/openexit.migration-plan.json: passed
+- json-parse-evidence/datadog/dashboards/abc-123.json: passed
+- json-parse-evidence/datadog/integrations/kubernetes.json: passed
+- json-parse-evidence/datadog/monitors/123456.json: passed
+- json-parse-evidence/datadog/monitors/789012.json: passed
+- json-parse-evidence/datadog/raw-fixture.json: passed
+- json-parse-evidence/datadog/slos/slo-123.json: passed
+- json-parse-generated-config/grafana/dashboards/production-api-overview.candidate.json: passed
+- json-parse-inventory/openexit.inventory.json: passed
+- json-parse-mapping/openexit.mapping.json: passed
+- jsonschema-assessment-json: passed
+- jsonschema-assessment-yaml: passed
+- jsonschema-inventory-json: passed
+- jsonschema-inventory-yaml: passed
+- jsonschema-mapping-json: passed
+- jsonschema-mapping-yaml: passed
+- jsonschema-migration-plan-json: passed
+- jsonschema-migration-plan-yaml: passed
+- jsonschema-project: passed
+- jsonschema-validation-report: passed
+- mapping-consistency: passed
+- mapping-schema: passed
+- migration-plan: passed
+- migration-plan-artifacts: passed
+- opentelemetry-candidate: passed
+- project-config: passed
+- project-manifest-consistency: passed
+- project-path-safety: passed
+- prometheus-rule-candidates: passed
+- prometheus-rules-promtool: warning - promtool not found; YAML parse still ran
+- secret-scan: passed
+- yaml-parse-assessment/openexit.assessment.yaml: passed
+- yaml-parse-assessment/openexit.migration-plan.yaml: passed
+- yaml-parse-generated-config/argocd/grafana-stack-application.candidate.yaml: passed
+- yaml-parse-generated-config/opentelemetry/collector.candidate.yaml: passed
+- yaml-parse-generated-config/prometheus/rules/datadog-monitor-candidates.yaml: passed
+- yaml-parse-inventory/openexit.inventory.yaml: passed
+- yaml-parse-mapping/openexit.mapping.yaml: passed
+- yaml-parse-openexit.yaml: passed
+- yaml-parse-validation/openexit.validation.yaml: passed

@@ -1,0 +1,39 @@
+groups:
+    - name: openexit-datadog-monitor-candidates
+      rules:
+        - alert: HighErrorRateCandidate
+          expr: |-
+            # TODO(openexit): Review candidate PromQL before production use.
+            # Source Datadog query:
+            # sum(last_5m):avg:trace.http.request.errors{env:prod} > 10
+            sum(avg_over_time(trace_http_request_errors{env="prod"}[5m])) > 10
+          for: 5m
+          labels:
+            conversion: simple-threshold
+            openexit_candidate: "true"
+            production_ready: "false"
+            severity: warning
+            source: datadog
+            source_monitor_id: "123456"
+          annotations:
+            openexit_manual_review: Simple Datadog threshold converted to a PromQL candidate. Review metric naming, label mapping, aggregation semantics, and alert shadowing before production use.
+            openexit_source_query: sum(last_5m):avg:trace.http.request.errors{env:prod} > 10
+            summary: High error rate
+        - alert: LatencyAnomalyCandidate
+          expr: |-
+            # TODO(openexit): Manual PromQL review required.
+            # Source Datadog query:
+            # avg(last_15m):anomalies(avg:trace.http.request.duration{env:prod}, 'basic', 2) >= 1
+            vector(0)
+          for: 5m
+          labels:
+            conversion: manual-review
+            openexit_candidate: "true"
+            production_ready: "false"
+            severity: warning
+            source: datadog
+            source_monitor_id: "789012"
+          annotations:
+            openexit_manual_review: complex Datadog function requires PromQL redesign.
+            openexit_source_query: avg(last_15m):anomalies(avg:trace.http.request.duration{env:prod}, 'basic', 2) >= 1
+            summary: Latency anomaly

@@ -1,0 +1,7 @@
+{
+  "name": "kubernetes",
+  "enabled": true,
+  "tags": [
+    "env:prod"
+  ]
+}

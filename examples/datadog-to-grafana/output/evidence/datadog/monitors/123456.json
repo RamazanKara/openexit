@@ -1,0 +1,15 @@
+{
+  "id": "123456",
+  "name": "High error rate",
+  "type": "query alert",
+  "query": "sum(last_5m):avg:trace.http.request.errors{env:prod} \u003e 10",
+  "message": "Investigate API errors @slack-platform",
+  "notificationTargets": [
+    "slack-platform"
+  ],
+  "tags": [
+    "env:prod",
+    "team:platform"
+  ],
+  "runbookUrl": "https://runbooks.example.invalid/high-error-rate"
+}

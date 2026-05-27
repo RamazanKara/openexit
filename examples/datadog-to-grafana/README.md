@@ -5,14 +5,9 @@ This example uses a small redacted Datadog-like fixture and writes all generated
 Run from the repository root:
 
 ```bash
-make build VERSION=0.1.0-dev
-./bin/openexit init ./demo
-./bin/openexit collect fixture --project ./demo --input ./examples/datadog-to-grafana/input/datadog-fixture.json
-./bin/openexit assess --project ./demo --target grafana-lgtm
-./bin/openexit map --project ./demo
-./bin/openexit generate --project ./demo --all
-./bin/openexit validate --project ./demo
-./bin/openexit export --project ./demo --format zip --out ./openexit-demo.zip
+make example VERSION=0.1.0-dev
 ```
+
+This refreshes `examples/datadog-to-grafana/output/` and writes an ignored bundle to `examples/datadog-to-grafana/openexit-example.zip`.
 
 The generated files are candidates only. Review every dashboard, alert rule, collector sketch, migration-plan phase gate, and runbook before operational use.

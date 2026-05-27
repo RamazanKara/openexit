@@ -1,0 +1,30 @@
+{
+  "id": "abc-123",
+  "title": "Production API Overview",
+  "url": "https://app.datadoghq.eu/dashboard/abc-123",
+  "tags": [
+    "env:prod",
+    "team:platform"
+  ],
+  "widgets": [
+    {
+      "id": "w1",
+      "type": "timeseries",
+      "title": "CPU by service",
+      "query": "avg:system.cpu.user{env:prod} by {service}",
+      "dataSource": ""
+    },
+    {
+      "id": "w2",
+      "type": "note",
+      "title": "Migration notes",
+      "query": "",
+      "dataSource": ""
+    }
+  ],
+  "queries": [
+    "sum:trace.http.request.errors{env:prod}.as_count()"
+  ],
+  "dataSources": null,
+  "templateVariables": null
+}

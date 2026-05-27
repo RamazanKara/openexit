@@ -1,0 +1,67 @@
+{
+  "apiVersion": "openexit.dev/v1alpha1",
+  "kind": "Mapping",
+  "metadata": {
+    "project": "output",
+    "generatedAt": "2026-05-27T04:39:07.28825049Z"
+  },
+  "source": {
+    "type": "datadog"
+  },
+  "target": {
+    "type": "grafana-lgtm"
+  },
+  "targetType": "grafana-lgtm",
+  "dashboardDrafts": [
+    {
+      "sourceId": "abc-123",
+      "title": "Production API Overview",
+      "level": 1,
+      "path": "generated-config/grafana/dashboards/production-api-overview.candidate.json"
+    }
+  ],
+  "alertRuleDrafts": [
+    {
+      "sourceId": "123456",
+      "alert": "HighErrorRateCandidate",
+      "path": "generated-config/prometheus/rules/datadog-monitor-candidates.yaml",
+      "reviewNeeded": true
+    },
+    {
+      "sourceId": "789012",
+      "alert": "LatencyAnomalyCandidate",
+      "path": "generated-config/prometheus/rules/datadog-monitor-candidates.yaml",
+      "reviewNeeded": true
+    }
+  ],
+  "unsupportedItems": [
+    {
+      "sourceId": "abc-123",
+      "type": "dashboard-widget",
+      "reason": "1 unsupported widget(s) require Grafana panel review"
+    },
+    {
+      "sourceId": "slo-123",
+      "type": "slo",
+      "reason": "SLOs require explicit target SLI, dashboard, and burn-rate alert mapping"
+    }
+  ],
+  "manualReview": [
+    {
+      "sourceId": "inventory:queries",
+      "reason": "Manual query review is required: Review query candidates with SRE owners and shadow target alert behavior before cutover."
+    },
+    {
+      "sourceId": "monitor:123456",
+      "reason": "Datadog-specific monitor query requires manual conversion: Create a PromQL candidate and require SRE review before alert shadowing."
+    },
+    {
+      "sourceId": "monitor:789012",
+      "reason": "Anomaly detection monitor needs manual replacement: Design an explicit Prometheus/Grafana alerting strategy and shadow it before cutover."
+    },
+    {
+      "sourceId": "monitor:789012",
+      "reason": "Manual alert routing review is needed: Create explicit target contact points and routing policies, then test them without production paging."
+    }
+  ]
+}

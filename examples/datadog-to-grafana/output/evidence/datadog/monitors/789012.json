@@ -1,0 +1,14 @@
+{
+  "id": "789012",
+  "name": "Latency anomaly",
+  "type": "query alert",
+  "query": "avg(last_15m):anomalies(avg:trace.http.request.duration{env:prod}, 'basic', 2) \u003e= 1",
+  "message": "Latency anomaly @webhook-custom",
+  "notificationTargets": [
+    "webhook-custom"
+  ],
+  "tags": [
+    "env:prod"
+  ],
+  "runbookUrl": ""
+}

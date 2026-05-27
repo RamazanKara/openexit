@@ -455,6 +455,9 @@ func addEvidenceChecks(projectDir string, inv *inventory.Inventory, a *assessmen
 	for _, slo := range inv.Assets.SLOs {
 		refs[slo.EvidenceRef] = struct{}{}
 	}
+	for _, integration := range inv.Assets.Integrations {
+		refs[integration.EvidenceRef] = struct{}{}
+	}
 	for _, repo := range inv.Assets.Repositories {
 		refs[repo.EvidenceRef] = struct{}{}
 	}
