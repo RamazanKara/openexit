@@ -10,6 +10,7 @@ import (
 
 	"github.com/RamazanKara/openexit/internal/assessment"
 	"github.com/RamazanKara/openexit/internal/inventory"
+	openmapping "github.com/RamazanKara/openexit/internal/mapping"
 	migrationplan "github.com/RamazanKara/openexit/internal/plan"
 	"gopkg.in/yaml.v3"
 )
@@ -32,6 +33,10 @@ func Generate(projectDir string, artifacts []string) error {
 		switch artifact {
 		case "all":
 			if err := GenerateAll(projectDir); err != nil {
+				return err
+			}
+		case "mapping":
+			if err := writeMappingArtifact(ctx); err != nil {
 				return err
 			}
 		case "assessment", "risk-register", "manual-review", "cost-drivers", "target-architecture", "acceptance-criteria", "rollback-plan", "runbook", "restore-drill-checklist", "alert-shadowing-plan", "forgejo-migration-assessment", "ci-compatibility-report", "branch-protection-mapping", "runner-migration-plan", "repository-ownership-report", "identity-migration-risk-register", "break-glass-checklist", "identity-cutover-plan", "identity-rollback-plan", "cache-parity-report", "waf-enforcement-risk-report", "self-hosted-llm-readiness-report", "vllm-sizing-assumptions", "evaluation-plan", "data-sensitivity-report":
@@ -92,6 +97,9 @@ func Generate(projectDir string, artifacts []string) error {
 func GenerateAll(projectDir string) error {
 	ctx, err := loadContext(projectDir)
 	if err != nil {
+		return err
+	}
+	if err := writeMappingArtifact(ctx); err != nil {
 		return err
 	}
 	artifacts := markdownArtifacts
@@ -265,6 +273,14 @@ func writeMigrationPlan(ctx *Context) error {
 		return err
 	}
 	return migrationplan.Write(ctx.ProjectDir, p)
+}
+
+func writeMappingArtifact(ctx *Context) error {
+	result, err := openmapping.Build(ctx.Inventory, ctx.Assessment, ctx.Assessment.Metadata.GeneratedAt)
+	if err != nil {
+		return err
+	}
+	return openmapping.Write(ctx.ProjectDir, result)
 }
 
 func writeCommonHeader(b *bytes.Buffer, ctx *Context) {

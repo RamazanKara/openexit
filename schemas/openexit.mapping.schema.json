@@ -3,11 +3,43 @@
   "$id": "https://openexit.dev/schemas/openexit.mapping.schema.json",
   "title": "OpenExit Mapping",
   "type": "object",
-  "required": ["targetType", "dashboardDrafts", "alertRuleDrafts", "unsupportedItems", "manualReview"],
+  "required": ["apiVersion", "kind", "metadata", "source", "target", "targetType", "dashboardDrafts", "alertRuleDrafts", "unsupportedItems", "manualReview"],
   "properties": {
+    "apiVersion": { "const": "openexit.dev/v1alpha1" },
+    "kind": { "const": "Mapping" },
+    "metadata": {
+      "type": "object",
+      "required": ["project", "generatedAt"],
+      "properties": {
+        "project": { "type": "string", "minLength": 1 },
+        "generatedAt": { "type": "string" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "properties": { "type": { "type": "string" } }
+    },
+    "target": {
+      "type": "object",
+      "required": ["type"],
+      "properties": { "type": { "type": "string" } }
+    },
     "targetType": { "type": "string" },
-    "dashboardDrafts": { "type": "array" },
-    "alertRuleDrafts": { "type": "array" },
+    "dashboardDrafts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceId", "title", "level", "path"]
+      }
+    },
+    "alertRuleDrafts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceId", "alert", "path", "reviewNeeded"]
+      }
+    },
     "unsupportedItems": { "type": "array" },
     "manualReview": { "type": "array" }
   }

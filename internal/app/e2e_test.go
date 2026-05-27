@@ -21,6 +21,7 @@ func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
 		{"init", projectDir},
 		{"collect", "fixture", "--project", projectDir, "--input", fixturePath},
 		{"assess", "--project", projectDir, "--target", "grafana-lgtm"},
+		{"map", "--project", projectDir},
 		{"generate", "--project", projectDir, "--all"},
 		{"validate", "--project", projectDir},
 		{"export", "--project", projectDir, "--format", "zip", "--out", bundlePath},
@@ -182,6 +183,9 @@ func TestGitHubEnterpriseForgejoFixturePipeline(t *testing.T) {
 	}
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
+		"mapping/openexit.mapping.yaml",
+		"mapping/openexit.mapping.json",
+		"mapping/mapping-summary.md",
 		"assessment/openexit.assessment.yaml",
 		"assessment/openexit.migration-plan.yaml",
 		"assessment/migration-plan.md",
@@ -234,6 +238,9 @@ func TestIdentityFixturePipeline(t *testing.T) {
 	}
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
+		"mapping/openexit.mapping.yaml",
+		"mapping/openexit.mapping.json",
+		"mapping/mapping-summary.md",
 		"assessment/openexit.assessment.yaml",
 		"assessment/openexit.migration-plan.yaml",
 		"assessment/migration-plan.md",
@@ -285,6 +292,9 @@ func TestEdgeFixturePipeline(t *testing.T) {
 	}
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
+		"mapping/openexit.mapping.yaml",
+		"mapping/openexit.mapping.json",
+		"mapping/mapping-summary.md",
 		"assessment/openexit.assessment.yaml",
 		"assessment/openexit.migration-plan.yaml",
 		"assessment/migration-plan.md",
@@ -336,6 +346,9 @@ func TestAIProviderFixturePipeline(t *testing.T) {
 	}
 	for _, rel := range []string{
 		"inventory/openexit.inventory.yaml",
+		"mapping/openexit.mapping.yaml",
+		"mapping/openexit.mapping.json",
+		"mapping/mapping-summary.md",
 		"assessment/openexit.assessment.yaml",
 		"assessment/openexit.migration-plan.yaml",
 		"assessment/migration-plan.md",
@@ -397,6 +410,9 @@ func expectedProjectFiles() []string {
 		"openexit.yaml",
 		"inventory/openexit.inventory.yaml",
 		"inventory/openexit.inventory.json",
+		"mapping/openexit.mapping.yaml",
+		"mapping/openexit.mapping.json",
+		"mapping/mapping-summary.md",
 		"assessment/openexit.assessment.yaml",
 		"assessment/openexit.assessment.json",
 		"assessment/openexit.migration-plan.yaml",

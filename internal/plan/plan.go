@@ -228,6 +228,8 @@ func phaseTemplates(source string) []phaseTemplate {
 		"assessment/assessment.md",
 		"assessment/risk-register.md",
 		"assessment/manual-review.md",
+		"mapping/openexit.mapping.yaml",
+		"mapping/mapping-summary.md",
 	}
 	switch source {
 	case "github-enterprise":

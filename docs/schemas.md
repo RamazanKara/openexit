@@ -6,6 +6,8 @@ Project manifests must use one of the supported source/target pairs: Datadog to 
 
 Inventory dashboards can include optional `dataSources` and `templateVariables` fields so assessment can flag Grafana mapping risk. SLOs can include optional `sli`, `burnRateMonitorIds`, and `dashboardRefs` fields. The top-level inventory `volumes` section records whether log and trace volume assumptions are known.
 
+Mapping manifests use `kind: Mapping` and are written to `mapping/openexit.mapping.yaml` and `.json`. They record candidate dashboard paths, alert-rule candidate paths, unsupported source items, and manual-review entries derived from assessment findings. Validation reloads the mapping manifest and checks that source and target types still match inventory and assessment.
+
 Migration plans use `kind: MigrationPlan` and are written to `assessment/openexit.migration-plan.yaml` and `.json`. They group generated outputs into assessment, pilot, shadow, and cutover phases, record required artifact paths, and mark phases as `ready` or `incomplete` based on the files present when the plan is generated. Validation reloads the plan when present and verifies that required artifacts still exist.
 
 For the GitHub Enterprise to Forgejo path, inventory can include `repositories`, `teams`, `branchProtections`, `actionsWorkflows`, `secrets`, `runners`, `deployKeys`, and `githubApps`. The live collector currently populates repository, team, branch protection, Actions workflow, secret metadata, runner, and deploy-key assets; GitHub App metadata is fixture-only. Secret entries are metadata only; OpenExit should never collect or store secret values.

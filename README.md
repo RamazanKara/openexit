@@ -23,6 +23,7 @@ make build
 ./bin/openexit init ./demo --source datadog --target grafana-lgtm
 ./bin/openexit collect fixture --project ./demo --input ./testdata/datadog/small.json
 ./bin/openexit assess --project ./demo --target grafana-lgtm
+./bin/openexit map --project ./demo
 ./bin/openexit generate --project ./demo --all
 ./bin/openexit validate --project ./demo
 ./bin/openexit export --project ./demo --format zip --out ./openexit-demo.zip
@@ -65,6 +66,7 @@ This writes OS/architecture binaries and `dist/SHA256SUMS`.
 - `openexit collect ai-fixture --project <project-dir> --input <file>`
 - `openexit collect datadog --project <project-dir> --site datadoghq.eu --api-key-env DATADOG_API_KEY --app-key-env DATADOG_APP_KEY`
 - `openexit assess --project <project-dir> --target grafana-lgtm`
+- `openexit map --project <project-dir>`
 - `openexit generate --project <project-dir> --all`
 - `openexit validate --project <project-dir>`
 - `openexit export --project <project-dir> --format zip --out <file>`
@@ -101,6 +103,7 @@ Included in the current implementation:
 - Read-only OpenAI collection for model-grouped aggregate completions usage, token volumes, available model metadata, and hourly peak estimates.
 - Read-only Anthropic collection for model-grouped Messages API token usage, server web-search tool metadata, filters, and hourly peak estimates.
 - Deterministic risk assessment.
+- Deterministic source-to-target mapping manifest and summary.
 - Markdown handover artifacts.
 - Grafana dashboard candidate JSON.
 - Prometheus alert rule candidate YAML with simple Datadog threshold conversion hints.
@@ -140,7 +143,7 @@ OpenExit is intentionally conservative:
 
 ## Risk Coverage
 
-The assessment engine includes dashboard, monitor, SLO, cost, scale, identity, edge, repository, and AI provider risk rules from the implementation plan. Findings have stable IDs, severity, affected assets, evidence refs, and recommendations. `generate --all` also writes a typed migration plan under `assessment/` with assessment, pilot, shadow, and cutover phase gates.
+The assessment engine includes dashboard, monitor, SLO, cost, scale, identity, edge, repository, and AI provider risk rules from the implementation plan. Findings have stable IDs, severity, affected assets, evidence refs, and recommendations. `openexit map` writes a typed mapping manifest under `mapping/`; `generate --all` refreshes mapping and writes a typed migration plan under `assessment/` with assessment, pilot, shadow, and cutover phase gates.
 
 ## Release Process
 

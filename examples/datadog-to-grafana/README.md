@@ -9,6 +9,7 @@ make build VERSION=0.1.0-dev
 ./bin/openexit init ./demo
 ./bin/openexit collect fixture --project ./demo --input ./examples/datadog-to-grafana/input/datadog-fixture.json
 ./bin/openexit assess --project ./demo --target grafana-lgtm
+./bin/openexit map --project ./demo
 ./bin/openexit generate --project ./demo --all
 ./bin/openexit validate --project ./demo
 ./bin/openexit export --project ./demo --format zip --out ./openexit-demo.zip

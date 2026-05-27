@@ -9,6 +9,7 @@ import (
 var requiredProjectDirs = []string{
 	"inventory",
 	"assessment",
+	"mapping",
 	"generated-config",
 	"evidence",
 	"validation",

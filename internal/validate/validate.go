@@ -14,6 +14,7 @@ import (
 	"github.com/RamazanKara/openexit/internal/assessment"
 	"github.com/RamazanKara/openexit/internal/evidence"
 	"github.com/RamazanKara/openexit/internal/inventory"
+	openmapping "github.com/RamazanKara/openexit/internal/mapping"
 	migrationplan "github.com/RamazanKara/openexit/internal/plan"
 	"gopkg.in/yaml.v3"
 )
@@ -80,12 +81,21 @@ func Run(projectDir string, strict bool) (*Report, error) {
 	} else {
 		add("assessment-schema", "passed", "", true)
 	}
+	mappingResult, err := loadMapping(projectDir)
+	if err != nil {
+		add("mapping-schema", "failed", err.Error(), true)
+	} else {
+		add("mapping-schema", "passed", "", true)
+	}
 	addYAMLChecks(projectDir, add)
 	addJSONChecks(projectDir, add)
 	addExternalChecks(projectDir, add)
 	if inv != nil && a != nil {
 		if cfgErr == nil {
 			addProjectConsistencyChecks(cfg, inv, a, add)
+		}
+		if mappingResult != nil {
+			addMappingConsistencyChecks(inv, a, mappingResult, add)
 		}
 		addEvidenceChecks(projectDir, inv, a, add)
 	}
@@ -162,7 +172,7 @@ func checkProject(projectDir string) error {
 	if cfg.Policy.AllowNetworkWrites || cfg.Policy.AllowProductionWrites {
 		problems = append(problems, "project policy must not allow network or production writes")
 	}
-	for _, dir := range []string{"inventory", "assessment", "generated-config", "evidence", "validation"} {
+	for _, dir := range []string{"inventory", "assessment", "mapping", "generated-config", "evidence", "validation"} {
 		info, err := os.Stat(filepath.Join(projectDir, dir))
 		if err != nil || !info.IsDir() {
 			problems = append(problems, "missing directory "+dir)
@@ -214,6 +224,21 @@ func loadAssessment(projectDir string) (*assessment.Assessment, error) {
 		return nil, err
 	}
 	return &a, nil
+}
+
+func loadMapping(projectDir string) (*openmapping.MappingResult, error) {
+	data, err := os.ReadFile(filepath.Join(projectDir, "mapping", "openexit.mapping.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	var result openmapping.MappingResult
+	if err := yaml.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
+	if err := openmapping.Validate(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 func loadMigrationPlan(projectDir string) (*migrationplan.Plan, error) {
@@ -312,6 +337,24 @@ func addProjectConsistencyChecks(cfg *projectManifest, inv *inventory.Inventory,
 		return
 	}
 	add("project-manifest-consistency", "passed", "", true)
+}
+
+func addMappingConsistencyChecks(inv *inventory.Inventory, a *assessment.Assessment, result *openmapping.MappingResult, add func(string, string, string, bool)) {
+	var problems []string
+	if result.Source.Type != inv.Source.Type {
+		problems = append(problems, fmt.Sprintf("mapping source %q does not match inventory source %q", result.Source.Type, inv.Source.Type))
+	}
+	if result.Target.Type != a.Target.Type {
+		problems = append(problems, fmt.Sprintf("mapping target %q does not match assessment target %q", result.Target.Type, a.Target.Type))
+	}
+	if result.TargetType != a.Target.Type {
+		problems = append(problems, fmt.Sprintf("mapping targetType %q does not match assessment target %q", result.TargetType, a.Target.Type))
+	}
+	if len(problems) > 0 {
+		add("mapping-consistency", "failed", strings.Join(problems, "; "), true)
+		return
+	}
+	add("mapping-consistency", "passed", "", true)
 }
 
 func addMigrationPlanArtifactChecks(projectDir string, p *migrationplan.Plan, add func(string, string, string, bool)) {

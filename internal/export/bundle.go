@@ -50,6 +50,7 @@ func bundleFiles(projectDir string) ([]string, error) {
 		"openexit.yaml":    true,
 		"inventory":        true,
 		"assessment":       true,
+		"mapping":          true,
 		"generated-config": true,
 		"validation":       true,
 		"evidence":         true,

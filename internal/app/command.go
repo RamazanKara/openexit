@@ -21,6 +21,7 @@ import (
 	openexport "github.com/RamazanKara/openexit/internal/export"
 	"github.com/RamazanKara/openexit/internal/generate"
 	"github.com/RamazanKara/openexit/internal/inventory"
+	"github.com/RamazanKara/openexit/internal/mapping"
 	"github.com/RamazanKara/openexit/internal/validate"
 	"github.com/RamazanKara/openexit/internal/version"
 	"github.com/spf13/cobra"
@@ -39,6 +40,7 @@ func NewRootCommand() *cobra.Command {
 	root.AddCommand(newStatusCommand())
 	root.AddCommand(newCollectCommand())
 	root.AddCommand(newAssessCommand())
+	root.AddCommand(newMapCommand())
 	root.AddCommand(newGenerateCommand())
 	root.AddCommand(newValidateCommand())
 	root.AddCommand(newExportCommand())
@@ -528,6 +530,27 @@ func newAssessCommand() *cobra.Command {
 	return cmd
 }
 
+func newMapCommand() *cobra.Command {
+	var project string
+	cmd := &cobra.Command{
+		Use:   "map",
+		Short: "Map source inventory to deterministic target candidates",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := writeMapping(project); err != nil {
+				return err
+			}
+			result, err := loadMappingManifest(project)
+			if err != nil {
+				return err
+			}
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "mapping written: %d dashboard drafts, %d alert rule drafts, %d manual review items\n", len(result.DashboardDrafts), len(result.AlertRuleDrafts), len(result.ManualReview))
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&project, "project", ".", "OpenExit project directory")
+	return cmd
+}
+
 func newGenerateCommand() *cobra.Command {
 	var project string
 	var artifacts []string
@@ -557,6 +580,35 @@ func newGenerateCommand() *cobra.Command {
 	cmd.Flags().StringArrayVar(&artifacts, "artifact", nil, "Artifact to generate")
 	cmd.Flags().BoolVar(&all, "all", false, "Generate all artifacts")
 	return cmd
+}
+
+func writeMapping(project string) error {
+	cfg, err := LoadProjectConfig(project)
+	if err != nil {
+		return err
+	}
+	inv, err := loadInventoryManifest(project)
+	if err != nil {
+		return err
+	}
+	a, err := loadAssessmentManifest(project)
+	if err != nil {
+		return err
+	}
+	if cfg.Source.Type != inv.Source.Type {
+		return fmt.Errorf("project source %q does not match inventory source %q; collect inventory for the configured source or update openexit.yaml", cfg.Source.Type, inv.Source.Type)
+	}
+	if inv.Source.Type != a.Source.Type {
+		return fmt.Errorf("inventory source %q does not match assessment source %q", inv.Source.Type, a.Source.Type)
+	}
+	if cfg.Target.Type != a.Target.Type {
+		return fmt.Errorf("project target %q does not match assessment target %q", cfg.Target.Type, a.Target.Type)
+	}
+	result, err := mapping.Build(inv, a, time.Now().UTC())
+	if err != nil {
+		return err
+	}
+	return mapping.Write(project, result)
 }
 
 func newValidateCommand() *cobra.Command {
@@ -755,6 +807,36 @@ func loadInventoryManifest(project string) (*inventory.Inventory, error) {
 		return nil, err
 	}
 	return &inv, nil
+}
+
+func loadAssessmentManifest(project string) (*assessment.Assessment, error) {
+	data, err := os.ReadFile(filepath.Join(project, "assessment", "openexit.assessment.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	var a assessment.Assessment
+	if err := yaml.Unmarshal(data, &a); err != nil {
+		return nil, err
+	}
+	if err := assessment.Validate(&a); err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+func loadMappingManifest(project string) (*mapping.MappingResult, error) {
+	data, err := os.ReadFile(filepath.Join(project, "mapping", "openexit.mapping.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	var result mapping.MappingResult
+	if err := yaml.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
+	if err := mapping.Validate(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 func writeAssessmentManifest(project string, a *assessment.Assessment) error {
