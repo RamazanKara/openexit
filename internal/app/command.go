@@ -48,6 +48,7 @@ func NewRootCommand() *cobra.Command {
 	root.AddCommand(newGenerateCommand())
 	root.AddCommand(newValidateCommand())
 	root.AddCommand(newExportCommand())
+	root.AddCommand(newVerifyBundleCommand())
 	root.AddCommand(newAssistCommand())
 	return root
 }
@@ -874,6 +875,51 @@ func newExportCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&force, "force", false, "Export even when validation has critical failures")
 	_ = cmd.MarkFlagRequired("out")
 	return cmd
+}
+
+func newVerifyBundleCommand() *cobra.Command {
+	var jsonOutput bool
+	cmd := &cobra.Command{
+		Use:   "verify-bundle <bundle.zip>",
+		Short: "Verify an exported OpenExit evidence bundle",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			report, err := openexport.Verify(openexport.VerifyOptions{BundlePath: args[0]})
+			if jsonOutput {
+				enc := json.NewEncoder(cmd.OutOrStdout())
+				enc.SetIndent("", "  ")
+				if encErr := enc.Encode(report); encErr != nil {
+					return encErr
+				}
+				return err
+			}
+			writeBundleVerification(cmd.OutOrStdout(), report)
+			return err
+		},
+	}
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "Write machine-readable bundle verification report")
+	return cmd
+}
+
+func writeBundleVerification(w io.Writer, report *openexport.VerificationReport) {
+	if report == nil {
+		return
+	}
+	_, _ = fmt.Fprintf(w, "bundle: %s\n", report.BundlePath)
+	_, _ = fmt.Fprintf(w, "status: %s\n", report.Status)
+	if report.Project.Name != "" || report.Project.Source != "" || report.Project.Target != "" {
+		_, _ = fmt.Fprintf(w, "project: %s (%s -> %s)\n", report.Project.Name, report.Project.Source, report.Project.Target)
+	}
+	if report.Build.Version != "" || report.Build.Commit != "" || report.Build.Date != "" {
+		_, _ = fmt.Fprintf(w, "build: version=%s commit=%s date=%s\n", report.Build.Version, report.Build.Commit, report.Build.Date)
+	}
+	if report.Validation.Status != "" {
+		_, _ = fmt.Fprintf(w, "validation: %s (checks=%d passed=%d failed=%d warnings=%d)\n", report.Validation.Status, report.Validation.Checks, report.Validation.Passed, report.Validation.Failed, report.Validation.Warnings)
+	}
+	_, _ = fmt.Fprintf(w, "files: archive=%d manifest=%d checksums=%d\n", report.ArchiveFiles, report.ManifestFiles, report.ChecksumEntries)
+	for _, message := range report.Errors {
+		_, _ = fmt.Fprintf(w, "error: %s\n", message)
+	}
 }
 
 func newAssistCommand() *cobra.Command {

@@ -65,8 +65,8 @@ type BundleBuild struct {
 
 type BundleProject struct {
 	Name   string `json:"name"`
-	Source string `json:"source,omitempty"`
-	Target string `json:"target,omitempty"`
+	Source string `json:"source"`
+	Target string `json:"target"`
 }
 
 type BundleValidation struct {

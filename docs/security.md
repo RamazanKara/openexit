@@ -16,6 +16,7 @@ OpenExit is designed for local-first assessment work.
 - Validation scans JSON, YAML, Markdown, text, VCL, HAProxy, and Coraza-style generated artifacts for secret-like values.
 - Exported bundles contain local manifests, generated candidates, validation output, a machine-readable bundle manifest, checksums, and redacted evidence.
 - Export refuses symlinks in exported project sections so bundle contents cannot follow paths outside the project tree.
+- `openexit verify-bundle <bundle.zip>` verifies archive path safety, manifest schema, manifest digests and sizes, and `checksums.txt` without access to the original project directory.
 - AI assist is optional, disabled by default, and never part of deterministic validation or export.
 
 Generated configs are candidates only. Review them before any operational use.

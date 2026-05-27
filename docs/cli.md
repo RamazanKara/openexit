@@ -31,6 +31,8 @@ The checked-in Datadog example can be refreshed with `make example VERSION=0.1.0
 
 `openexit export` refuses to package symlinks from exported project sections, even with `--force`, so evidence bundles cannot accidentally include files from outside the project tree. Exported zips include `openexit-evidence/manifest.json` with build metadata, project source/target, validation totals, and per-file SHA-256 digests, plus `checksums.txt` for archive-level verification. The manifest shape is published as `schemas/openexit.evidence-bundle.schema.json`.
 
+`openexit verify-bundle <bundle.zip>` verifies an exported bundle without requiring the original project directory. It checks archive path safety, required bundle files, manifest schema validity, manifest file size/digest metadata, and `checksums.txt`. Use `--json` to feed the verification report into a handover gate.
+
 Generate individual artifacts with `openexit generate --artifact <name>`. The primary Datadog path supports `mapping`, `assessment`, `risk-register`, `manual-review`, `cost-drivers`, `target-architecture`, `acceptance-criteria`, `rollback-plan`, `runbook`, `restore-drill-checklist`, `alert-shadowing-plan`, `migration-plan`, `grafana-dashboards`, `prometheus-rules`, `opentelemetry`, and `argocd`. The GitHub Enterprise path also supports `forgejo-migration-candidate`; the identity path also supports `realm-client-candidate`; the edge path also supports `vcl-candidates`, `haproxy-candidates`, and `coraza-rule-candidates`; the AI provider path also supports `litellm-config-candidate`.
 
 The GitHub Enterprise to Forgejo fixture path uses local JSON metadata:

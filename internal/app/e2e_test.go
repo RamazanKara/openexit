@@ -56,6 +56,71 @@ func TestDefinitionOfDonePipelineAndBundle(t *testing.T) {
 	}
 }
 
+func TestVerifyBundleCommand(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	bundlePath := filepath.Join(t.TempDir(), "openexit-demo.zip")
+	if _, err := executeForTestWithOutput("demo", projectDir, "--out", bundlePath); err != nil {
+		t.Fatalf("openexit demo failed: %v", err)
+	}
+
+	out, err := executeForTestWithOutput("verify-bundle", bundlePath)
+	if err != nil {
+		t.Fatalf("openexit verify-bundle failed: %v\n%s", err, out)
+	}
+	for _, marker := range []string{
+		"status: passed",
+		"project: demo (datadog -> grafana-lgtm)",
+		"validation: passed",
+		"files: archive=",
+	} {
+		if !strings.Contains(out, marker) {
+			t.Fatalf("expected verify-bundle marker %q, got:\n%s", marker, out)
+		}
+	}
+
+	jsonOut, err := executeForTestWithOutput("verify-bundle", bundlePath, "--json")
+	if err != nil {
+		t.Fatalf("openexit verify-bundle --json failed: %v\n%s", err, jsonOut)
+	}
+	var report struct {
+		Status        string `json:"status"`
+		ManifestFiles int    `json:"manifestFiles"`
+		Project       struct {
+			Source string `json:"source"`
+			Target string `json:"target"`
+		} `json:"project"`
+	}
+	if err := json.Unmarshal([]byte(jsonOut), &report); err != nil {
+		t.Fatalf("decode verify-bundle JSON: %v\n%s", err, jsonOut)
+	}
+	if report.Status != "passed" || report.ManifestFiles == 0 || report.Project.Source != "datadog" || report.Project.Target != "grafana-lgtm" {
+		t.Fatalf("unexpected verify-bundle JSON report: %+v", report)
+	}
+}
+
+func TestVerifyBundleCommandRejectsTampering(t *testing.T) {
+	projectDir := filepath.Join(t.TempDir(), "demo")
+	bundlePath := filepath.Join(t.TempDir(), "openexit-demo.zip")
+	if _, err := executeForTestWithOutput("demo", projectDir, "--out", bundlePath); err != nil {
+		t.Fatalf("openexit demo failed: %v", err)
+	}
+	corruptBundleEntry(t, bundlePath, "openexit-evidence/openexit.yaml", []byte("tampered: true\n"))
+
+	out, err := executeForTestWithOutput("verify-bundle", bundlePath)
+	if err == nil {
+		t.Fatalf("expected verify-bundle to reject tampered bundle, got:\n%s", out)
+	}
+	for _, marker := range []string{
+		"status: failed",
+		"manifest digest mismatch for openexit.yaml",
+		"checksum digest mismatch for openexit.yaml",
+	} {
+		if !strings.Contains(out, marker) {
+			t.Fatalf("expected tamper marker %q, got:\n%s", marker, out)
+		}
+	}
+}
+
 func TestStatusReportsPipelineReadiness(t *testing.T) {
 	projectDir := filepath.Join(t.TempDir(), "demo")
 	fixturePath := filepath.Join("..", "..", "testdata", "datadog", "small.json")
@@ -1269,6 +1334,61 @@ func validateBundleManifestSchema(data []byte) error {
 		return err
 	}
 	return schema.Validate(instance)
+}
+
+func corruptBundleEntry(t *testing.T, bundlePath, entryName string, replacement []byte) {
+	t.Helper()
+	reader, err := zip.OpenReader(bundlePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = reader.Close() }()
+
+	tmpPath := bundlePath + ".tmp"
+	out, err := os.Create(tmpPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	zw := zip.NewWriter(out)
+	replaced := false
+	for _, file := range reader.File {
+		header := file.FileHeader
+		w, err := zw.CreateHeader(&header)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if file.Name == entryName {
+			if _, err := w.Write(replacement); err != nil {
+				t.Fatal(err)
+			}
+			replaced = true
+			continue
+		}
+		rc, err := file.Open()
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, copyErr := io.Copy(w, rc)
+		closeErr := rc.Close()
+		if copyErr != nil {
+			t.Fatal(copyErr)
+		}
+		if closeErr != nil {
+			t.Fatal(closeErr)
+		}
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := out.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if !replaced {
+		t.Fatalf("bundle entry %s not found", entryName)
+	}
+	if err := os.Rename(tmpPath, bundlePath); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func verifyChecksums(files map[string][]byte) error {

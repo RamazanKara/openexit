@@ -74,6 +74,7 @@ make example VERSION=0.1.0-dev
 - `openexit generate --project <project-dir> --all`
 - `openexit validate --project <project-dir>`
 - `openexit export --project <project-dir> --format zip --out <file>`
+- `openexit verify-bundle <file> [--json]`
 - `openexit assist summarize --project <project-dir> --provider noop`
 
 The Datadog, GitHub, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic collectors are read-only. API tokens are read from environment variables or local credential files, are not printed, and are not stored.
@@ -119,6 +120,7 @@ Included in the current implementation:
 - Typed migration plan manifest and phase-gate Markdown plan.
 - Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
 - Evidence bundle export with README, checksums, and a schema-backed machine-readable manifest.
+- Offline evidence bundle verification for manifest schema, checksums, digest/size metadata, and archive path safety.
 - Evidence bundle path-safety checks that reject symlinks in exported project sections.
 - No-op assist provider and explicit opt-in LiteLLM assist.
 - GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.
