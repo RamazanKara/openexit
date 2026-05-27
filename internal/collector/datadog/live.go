@@ -73,6 +73,9 @@ func collectDashboards(ctx context.Context, client *Client, projectDir string, i
 			return err
 		}
 		dashboard := dashboardFromRaw(item.ID, item.Title, item.URL, raw)
+		for _, query := range dashboard.Queries {
+			recordInventoryQueryMetricRefs(inv, query.Raw)
+		}
 		inv.Assets.Dashboards = append(inv.Assets.Dashboards, dashboard)
 	}
 	return nil
@@ -187,6 +190,7 @@ func collectMonitors(ctx context.Context, client *Client, projectDir string, inv
 			if err := writeEvidence(projectDir, "datadog/monitors/"+safeID(monitorID)+".json", inventory.RedactBytes(prettyJSON(monitor))); err != nil {
 				return err
 			}
+			recordInventoryQueryMetricRefs(inv, monitor.Query)
 			inv.Assets.Monitors = append(inv.Assets.Monitors, inventory.Monitor{
 				ID:                  monitorID,
 				Name:                monitor.Name,

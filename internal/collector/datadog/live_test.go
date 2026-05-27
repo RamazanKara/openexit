@@ -71,6 +71,15 @@ func TestLiveCollectorNormalizationWithMockedAPI(t *testing.T) {
 	if inv.Summary.Dashboards != 1 || inv.Summary.Monitors != 1 || inv.Summary.SLOs != 1 {
 		t.Fatalf("unexpected summary: %+v", inv.Summary)
 	}
+	if inv.Summary.UniqueMetrics != 2 {
+		t.Fatalf("expected live queries to populate metric summary, got %+v", inv.Summary)
+	}
+	if metric := metricByName(inv.Assets.Metrics, "system.cpu.user"); metric == nil || !hasAll(metric.Tags, "env", "service") {
+		t.Fatalf("expected dashboard metric tags to be captured, got %+v", inv.Assets.Metrics)
+	}
+	if metric := metricByName(inv.Assets.Metrics, "trace.http.request.errors"); metric == nil || !hasAll(metric.Tags, "env") {
+		t.Fatalf("expected monitor metric tags to be captured, got %+v", inv.Assets.Metrics)
+	}
 	for _, ref := range []string{
 		inv.Assets.Dashboards[0].EvidenceRef,
 		inv.Assets.Monitors[0].EvidenceRef,
@@ -106,4 +115,26 @@ func TestDatadogBaseURLValidation(t *testing.T) {
 	if _, err := datadogBaseURL("example.com"); err == nil {
 		t.Fatal("expected unknown site to be rejected")
 	}
+}
+
+func metricByName(metrics []inventory.MetricRef, name string) *inventory.MetricRef {
+	for i := range metrics {
+		if metrics[i].Name == name {
+			return &metrics[i]
+		}
+	}
+	return nil
+}
+
+func hasAll(values []string, expected ...string) bool {
+	seen := map[string]struct{}{}
+	for _, value := range values {
+		seen[value] = struct{}{}
+	}
+	for _, value := range expected {
+		if _, ok := seen[value]; !ok {
+			return false
+		}
+	}
+	return true
 }

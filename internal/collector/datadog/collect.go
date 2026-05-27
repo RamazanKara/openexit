@@ -65,9 +65,7 @@ func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Invent
 		}
 		queries := dashboardQueries(dashboard)
 		for _, query := range queries {
-			for _, name := range inventory.ExtractMetricNames(query.Raw) {
-				metricNames[name] = inventory.MetricRef{Name: name}
-			}
+			recordQueryMetricRefs(metricNames, query.Raw)
 		}
 		widgetTypes := dashboard.WidgetTypes()
 		dataSources := dashboardDataSources(dashboard)
@@ -97,9 +95,7 @@ func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Invent
 		if err := writeEvidence(projectDir, evidencePath, inventory.RedactBytes(monitorBytes)); err != nil {
 			return err
 		}
-		for _, name := range inventory.ExtractMetricNames(monitor.Query) {
-			metricNames[name] = inventory.MetricRef{Name: name}
-		}
+		recordQueryMetricRefs(metricNames, monitor.Query)
 		inv.Assets.Monitors = append(inv.Assets.Monitors, inventory.Monitor{
 			ID:                  monitor.ID,
 			Name:                monitor.Name,
@@ -139,14 +135,9 @@ func normalizeFixture(projectDir string, fixture *Fixture, inv *inventory.Invent
 		})
 	}
 	for _, metric := range fixture.Metrics {
-		if metric.Name != "" {
-			metricNames[metric.Name] = inventory.MetricRef{Name: metric.Name, Tags: append([]string{}, metric.Tags...)}
-		}
+		recordFixtureMetricRef(metricNames, metric)
 	}
-	for _, metric := range metricNames {
-		inv.Assets.Metrics = append(inv.Assets.Metrics, metric)
-	}
-	sort.Slice(inv.Assets.Metrics, func(i, j int) bool { return inv.Assets.Metrics[i].Name < inv.Assets.Metrics[j].Name })
+	inv.Assets.Metrics = metricRefsFromMap(metricNames)
 	sort.Slice(inv.Assets.Dashboards, func(i, j int) bool { return inv.Assets.Dashboards[i].ID < inv.Assets.Dashboards[j].ID })
 	sort.Slice(inv.Assets.Monitors, func(i, j int) bool { return inv.Assets.Monitors[i].ID < inv.Assets.Monitors[j].ID })
 	sort.Slice(inv.Assets.SLOs, func(i, j int) bool { return inv.Assets.SLOs[i].ID < inv.Assets.SLOs[j].ID })

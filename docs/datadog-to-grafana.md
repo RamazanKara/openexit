@@ -29,7 +29,7 @@ Validation checks the ArgoCD candidate for Application shape, OpenExit candidate
 
 ## Live Collection
 
-The live Datadog collector stores redacted evidence for dashboards, monitors, and SLOs. Evidence refs in generated assessments resolve to local files under `evidence/datadog/`.
+The live Datadog collector stores redacted evidence for dashboards, monitors, and SLOs. It records referenced metric names and tag keys from dashboard and monitor queries so cost, cardinality, and target sizing review can use the same metadata as fixture-based assessments. Evidence refs in generated assessments resolve to local files under `evidence/datadog/`.
 
 ## Risk Rules
 
