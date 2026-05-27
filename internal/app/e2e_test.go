@@ -1125,6 +1125,7 @@ func expectedProjectFiles() []string {
 func expectedBundleFiles() []string {
 	files := []string{
 		"openexit-evidence/README.md",
+		"openexit-evidence/manifest.json",
 		"openexit-evidence/checksums.txt",
 	}
 	for _, rel := range expectedProjectFiles() {
@@ -1167,7 +1168,76 @@ func assertBundle(bundlePath string, expected []string) error {
 			return &checksumError{message: "bundle README missing marker " + string(marker)}
 		}
 	}
+	if err := verifyBundleManifest(files); err != nil {
+		return err
+	}
 	return verifyChecksums(files)
+}
+
+func verifyBundleManifest(files map[string][]byte) error {
+	data, ok := files["openexit-evidence/manifest.json"]
+	if !ok {
+		return &missingBundleFileError{name: "openexit-evidence/manifest.json"}
+	}
+	var manifest struct {
+		APIVersion string `json:"apiVersion"`
+		Kind       string `json:"kind"`
+		Build      struct {
+			Version string `json:"version"`
+			Commit  string `json:"commit"`
+			Date    string `json:"date"`
+		} `json:"build"`
+		Project struct {
+			Name   string `json:"name"`
+			Source string `json:"source"`
+			Target string `json:"target"`
+		} `json:"project"`
+		Validation struct {
+			Status   string `json:"status"`
+			Checks   int    `json:"checks"`
+			Passed   int    `json:"passed"`
+			Failed   int    `json:"failed"`
+			Warnings int    `json:"warnings"`
+		} `json:"validation"`
+		Files []struct {
+			Path   string `json:"path"`
+			Size   int64  `json:"size"`
+			SHA256 string `json:"sha256"`
+		} `json:"files"`
+	}
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		return err
+	}
+	if manifest.APIVersion != "openexit.dev/v1alpha1" || manifest.Kind != "EvidenceBundle" {
+		return &checksumError{message: "unexpected bundle manifest identity"}
+	}
+	if manifest.Project.Source != "datadog" || manifest.Project.Target != "grafana-lgtm" {
+		return &checksumError{message: "bundle manifest has wrong source/target"}
+	}
+	if manifest.Validation.Status != "passed" || manifest.Validation.Checks == 0 || manifest.Validation.Failed != 0 {
+		return &checksumError{message: "bundle manifest has wrong validation summary"}
+	}
+	if manifest.Build.Version == "" || manifest.Build.Commit == "" || manifest.Build.Date == "" {
+		return &checksumError{message: "bundle manifest missing build metadata"}
+	}
+	seen := map[string]bool{}
+	for _, entry := range manifest.Files {
+		data, ok := files["openexit-evidence/"+entry.Path]
+		if !ok {
+			return &missingBundleFileError{name: "openexit-evidence/" + entry.Path}
+		}
+		sum := sha256.Sum256(data)
+		if hex.EncodeToString(sum[:]) != entry.SHA256 || int64(len(data)) != entry.Size {
+			return &checksumError{message: "bundle manifest digest mismatch for " + entry.Path}
+		}
+		seen[entry.Path] = true
+	}
+	for _, rel := range []string{"openexit.yaml", "validation/openexit.validation.yaml", "generated-config/prometheus/rules/datadog-monitor-candidates.yaml"} {
+		if !seen[rel] {
+			return &missingBundleFileError{name: "bundle manifest entry " + rel}
+		}
+	}
+	return nil
 }
 
 func verifyChecksums(files map[string][]byte) error {

@@ -14,7 +14,7 @@ OpenExit is designed for local-first assessment work.
 - The Anthropic collector records aggregate Messages API usage and server tool metadata only; it never requests or stores raw prompts, responses, or API key values.
 - Raw source evidence is redacted before it is written locally.
 - Validation scans JSON, YAML, Markdown, text, VCL, HAProxy, and Coraza-style generated artifacts for secret-like values.
-- Exported bundles contain local manifests, generated candidates, validation output, checksums, and redacted evidence.
+- Exported bundles contain local manifests, generated candidates, validation output, a machine-readable bundle manifest, checksums, and redacted evidence.
 - Export refuses symlinks in exported project sections so bundle contents cannot follow paths outside the project tree.
 - AI assist is optional, disabled by default, and never part of deterministic validation or export.
 
