@@ -1,23 +1,24 @@
 # Schemas
 
-OpenExit schemas live under `schemas/` and mirror the typed Go manifests. Release binaries embed these public Draft 7 JSON Schemas, and `openexit validate` checks project, inventory, assessment, mapping, migration-plan, and validation-report manifests against the embedded copies in addition to typed consistency checks and YAML/JSON parse checks.
+OpenExit publishes Draft 7 JSON Schemas under `schemas/` and embeds them in release binaries.
 
-Evidence bundle exports include `openexit-evidence/manifest.json`, which follows `schemas/openexit.evidence-bundle.schema.json`. The manifest records OpenExit build metadata, project source/target metadata, validation totals, and SHA-256 digests for exported project files so downstream review tooling can verify a bundle without parsing every human-readable report first.
+## Datadog v0.1
 
-Release builds include `RELEASE_MANIFEST.json`, which follows `schemas/openexit.release-manifest.schema.json`. The manifest records OpenExit build metadata and every release artifact that should be covered by `SHA256SUMS`: platform binaries use `type: binary` with `os` and `arch`, while installer, shell-completion, and SBOM files use `type: asset`.
+| Schema | Generated document |
+| --- | --- |
+| `openexit.datadog-inventory.schema.json` | `.openexit/inventory/datadog.inventory.json` |
+| `openexit.datadog-plan.schema.json` | `.openexit/plan/openexit.plan.json` |
+| `openexit.datadog-validation.schema.json` | `.openexit/validation/validation.json` |
+| `openexit.migration-bundle.schema.json` | `migration/manifest.json` |
 
-Project manifests must use one of the supported source/target pairs: Datadog to Grafana LGTM, GitHub Enterprise to Forgejo, Okta/Auth0 to Keycloak/Zitadel, Cloudflare/Akamai to Varnish/HAProxy/Coraza, or OpenAI/Anthropic to vLLM/LiteLLM.
+The Datadog inventory uses `kind: DatadogInventory` and catalog version `datadog-observability/v1`. It records scan metadata, endpoint-level coverage, stable source references, dependencies, redacted specs, and evidence paths/digests.
 
-Inventory dashboards can include optional `dataSources` and `templateVariables` fields so assessment can flag Grafana mapping risk. Datadog fixture and live collectors populate `metrics` from captured dashboard and monitor queries, including referenced tag keys where available. The live Datadog collector also populates `integrations` from the Datadog v2 Integrations API when accessible. SLOs can include optional `sli`, `burnRateMonitorIds`, and `dashboardRefs` fields. The top-level inventory `volumes` section records whether log and trace volume assumptions are known.
+The plan uses `kind: DatadogMigrationPlan`, target `grafana-lgtm`, and ruleset `datadog-grafana-lgtm/v1`. It records the deterministic plan ID, inventory digest, conversion summary, transparent readiness factors, and one conversion decision per source resource. Decisions include status, reason codes, semantic changes, component-level results, and output links.
 
-Mapping manifests use `kind: Mapping` and are written to `mapping/openexit.mapping.yaml` and `.json`. They record candidate dashboard paths, alert-rule candidate paths, unsupported source items, and manual-review entries derived from assessment findings. Validation reloads the mapping manifest and checks that source and target types still match inventory and assessment.
+The validation document records every critical or advisory internal check. Export is permitted only when critical checks pass.
 
-Migration plans use `kind: MigrationPlan` and are written to `assessment/openexit.migration-plan.yaml` and `.json`. They group generated outputs into assessment, pilot, shadow, and cutover phases, record required artifact paths, and mark phases as `ready` or `incomplete` based on the files present when the plan is generated. Validation reloads the plan when present and verifies that required artifacts still exist.
+The migration bundle manifest records OpenExit build metadata and every payload file’s relative path, size, SHA-256 digest, and source references where applicable. `SHA256SUMS` additionally covers the manifest.
 
-For the GitHub Enterprise to Forgejo path, inventory can include `repositories`, `teams`, `branchProtections`, `actionsWorkflows`, `secrets`, `runners`, `deployKeys`, and `githubApps`. The live collector currently populates repository, team, branch protection, Actions workflow, secret metadata, runner, deploy-key, and GitHub App installation assets. Secret entries are metadata only; OpenExit should never collect or store secret values.
+## Legacy and Release Schemas
 
-For the Okta/Auth0 to Keycloak/Zitadel path, inventory can include `identityApplications`, `identityGroups`, `identityPolicies`, `mfaSettings`, and `breakGlassAccounts`. The live Okta collector populates application, group, policy, MFA, and explicitly named break-glass account assets. The live Auth0 collector populates client, role, action/rule metadata, Guardian MFA, and explicitly named break-glass account assets. Client entries include redirect URIs, grant types, owners, group assignments where available, and SAML metadata; they do not include client secrets.
-
-For the Cloudflare/Akamai to Varnish/HAProxy/Coraza path, inventory can include `dnsRecords`, `wafRules`, `cacheRules`, `redirects`, `origins`, `tlsSettings`, `botRules`, and `pageRules`. The live Cloudflare collector currently populates DNS records, WAF/custom/managed ruleset metadata, cache rules, dynamic redirects, inferred origins, TLS settings, bot-related rules, and page rules. The live Akamai collector populates Edge DNS recordsets, Property Manager hostnames/rule metadata, origins, cache behaviors, redirects, TLS/HSTS metadata, Bot Manager behavior metadata, and optional AppSec custom-rule metadata. WAF entries contain rule metadata and expressions only; they should not contain provider credentials.
-
-For the OpenAI/Anthropic to vLLM/LiteLLM path, inventory can include `aiModelUsageClasses`, `aiTokenVolumes`, `aiLatencyExpectations`, `aiSensitivePromptCategories`, `aiToolUsages`, and `aiFallbackBehaviors`. The live OpenAI and Anthropic collectors populate model usage classes and token volumes from aggregate usage, and can attach owner, latency, streaming, and fallback metadata supplied as CLI flags. Anthropic server web-search usage is represented as tool metadata when reported. Entries contain operational metadata only; OpenExit should never collect provider credentials, raw prompts, or responses.
+The earlier project, generic inventory, assessment, mapping, plan, validation, and evidence-bundle schemas remain embedded for the experimental multi-provider engine. `openexit.release-manifest.schema.json` remains the release-artifact contract used with `SHA256SUMS`.

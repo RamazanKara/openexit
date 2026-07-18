@@ -1,111 +1,60 @@
 # Release Readiness
 
-This checklist prepares OpenExit for its first public release.
+## v0.1 Product Contract
 
-## Scope Audit
-
-The implementation plan names Datadog to Grafana LGTM, Prometheus-compatible alerting, and OpenTelemetry Collector/Alloy as the v0.1 primary release path.
-
-Release-blocking v0.1 requirements:
-
-- CLI skeleton, project init, built-in demo, workflow runner, readiness status, version command.
-- Runtime doctor for version metadata, embedded schemas, and optional validator availability.
-- Datadog fixture collector and read-only live Datadog collector.
-- Inventory and assessment manifests with typed validation.
-- Source-to-target mapping manifest with candidate paths and manual-review entries.
-- Risk and manual-review analyzers.
-- Markdown handover artifacts.
-- Grafana, Prometheus, OpenTelemetry, and ArgoCD candidate generators.
-- Typed migration plan manifest with assessment, pilot, shadow, and cutover phase gates.
-- Validation engine with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence refs, secret scan, optional promtool, and optional kubeconform.
-- Evidence bundle export with checksums, a schema-backed machine-readable manifest, and OpenExit version metadata.
-- Offline evidence bundle verification for archive path safety, manifest schema, manifest digests, and checksums.
-- Machine-readable release manifest generation and offline release artifact verification for OS/architecture binaries, auxiliary release assets, and `SHA256SUMS`.
-- Verified release installer for Linux/macOS `amd64` and `arm64` downloads.
-- Shell completion generation and release completion assets for Bash, Zsh, Fish, and PowerShell.
-- CycloneDX JSON SBOM generation for release binaries and Go module dependencies.
-- No-op AI assist and optional external assist behind explicit opt-in.
-- Documentation, examples, CI, release draft workflow, and reproducible release artifacts.
-
-Additional assessment paths present in this repository:
-
-- GitHub Enterprise to Forgejo, with fixture import and read-only live repository inventory collection.
-- Okta/Auth0 to Keycloak/Zitadel, with fixture import and read-only live Okta/Auth0 identity inventory collection.
-- Cloudflare/Akamai to Varnish/HAProxy/Coraza, with fixture import and read-only live Cloudflare/Akamai edge inventory collection.
-- OpenAI/Anthropic to vLLM/LiteLLM, with fixture import and read-only live OpenAI/Anthropic aggregate usage inventory collection.
-
-The AI provider path is complete for local fixture assessment workflows and includes read-only live OpenAI and Anthropic collectors for aggregate usage. Datadog, GitHub Enterprise, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic currently include read-only live SaaS collectors.
-
-## Release Checklist
-
-- [ ] `git status --short --branch` is clean and on the intended release branch.
-- [ ] GitHub Actions CI passes the same `make release-check VERSION=0.1.0-ci` gate used for local release readiness.
-- [ ] `make release-check VERSION=0.1.0` passes locally, including verification, CLI smoke pipelines, bundle verification, release artifact builds, installer smoke, and checksum count checks.
-- [ ] `make verify VERSION=0.1.0` passes, including CLI smoke pipelines.
-- [ ] `make lint` runs `gofmt`, `golangci-lint`, and `go vet`.
-- [ ] `make release-dist VERSION=0.1.0` produces binaries, `dist/SHA256SUMS`, `dist/RELEASE_MANIFEST.json`, `dist/SBOM.cdx.json`, `dist/install.sh`, and completion assets `openexit.bash`, `_openexit`, `openexit.fish`, and `openexit.ps1`.
-- [ ] `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums` passes and covers binaries, `install.sh`, and completion assets; it fails when a release artifact is tampered with.
-- [ ] `OPENEXIT_VERSION=0.1.0 OPENEXIT_BASE_URL=$PWD/dist BIN_DIR=$(mktemp -d)/bin sh scripts/install.sh` installs a verified local release binary and `openexit version` reports `0.1.0`.
-- [ ] `make example VERSION=0.1.0-dev` refreshes `examples/datadog-to-grafana/output/` and exports `examples/datadog-to-grafana/openexit-example.zip`.
-- [ ] Datadog definition-of-done pipeline passes:
-  `init`, `collect fixture`, `assess`, `map`, `generate --all`, `validate`, `export`.
-- [ ] GitHub, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic fixture/live-collector test coverage pass, and supported fixture provider pipelines validate.
-- [ ] `openexit version` prints name, version, commit, and date from release build flags.
-- [ ] `openexit doctor` reports passing version/schema checks and warns, rather than crashes, when optional validators are absent.
-- [ ] `openexit demo <demo>` creates a complete sample project and evidence bundle from built-in fixture data without repository-local `testdata/`.
-- [ ] `openexit run --project <demo> --export --out <zip>` completes a collected project through assessment, mapping, generation, validation, status reporting, and bundle export.
-- [ ] `openexit status --project <demo>` reports inventory, assessment, mapping, generated artifacts, validation status, export readiness, and matching `--json` output.
-- [ ] `openexit completion bash`, `zsh`, `fish`, and `powershell` each generate non-empty shell completion scripts.
-- [ ] `openexit sbom --out SBOM.cdx.json` generates valid CycloneDX JSON with OpenExit build metadata and Go module dependencies.
-- [ ] `README.md`, `docs/cli.md`, `docs/security.md`, and this checklist reflect current behavior.
-- [ ] `examples/datadog-to-grafana/README.md` reproduces the primary local demo.
-- [ ] `assessment/openexit.migration-plan.yaml`, `.json`, and `migration-plan.md` are generated by the demo pipeline and included in exported bundles.
-- [ ] `mapping/openexit.mapping.yaml`, `.json`, and `mapping-summary.md` are generated by the demo pipeline and included in exported bundles.
-- [ ] `validation/validation-report.md` includes passing `jsonschema-*` checks for project, inventory, assessment, mapping, migration plan, and the validation report.
-- [ ] `validation/validation-report.md` includes `project-path-safety: passed`.
-- [ ] `validation/validation-report.md` includes `grafana-dashboard-candidates: passed` for the Datadog definition-of-done pipeline.
-- [ ] `validation/validation-report.md` includes `prometheus-rule-candidates: passed` for the Datadog definition-of-done pipeline.
-- [ ] `validation/validation-report.md` includes `opentelemetry-candidate: passed` for the Datadog definition-of-done pipeline.
-- [ ] `validation/validation-report.md` includes `argocd-candidate: passed` for the Datadog definition-of-done pipeline.
-- [ ] `validation/validation-report.md` includes `forgejo-migration-candidate: passed` for the GitHub Enterprise to Forgejo pipeline.
-- [ ] `validation/validation-report.md` includes `identity-realm-client-candidate: passed` for the Okta/Auth0 to Keycloak/Zitadel pipeline.
-- [ ] `validation/validation-report.md` includes `edge-candidates: passed` for the Cloudflare/Akamai to Varnish/HAProxy/Coraza pipeline.
-- [ ] `validation/validation-report.md` includes `litellm-config-candidate: passed` for the OpenAI/Anthropic to vLLM/LiteLLM pipeline.
-- [ ] `CHANGELOG.md` has a `0.1.0` section.
-- [ ] Exported bundle README includes version, commit, build date, bundle timestamp, and candidate warning.
-- [ ] Exported bundle `manifest.json` includes build metadata, project source/target, validation totals, and per-file SHA-256 digests, and validates against `schemas/openexit.evidence-bundle.schema.json`.
-- [ ] `openexit verify-bundle <zip>` passes for exported bundles and fails when an archived file is tampered with.
-- [ ] Release manifest validates against `schemas/openexit.release-manifest.schema.json` and includes version, commit, build date, generation time, artifact type, binary OS/architecture metadata, sizes, and SHA-256 digests, including `SBOM.cdx.json`.
-- [ ] Export refuses symlinks in exported project sections, including when `--force` is used.
-- [ ] No credentials, tokens, passwords, or private keys are present in fixtures, generated files, docs, or bundles.
-- [ ] Draft release notes have been reviewed.
-
-## Draft Release Body
-
-OpenExit `v0.1.0` is the first public release of the local-first SaaS-to-open-source migration assessment CLI.
-
-Primary supported path:
-
-- Datadog to Grafana LGTM, Prometheus-compatible alerting, and OpenTelemetry Collector/Alloy candidate artifacts.
-
-Additional assessment paths:
-
-- GitHub Enterprise to Forgejo, including a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
-- Okta/Auth0 to Keycloak/Zitadel, including read-only live Okta/Auth0 collectors for identity migration inventory.
-- Cloudflare/Akamai to Varnish/HAProxy/Coraza, including read-only live Cloudflare/Akamai collectors for edge migration inventory.
-- OpenAI/Anthropic to vLLM/LiteLLM, including read-only live OpenAI/Anthropic aggregate usage collectors.
-
-Safety model:
-
-- No production writes.
-- No credential storage.
-- No hidden hosted backend.
-- No AI dependency.
-- Generated configs are candidates and require human review.
-
-Verification before publishing:
+The release-blocking workflow is:
 
 ```bash
-openexit demo ./demo
-make release-check VERSION=0.1.0
+openexit datadog scan
+openexit datadog plan --target grafana-lgtm
+openexit datadog export --out migration/
 ```
+
+Release scope includes:
+
+- GET-only, paginated Datadog observability inventory with endpoint-level coverage and redacted evidence;
+- deterministic `exact`, `approximate`, `manual`, and `unsupported` decisions for every inventoried resource;
+- source-linked Grafana dashboards and safe-subset Prometheus alert candidates;
+- source-linked, credential-free Alloy and OpenTelemetry baselines;
+- explicit semantic changes and no fake executable placeholders;
+- static self-contained HTML report and transparent exit-readiness score;
+- embedded inventory, plan, validation, and bundle JSON Schemas;
+- stale-plan, provenance, candidate-safety, report-link, path, symlink, and secret validation;
+- transactional directory export with `manifest.json` and `SHA256SUMS`;
+- no AI conversion, source mutation, automatic deployment, or cutover.
+
+GitHub Enterprise, identity, edge, AI-provider, and legacy project workflows remain experimental and are not release claims for the primary v0.1 product.
+
+## Checklist
+
+- [ ] `git status --short --branch` contains only intended release changes.
+- [ ] `make verify VERSION=0.1.0` passes formatting, static analysis, all tests, the primary Datadog smoke test, and experimental compatibility smoke tests.
+- [ ] `make example VERSION=0.1.0` produces `examples/datadog-to-grafana/migration/index.html`, generated candidates, `manifest.json`, and `SHA256SUMS`.
+- [ ] A live least-privilege Datadog account completes every expected endpoint, or any unavailable endpoint is understood and visible in the report.
+- [ ] A permission-denied endpoint fails `scan` without `--allow-partial` and remains visible in inventory endpoint coverage.
+- [ ] Repeating fixture scan/plan with a fixed timestamp produces byte-identical inventory, plan, candidates, validation, and HTML.
+- [ ] Every inventory resource has exactly one plan decision and resolvable evidence.
+- [ ] Every non-baseline generated file has one or more source references.
+- [ ] Complex monitors emit no Prometheus rule and no generated file contains `vector(0)`.
+- [ ] Grafana and Prometheus candidates remain marked non-production-ready.
+- [ ] Tampered evidence or generated output blocks export.
+- [ ] Export rejects stale plans, symlinks, unsafe paths, failed critical validation, and an existing destination without `--force`.
+- [ ] Exported report links resolve offline and `SHA256SUMS` matches every listed file.
+- [ ] `openexit doctor` compiles every embedded schema.
+- [ ] `make release-dist VERSION=0.1.0` produces platform binaries, installer, completions, SBOM, `RELEASE_MANIFEST.json`, and `SHA256SUMS`.
+- [ ] `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums` passes and detects tampering.
+- [ ] The installer selects and verifies the current platform binary.
+- [ ] README, Datadog details, CLI, security, schemas, changelog, and example instructions match current behavior.
+- [ ] No credentials, private keys, tokens, or customer data are present in repository fixtures or generated release assets.
+
+## Release Commands
+
+```bash
+make verify VERSION=0.1.0
+make release-check VERSION=0.1.0
+openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums
+```
+
+## Draft Release Summary
+
+OpenExit v0.1 generates a deterministic, read-only Datadog-to-Grafana-LGTM migration plan. It inventories the Datadog observability control plane, emits only the safely recognized Grafana and Prometheus subset, creates review baselines for Alloy and OpenTelemetry, and packages a source-linked static report. Anything uncertain is explicit manual work. OpenExit does not use AI conversion, mutate Datadog, or deploy target configuration.

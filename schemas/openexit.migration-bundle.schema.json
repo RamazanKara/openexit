@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openexit.dev/schemas/openexit.migration-bundle.schema.json",
+  "title": "OpenExit Migration Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "planId", "inventoryDigest", "build", "files"],
+  "properties": {
+    "apiVersion": { "const": "openexit.dev/v1alpha1" },
+    "kind": { "const": "MigrationBundle" },
+    "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "inventoryDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "commit", "date"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "minLength": 1 }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "size", "sha256"],
+        "properties": {
+          "path": { "type": "string", "pattern": "^[^/].*" },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "sourceRefs": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^datadog:" } }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openexit.dev/schemas/openexit.datadog-inventory.schema.json",
+  "title": "OpenExit Datadog Inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "catalog", "resources"],
+  "properties": {
+    "apiVersion": { "const": "openexit.dev/v1alpha1" },
+    "kind": { "const": "DatadogInventory" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "site", "collectedAt", "collectorVersion", "snapshotDigest"],
+      "properties": {
+        "source": { "const": "datadog" },
+        "site": { "type": "string", "minLength": 1 },
+        "collectedAt": { "type": "string", "format": "date-time" },
+        "collectorVersion": { "type": "string", "minLength": 1 },
+        "snapshotDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "complete", "coverage"],
+      "properties": {
+        "version": { "const": "datadog-observability/v1" },
+        "complete": { "type": "boolean" },
+        "coverage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["family", "status", "count", "endpoints"],
+            "properties": {
+              "family": { "type": "string", "minLength": 1 },
+              "status": { "enum": ["complete", "empty", "not_available", "partial", "permission_denied", "error"] },
+              "count": { "type": "integer", "minimum": 0 },
+              "endpoints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["path", "status", "count"],
+                  "properties": {
+                    "path": { "type": "string", "minLength": 1 },
+                    "status": { "enum": ["complete", "empty", "not_available", "partial", "permission_denied", "error"] },
+                    "count": { "type": "integer", "minimum": 0 },
+                    "message": { "type": "string" }
+                  }
+                }
+              },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "kind", "id", "name", "evidence", "spec"],
+        "properties": {
+          "ref": { "type": "string", "pattern": "^datadog:[a-z0-9_]+:.+" },
+          "kind": { "type": "string", "minLength": 1 },
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "sourceUrl": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": { "type": "string", "pattern": "^evidence/datadog/" },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          },
+          "spec": { "type": "object" }
+        }
+      }
+    }
+  }
+}

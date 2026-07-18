@@ -1,6 +1,6 @@
-# Datadog To Grafana Example
+# Datadog to Grafana LGTM Example
 
-This example uses a small redacted Datadog-like fixture and writes all generated output to a local project directory.
+This example uses a small redacted Datadog fixture and runs the focused v0.1 workflow.
 
 Run from the repository root:
 
@@ -8,13 +8,16 @@ Run from the repository root:
 make example VERSION=0.1.0-dev
 ```
 
-This refreshes `examples/datadog-to-grafana/output/` and writes an ignored bundle to `examples/datadog-to-grafana/openexit-example.zip`.
-The bundle includes `openexit-evidence/manifest.json` for machine-readable audit metadata and per-file digests.
+This writes ignored local state to `.openexit/` and a reviewable directory to `migration/`. Open `migration/index.html` to inspect the inventory, conversion ledger, semantic changes, generated candidates, and exit-readiness score.
 
-For a release-binary smoke test that does not depend on repository-local fixtures, run:
+The equivalent commands are:
 
 ```bash
-openexit demo ./demo
+openexit datadog scan --fixture input/datadog-fixture.json
+openexit datadog plan --target grafana-lgtm
+openexit datadog export --out migration/
 ```
 
-The generated files are candidates only. Review every dashboard, alert rule, collector sketch, migration-plan phase gate, and runbook before operational use.
+The checked-in `output/` directory is a snapshot from the earlier experimental multi-stage engine. It remains only for historical compatibility and is not the v0.1 output contract.
+
+Generated files are candidates only. Review every dashboard, alert rule, Alloy/OpenTelemetry baseline, and manual ledger item before operational use.

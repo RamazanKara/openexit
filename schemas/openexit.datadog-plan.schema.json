@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openexit.dev/schemas/openexit.datadog-plan.schema.json",
+  "title": "OpenExit Datadog Migration Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "target", "summary", "readiness", "resources"],
+  "properties": {
+    "apiVersion": { "const": "openexit.dev/v1alpha1" },
+    "kind": { "const": "DatadogMigrationPlan" },
+    "target": { "const": "grafana-lgtm" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planId", "inventoryDigest", "generatedAt", "rulesetVersion"],
+      "properties": {
+        "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "inventoryDigest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "rulesetVersion": { "const": "datadog-grafana-lgtm/v1" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "exact", "approximate", "manual", "unsupported", "outputFiles"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "exact": { "type": "integer", "minimum": 0 },
+        "approximate": { "type": "integer", "minimum": 0 },
+        "manual": { "type": "integer", "minimum": 0 },
+        "unsupported": { "type": "integer", "minimum": 0 },
+        "outputFiles": { "type": "integer", "minimum": 2 }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "level", "formula", "collection", "translation", "validation", "deductions", "interpretation"],
+      "properties": {
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "level": { "enum": ["low", "medium", "high"] },
+        "formula": { "type": "string", "minLength": 1 },
+        "collection": { "$ref": "#/definitions/factor" },
+        "translation": { "$ref": "#/definitions/factor" },
+        "validation": { "$ref": "#/definitions/factor" },
+        "deductions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "description", "points"],
+            "properties": {
+              "code": { "type": "string", "minLength": 1 },
+              "description": { "type": "string", "minLength": 1 },
+              "points": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "interpretation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "resources": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/conversion" }
+    }
+  },
+  "definitions": {
+    "factor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "numerator", "denominator", "description"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0, "maximum": 1 },
+        "numerator": { "type": "integer", "minimum": 0 },
+        "denominator": { "type": "integer", "minimum": 0 },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "conversion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceRef", "sourceKind", "sourceName", "evidencePath", "status", "reasonCodes", "summary", "outputs"],
+      "properties": {
+        "sourceRef": { "type": "string", "pattern": "^datadog:[a-z0-9_]+:.+" },
+        "sourceKind": { "type": "string", "minLength": 1 },
+        "sourceName": { "type": "string", "minLength": 1 },
+        "sourceUrl": { "type": "string" },
+        "evidencePath": { "type": "string", "pattern": "^evidence/datadog/" },
+        "status": { "enum": ["exact", "approximate", "manual", "unsupported"] },
+        "reasonCodes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "summary": { "type": "string", "minLength": 1 },
+        "semanticChanges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "description", "impact"],
+            "properties": {
+              "code": { "type": "string", "minLength": 1 },
+              "description": { "type": "string", "minLength": 1 },
+              "impact": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "status"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "kind": { "type": "string", "minLength": 1 },
+              "status": { "enum": ["exact", "approximate", "manual", "unsupported"] },
+              "reasonCodes": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+              "sourceQuery": { "type": "string" },
+              "targetQuery": { "type": "string" },
+              "review": { "type": "string" }
+            }
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "kind"],
+            "properties": {
+              "path": { "type": "string", "pattern": "^generated/" },
+              "kind": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

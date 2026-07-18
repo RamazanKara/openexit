@@ -1,195 +1,186 @@
 # OpenExit
 
-Local-first migration assessments from proprietary SaaS platforms to open-source infrastructure.
+**Generate a reviewable, read-only migration plan from Datadog to Grafana, Prometheus, and OpenTelemetry.**
 
-OpenExit collects migration inventory, normalizes it, analyzes migration risks, generates candidate target files, validates outputs, and exports a local evidence bundle.
+OpenExit v0.1 does one job: inventory a Datadog organization, translate the deterministic subset, and produce a static migration report that shows exactly what changed and what still needs human work.
 
-The Datadog to Grafana LGTM path includes both fixture import and a read-only live Datadog collector. The GitHub Enterprise to Forgejo path includes fixture import and a read-only GitHub/GitHub Enterprise collector for repository migration inventory. The Okta/Auth0 to Keycloak/Zitadel path includes fixture import and read-only live Okta and Auth0 collectors. The Cloudflare/Akamai to Varnish/HAProxy/Coraza path includes fixture import and read-only live Cloudflare and Akamai collectors. The OpenAI/Anthropic path includes fixture import and read-only OpenAI and Anthropic aggregate usage collectors.
+It does not deploy anything. It does not write to Datadog. It does not use AI to guess conversions.
 
-## Safety Model
-
-- No production writes.
-- No one-click migration.
-- No hidden hosted backend.
-- No credential storage.
-- No direct SaaS deletion.
-- No AI dependency.
-- No generated config is production-ready without review.
-
-## Quick Start
+## Workflow
 
 ```bash
-make build
-./bin/openexit demo ./demo
+openexit datadog scan
+openexit datadog plan --target grafana-lgtm
+openexit datadog export --out migration/
 ```
 
-`openexit demo` uses built-in redacted fixture data, runs the deterministic workflow, validates the output, and writes `./demo/openexit-demo.zip`.
+Open `migration/index.html` in any browser. The report is self-contained and can be attached to an issue, reviewed in a pull request artifact, or shared with an observability team without running OpenExit.
 
-## Install Release Binary
+## What You Get
 
-```bash
-curl -fsSL https://github.com/RamazanKara/openexit/releases/latest/download/install.sh | sh
-openexit doctor
-openexit demo ./demo
+```text
+migration/
+├── index.html                              # static migration report
+├── README.md                               # reviewer handoff
+├── inventory/datadog.inventory.json        # catalog/resource inventory and coverage
+├── plan/openexit.plan.json                 # conversion ledger and readiness score
+├── generated/
+│   ├── grafana/dashboards/*.json           # reviewable Grafana candidates
+│   ├── prometheus/rules/*.yaml             # safe-subset alert candidates
+│   ├── alloy/config.alloy                   # credential-free Alloy baseline
+│   └── opentelemetry/collector.yaml         # credential-free OTel baseline
+├── evidence/datadog/**                     # redacted source evidence
+├── validation/validation.json               # machine-readable validation results
+├── manifest.json                            # file digests and source-resource links
+└── SHA256SUMS                               # bundle integrity checks
 ```
 
-The installer detects Linux or macOS plus `amd64` or `arm64`, downloads the matching release binary, verifies it against `SHA256SUMS`, verifies that artifact against `RELEASE_MANIFEST.json`, and installs `openexit` into `/usr/local/bin` when writable or `~/.local/bin` otherwise. Set `OPENEXIT_VERSION=v0.1.0` for a specific release or `BIN_DIR=/path/to/bin` for a custom install location.
+Every Datadog resource gets one conversion status:
 
-## Install From Source
+| Status | Meaning |
+| --- | --- |
+| `exact` | The represented behavior is preserved without a known semantic change. |
+| `approximate` | OpenExit emitted a candidate and documented semantics that must be reviewed. |
+| `manual` | The resource is inventoried, but no executable guess is emitted for the unsafe part. |
+| `unsupported` | The capability is outside the Grafana LGTM v0.1 target. |
+
+Complex anomaly, outlier, forecast, composite, formula, and unsupported query behavior remains manual. OpenExit never hides missing work behind `vector(0)` or another fake executable result.
+
+## Why the Output Is Reviewable
+
+- Each source-derived generated file links back to one or more stable `datadog:<kind>:<id>` source references; the two credential-free telemetry baselines are explicitly identified as target baselines when no source configuration applies.
+- Each source reference links to redacted local evidence and, where possible, the Datadog UI.
+- Dashboard conversion is recorded per widget and per query, including mixed converted/manual widgets.
+- Alert candidates preserve the source query and carry `openexit_candidate=true` and `production_ready=false`.
+- Semantic changes, reason codes, and manual review instructions are part of the machine-readable plan.
+- Inventory, plan, validation, and export manifests are checked against embedded JSON Schemas.
+- Export recomputes validation and refuses stale plans, failed checks, unsafe paths, symlinks, or secret-like output.
+
+## Datadog Inventory
+
+The live scanner uses GET requests only. Its versioned catalog evaluates:
+
+- dashboards, dashboard lists, and powerpacks;
+- monitors, monitor policies, and downtimes;
+- SLOs and SLO corrections;
+- notebooks and Synthetic Monitoring resources;
+- active metric metadata;
+- log pipelines, pipeline order, indexes, archives, and log-based metrics;
+- APM retention filters and span-based metrics;
+- service definitions;
+- installed integrations and AWS, Azure, and GCP integration accounts.
+
+The inventory records status, resource count, and any error for every endpoint. A `401`, `403`, decode failure, detail failure, or interrupted page makes the scan incomplete and the command fails closed. Use `--allow-partial` only when you intentionally want that limitation carried into the plan and readiness score.
+
+## Exit Readiness
+
+The report publishes the score inputs and formula:
+
+```text
+score = round(100 × C × (0.9 × T + 0.1 × V))
+```
+
+- `C` is completed inventory families divided by catalog families. Endpoint states `complete`, `empty`, and `not_available` count as evaluated; `partial`, `permission_denied`, and `error` do not.
+- `T` is `(2 × exact + approximate) / (2 × inventoried resources)`. Manual and unsupported resources contribute zero.
+- `V` is passed critical validation checks divided by critical checks.
+- Any critical validation failure caps the score at 49 and blocks export.
+
+The score is migration-plan coverage, not cutover approval or production readiness.
+
+## Install
+
+Build from source with Go 1.25 or newer:
 
 ```bash
 git clone https://github.com/RamazanKara/openexit.git
 cd openexit
-make verify
-make build VERSION=0.1.0
+make build
 ./bin/openexit version
 ```
 
-Release candidates can be built locally with:
+Release binaries can also be installed with:
 
 ```bash
-make release-check VERSION=0.1.0
+curl -fsSL https://github.com/RamazanKara/openexit/releases/latest/download/install.sh | sh
+openexit doctor
 ```
 
-This runs the release gate, writes OS/architecture binaries, writes `dist/SHA256SUMS`, writes `dist/RELEASE_MANIFEST.json`, writes `dist/SBOM.cdx.json`, and verifies the release artifacts.
+The installer verifies the selected binary against `SHA256SUMS` and `RELEASE_MANIFEST.json` before installation.
 
-Refresh the checked-in Datadog example project with:
+## Scan Datadog
+
+Put credentials in environment variables; OpenExit reads them at runtime and never stores them:
 
 ```bash
-make example VERSION=0.1.0-dev
+export DATADOG_API_KEY='<read-only-api-key>'
+export DATADOG_APP_KEY='<read-only-application-key>'
+
+openexit datadog scan --site datadoghq.eu
 ```
 
-## Commands
+The application key needs read access to every catalog family you want declared complete. Alternate variable names are supported:
 
-- `openexit version`
-- `openexit doctor [--json] [--strict]`
-- `openexit init <project-dir> [--source <type> --target <type>]`
-- `openexit demo <project-dir> [--source <type>] [--out <file>] [--force]`
-- `openexit status --project <project-dir> [--json]`
-- `openexit run --project <project-dir> [--strict] [--export --out <file>]`
-- `openexit collect fixture --project <project-dir> --input <file>`
-- `openexit collect github --project <project-dir> --owner <org> [--base-url https://github.example.com/api/v3] [--token-env GITHUB_TOKEN] [--repo owner/name]`
-- `openexit collect github-fixture --project <project-dir> --input <file>`
-- `openexit collect okta --project <project-dir> --org-url https://dev-123456.okta.com [--token-env OKTA_API_TOKEN] [--break-glass-user admin@example.com]`
-- `openexit collect auth0 --project <project-dir> --domain https://example.us.auth0.com [--token-env AUTH0_MANAGEMENT_TOKEN] [--break-glass-user admin@example.com]`
-- `openexit collect identity-fixture --project <project-dir> --input <file>`
-- `openexit collect cloudflare --project <project-dir> --zone-id <zone-id> [--token-env CLOUDFLARE_API_TOKEN]`
-- `openexit collect akamai --project <project-dir> [--zone example.com] [--property-id prp_123] [--security-config-id 123:7]`
-- `openexit collect edge-fixture --project <project-dir> --input <file>`
-- `openexit collect openai --project <project-dir> [--admin-key-env OPENAI_ADMIN_KEY] [--days 30] [--owner team@example.com]`
-- `openexit collect anthropic --project <project-dir> [--admin-key-env ANTHROPIC_ADMIN_KEY] [--days 30] [--workspace-id wrkspc_...]`
-- `openexit collect ai-fixture --project <project-dir> --input <file>`
-- `openexit collect datadog --project <project-dir> --site datadoghq.eu --api-key-env DATADOG_API_KEY --app-key-env DATADOG_APP_KEY`
-- `openexit assess --project <project-dir> --target grafana-lgtm`
-- `openexit map --project <project-dir>`
-- `openexit generate --project <project-dir> --all`
-- `openexit validate --project <project-dir>`
-- `openexit export --project <project-dir> --format zip --out <file>`
-- `openexit verify-bundle <file> [--json]`
-- `openexit release-manifest [--dist dist --out dist/RELEASE_MANIFEST.json]`
-- `openexit verify-release <manifest.json> [--dist dist] [--artifact <name>] [--require-checksums] [--json]`
-- `openexit completion [bash|zsh|fish|powershell]`
-- `openexit sbom [--out SBOM.cdx.json]`
-- `openexit assist summarize --project <project-dir> --provider noop`
+```bash
+openexit datadog scan \
+  --api-key-env MY_DD_API_KEY \
+  --app-key-env MY_DD_APP_KEY
+```
 
-The Datadog, GitHub, Okta, Auth0, Cloudflare, Akamai, OpenAI, and Anthropic collectors are read-only. API tokens are read from environment variables or local credential files, are not printed, and are not stored.
-When `--target` is omitted during `init`, OpenExit selects the standard target for the chosen source.
+State is written to `.openexit/` by default. Use `--workdir` on all three commands to select another location.
 
-## Supported Paths
+## Try It Without Datadog Credentials
 
-| Source | Target | Status | Collector |
-| --- | --- | --- | --- |
-| Datadog | Grafana LGTM, Prometheus-compatible alerting, OpenTelemetry Collector/Alloy | Primary path | Fixture and read-only live Datadog collector |
-| GitHub Enterprise | Forgejo | Repository migration assessment path | Fixture and read-only live GitHub/GitHub Enterprise collector |
-| Okta/Auth0 | Keycloak/Zitadel | Identity migration assessment path | Fixture and read-only live Okta/Auth0 collectors |
-| Cloudflare/Akamai | Varnish/HAProxy/Coraza | Edge migration assessment path | Fixture and read-only live Cloudflare/Akamai collectors |
-| OpenAI/Anthropic | vLLM/LiteLLM | AI provider migration assessment path | Fixture and read-only live OpenAI/Anthropic aggregate usage collectors |
+```bash
+make build
+./bin/openexit datadog scan \
+  --fixture testdata/datadog/small.json \
+  --workdir /tmp/openexit-demo/.openexit
+./bin/openexit datadog plan \
+  --target grafana-lgtm \
+  --workdir /tmp/openexit-demo/.openexit
+./bin/openexit datadog export \
+  --out /tmp/openexit-demo/migration \
+  --workdir /tmp/openexit-demo/.openexit
+```
 
-Fixture workflows run the full local OpenExit workflow with sample or customer-provided JSON fixture data. They are assessment and planning tools for offline review.
+## Safety Contract
 
-## Current Scope
+- Datadog access is read-only and implemented through a GET-only client.
+- API and application keys are sent only in Datadog request headers.
+- Error messages never include response bodies or credentials.
+- Evidence is structurally redacted before it is written.
+- Generated files are review candidates and contain no source credentials.
+- Planning and export are local, deterministic operations.
+- There is no automatic deployment, cutover, source deletion, hosted backend, or AI conversion in v0.1.
 
-Included in the current implementation:
+See [the Datadog migration details](docs/datadog-to-grafana.md), [security model](docs/security.md), and [public schemas](docs/schemas.md).
 
-- CLI skeleton and project init/status.
-- Runtime doctor for version metadata, embedded schemas, and optional validator availability.
-- Built-in demo project generation for release binaries without repository-local fixture files.
-- Project readiness status with pipeline counts, validation state, export readiness, and JSON output for automation.
-- One-command deterministic workflow runner for collected projects, with optional evidence bundle export.
-- Typed project, inventory, assessment, mapping, and validation manifests.
-- Fixture-based Datadog inventory import.
-- Read-only Datadog collection for dashboards, monitors, SLOs, installed integration metadata, and referenced metric/tag metadata.
-- Read-only GitHub/GitHub Enterprise collection for repositories, teams, branch protection, Actions workflows, secret metadata, runners, deploy keys, and GitHub App installations.
-- Read-only Okta collection for applications, groups, policy/rule metadata, org MFA factors, and explicit break-glass user metadata.
-- Read-only Auth0 collection for clients, roles, action/rule metadata, Guardian MFA factors, and explicit break-glass user metadata.
-- Read-only Cloudflare collection for DNS records, WAF rulesets, cache rules, redirects, inferred origins, TLS settings, bot rules, and page rules.
-- Read-only Akamai collection for Edge DNS recordsets, Property Manager hostnames/rules, origins, cache behaviors, redirects, TLS/HSTS metadata, Bot Manager behavior metadata, and optional AppSec custom-rule metadata.
-- Read-only OpenAI collection for model-grouped aggregate completions usage, token volumes, available model metadata, and hourly peak estimates.
-- Read-only Anthropic collection for model-grouped Messages API token usage, server web-search tool metadata, filters, and hourly peak estimates.
-- Deterministic risk assessment.
-- Deterministic source-to-target mapping manifest and summary.
-- Markdown handover artifacts.
-- Grafana dashboard candidate JSON.
-- Prometheus alert rule candidate YAML with simple Datadog threshold conversion hints.
-- OpenTelemetry Collector sketch.
-- ArgoCD starter manifest.
-- Typed migration plan manifest and phase-gate Markdown plan.
-- Validation report with embedded JSON Schema checks, Grafana dashboard, Prometheus alert, OpenTelemetry collector, ArgoCD, Forgejo migration, identity realm/client, edge VCL/HAProxy/Coraza, and LiteLLM/vLLM candidate checks, YAML/JSON parsing, evidence ref checks, secret scan, and optional `promtool`/`kubeconform` checks.
-- Evidence bundle export with README, checksums, and a schema-backed machine-readable manifest.
-- Offline evidence bundle verification for manifest schema, checksums, digest/size metadata, and archive path safety.
-- Release artifact manifest generation with binary OS/architecture metadata, auxiliary asset metadata, sizes, and SHA-256 digests.
-- Offline release artifact verification for binaries and auxiliary assets against `RELEASE_MANIFEST.json` and optional `SHA256SUMS`.
-- Release installer script that selects the current platform binary and verifies it before installation.
-- Shell completion generation for Bash, Zsh, Fish, and PowerShell, including release-provided completion assets.
-- CycloneDX JSON SBOM generation for the OpenExit binary and Go module dependencies.
-- Evidence bundle path-safety checks that reject symlinks in exported project sections.
-- No-op assist provider and explicit opt-in LiteLLM assist.
-- GitHub Enterprise to Forgejo assessment path with fixture import and live repository inventory collection.
-- Okta/Auth0 to Keycloak/Zitadel assessment path with fixture import and live Okta/Auth0 identity inventory collection.
-- Cloudflare/Akamai to Varnish/HAProxy/Coraza assessment path with fixture import and live Cloudflare/Akamai edge inventory collection.
-- OpenAI/Anthropic to vLLM/LiteLLM assessment path with fixture import and live OpenAI/Anthropic aggregate usage inventory collection.
+## Experimental Providers
 
-Not included in the current release:
+The earlier multi-provider assessment engine remains in the repository for experimentation:
 
-- Automatic cutover.
-- Production apply.
-- Hosted portal.
-- Perfect Datadog to Grafana parity.
-- AI-required decision making.
+- GitHub Enterprise → Forgejo
+- Okta/Auth0 → Keycloak/Zitadel
+- Cloudflare/Akamai → Varnish/HAProxy/Coraza
+- OpenAI/Anthropic → vLLM/LiteLLM
 
-## Optional Assist
+Discover it with:
 
-`openexit assist summarize` defaults to the local no-op provider. LiteLLM is available only when `openexit.yaml` explicitly sets `policy.allowAI: true`, `assist.enabled: true`, `assist.provider: litellm`, and `assist.allowExternalProvider: true`.
+```bash
+openexit experimental --help
+```
 
-Assist inputs are redacted before provider calls, outputs must use `.ai.md`, and deterministic artifacts are never overwritten.
+Legacy root command aliases remain hidden for compatibility. Experimental providers are not part of the v0.1 product contract and will not be promoted until the Datadog path has real users.
 
-## Candidate Conversion Policy
+## Development
 
-OpenExit is intentionally conservative:
+```bash
+make test
+make verify
+```
 
-- Simple Datadog metric thresholds can be translated into PromQL candidates.
-- Complex functions such as anomaly, outlier, forecast, timeshift, or composite behavior stay as `vector(0)` placeholders with source queries preserved.
-- Every generated alert remains labeled `openexit_candidate=true` and `production_ready=false`.
-- Human review and shadowing are required before operational use.
-
-## Risk Coverage
-
-The assessment engine includes dashboard, monitor, SLO, cost, scale, identity, edge, repository, and AI provider risk rules from the implementation plan. Findings have stable IDs, severity, affected assets, evidence refs, and recommendations. `openexit map` writes a typed mapping manifest under `mapping/`; `generate --all` refreshes mapping and writes a typed migration plan under `assessment/` with assessment, pilot, shadow, and cutover phase gates. `openexit validate` checks generated manifests against embedded public JSON Schemas as well as typed consistency rules.
-
-## Release Process
-
-The release checklist lives in `docs/release.md`. A release build should pass `make verify`, `make release-dist VERSION=0.1.0`, `openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums`, `make example VERSION=0.1.0-dev`, the Datadog definition-of-done pipeline, and validation/export for every supported assessment path.
-
-## Assessment Paths
-
-GitHub Enterprise to Forgejo collects repository, team, branch protection, Actions workflow, secret metadata, runner, deploy key, and GitHub App installation metadata from live GitHub/GitHub Enterprise APIs or local fixtures. It generates Forgejo migration assessment, CI compatibility, branch protection mapping, runner migration, repository ownership reports, and a validated Forgejo migration candidate YAML.
-
-Okta/Auth0 to Keycloak/Zitadel collects applications, SAML/OIDC client metadata, groups, policies, MFA settings, redirect URIs, owners, and break-glass account metadata from live Okta/Auth0 APIs or local fixtures. It generates identity migration risk, validated realm/client candidate config, break-glass, cutover, and rollback artifacts.
-
-Cloudflare/Akamai to Varnish/HAProxy/Coraza collects DNS records, WAF rules, cache rules, redirects, origins, TLS settings, bot rules, and page rules from live Cloudflare/Akamai APIs or local fixtures. The Akamai collector uses read-only EdgeGrid-authenticated calls for Edge DNS, Property Manager, and optional AppSec metadata. It generates validated VCL, HAProxy, Coraza, cache parity, and WAF enforcement review artifacts.
-
-OpenAI/Anthropic to vLLM/LiteLLM collects model usage classes, token volumes, latency expectations, sensitive prompt categories, tool usage, and fallback behavior from local fixtures. It can also collect model-grouped aggregate OpenAI completions usage, aggregate Anthropic Messages API usage, available model metadata where exposed, server web-search tool metadata, and hourly peak estimates from live provider APIs without storing prompts or credentials. The path generates self-hosted LLM readiness, validated LiteLLM routing, vLLM sizing, evaluation, and data sensitivity artifacts.
+`make verify` runs formatting, static analysis, unit and end-to-end tests, a Datadog scan/plan/export smoke test, and compatibility tests for the experimental engine.
 
 ## License
 
-Apache-2.0.
+Apache-2.0
