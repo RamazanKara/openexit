@@ -3,4 +3,6 @@ demo/
 *.zip
 coverage.out
 dist/
+examples/datadog-to-grafana/.openexit/
+examples/datadog-to-grafana/migration/
 .DS_Store

@@ -75,7 +75,11 @@ func newSchemaValidator() (*schemaValidator, error) {
 
 func schemaFileNames() []string {
 	seen := map[string]struct{}{
-		"openexit.validation.schema.json": {},
+		"openexit.validation.schema.json":         {},
+		"openexit.datadog-inventory.schema.json":  {},
+		"openexit.datadog-plan.schema.json":       {},
+		"openexit.datadog-validation.schema.json": {},
+		"openexit.migration-bundle.schema.json":   {},
 	}
 	for _, manifest := range schemaManifests {
 		seen[manifest.schemaFile] = struct{}{}

@@ -1,19 +1,34 @@
 # Architecture
 
-OpenExit uses a deterministic pipeline:
+The primary OpenExit v0.1 pipeline is intentionally small:
 
 ```text
-Collect -> Normalize -> Analyze -> Map -> Generate -> Plan -> Validate -> Export
+Datadog GET-only scan
+        ↓
+versioned inventory + redacted evidence
+        ↓
+deterministic conversion ledger
+        ↓
+Grafana / Prometheus / Alloy / OpenTelemetry candidates
+        ↓
+schema + provenance + safety validation
+        ↓
+static HTML report + transactional directory export
 ```
 
-The core engine is written in Go. The primary Datadog live-collector path targets Grafana LGTM with Prometheus-compatible alerting and OpenTelemetry Collector or Alloy sketches. The map stage writes deterministic source-to-target mapping manifests under `mapping/`; `generate --all` refreshes that mapping and also writes a typed migration plan that groups required artifacts into assessment, pilot, shadow, and cutover phase gates. The validator embeds the public JSON Schemas into the release binary so generated manifests can be checked without a checked-out repository.
+The engine is written in Go and keeps state under `.openexit/`. Inventory and plan identities are content-derived SHA-256 digests. The inventory timestamp is the scan time; planning reuses that timestamp instead of introducing nondeterministic wall-clock output.
 
-GitHub Enterprise to Forgejo keeps the same local-first collect, normalize, analyze, generate, validate, export pipeline. It supports fixture import and a read-only live GitHub/GitHub Enterprise collector for repository migration inventory.
+## Boundaries
 
-Okta/Auth0 to Keycloak/Zitadel reuses the same normalized inventory and evidence model, but generates identity-specific planning artifacts and a candidate realm/client YAML instead of Datadog target configs. It supports fixture import and read-only live Okta/Auth0 collectors.
+- The Datadog client exposes GET only and rejects pagination URLs that change scheme or host.
+- Scan output is staged before inventory/evidence replacement. A new scan invalidates stale planned output.
+- Converters accept only explicitly recognized syntax. Unsupported behavior produces a manual ledger entry, not a guessed executable file.
+- Generated target files carry source references and candidate safety metadata.
+- Validation checks source-to-output coverage in both directions: every inventory resource has one decision, and every generated file is linked from the plan or declared as a target baseline.
+- Export revalidates current disk state, stages a fixed payload, writes per-file provenance/digests, and installs the directory atomically.
 
-Cloudflare/Akamai to Varnish/HAProxy/Coraza generates and validates edge-specific VCL, HAProxy, and Coraza candidate files plus cache and WAF review reports. It supports fixture import plus read-only live Cloudflare and Akamai collectors.
+Public Draft 7 JSON Schemas are embedded in release binaries, so inventory, plan, validation, and bundle manifests can be validated without a repository checkout.
 
-OpenAI/Anthropic to vLLM/LiteLLM generates AI provider readiness, validated LiteLLM routing, vLLM sizing, evaluation, and data sensitivity artifacts. It supports fixture import plus read-only live OpenAI/Anthropic aggregate usage collectors.
+## Experimental Engine
 
-AI assist is optional and never required for validation or export.
+The repository retains the earlier multi-provider collect/normalize/analyze/map/generate/validate/export engine under `openexit experimental`. It supports GitHub Enterprise, identity, edge, AI-provider, and legacy Datadog assessment paths. That engine is maintained for compatibility but is not part of the v0.1 product boundary.

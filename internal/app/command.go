@@ -35,29 +35,50 @@ import (
 func NewRootCommand() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "openexit",
-		Short:         "Local-first SaaS-to-open-source migration assessments",
+		Short:         "Reviewable Datadog to Grafana LGTM migration plans",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 	root.AddCommand(newVersionCommand())
 	root.AddCommand(newDoctorCommand())
-	root.AddCommand(newInitCommand())
-	root.AddCommand(newDemoCommand())
-	root.AddCommand(newStatusCommand())
-	root.AddCommand(newRunCommand())
-	root.AddCommand(newCollectCommand())
-	root.AddCommand(newAssessCommand())
-	root.AddCommand(newMapCommand())
-	root.AddCommand(newGenerateCommand())
-	root.AddCommand(newValidateCommand())
-	root.AddCommand(newExportCommand())
+	root.AddCommand(newDatadogWorkflowCommand())
+	root.AddCommand(newExperimentalCommand())
+	for _, legacy := range newLegacyWorkflowCommands() {
+		legacy.Hidden = true
+		root.AddCommand(legacy)
+	}
 	root.AddCommand(newVerifyBundleCommand())
 	root.AddCommand(newReleaseManifestCommand())
 	root.AddCommand(newVerifyReleaseCommand())
 	root.AddCommand(newCompletionCommand(root))
 	root.AddCommand(newSBOMCommand())
-	root.AddCommand(newAssistCommand())
 	return root
+}
+
+func newExperimentalCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "experimental",
+		Short: "Experimental providers and the legacy multi-provider workflow",
+		Long:  "Experimental migration paths are retained for evaluation, but are not part of the focused Datadog-to-Grafana-LGTM v0.1 workflow.",
+	}
+	cmd.AddCommand(newLegacyWorkflowCommands()...)
+	return cmd
+}
+
+func newLegacyWorkflowCommands() []*cobra.Command {
+	return []*cobra.Command{
+		newInitCommand(),
+		newDemoCommand(),
+		newStatusCommand(),
+		newRunCommand(),
+		newCollectCommand(),
+		newAssessCommand(),
+		newMapCommand(),
+		newGenerateCommand(),
+		newValidateCommand(),
+		newExportCommand(),
+		newAssistCommand(),
+	}
 }
 
 func newVersionCommand() *cobra.Command {

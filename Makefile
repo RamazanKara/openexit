@@ -12,10 +12,10 @@ RELEASE_ASSETS ?= install.sh openexit.bash _openexit openexit.fish openexit.ps1 
 GOLANGCI_LINT_VERSION ?= v2.12.2
 GOLANGCI_LINT ?= bin/golangci-lint
 EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
-EXAMPLE_DIR ?= examples/datadog-to-grafana/output
-EXAMPLE_BUNDLE ?= examples/datadog-to-grafana/openexit-example.zip
+EXAMPLE_STATE ?= examples/datadog-to-grafana/.openexit
+EXAMPLE_DIR ?= examples/datadog-to-grafana/migration
 
-.PHONY: build test fmt fmt-check lint golangci-lint smoke example example-smoke verify release-dist install-smoke release-check clean
+.PHONY: build test fmt fmt-check lint golangci-lint smoke experimental-smoke example example-smoke verify release-dist install-smoke release-check clean
 
 build:
 	mkdir -p $(dir $(BINARY))
@@ -41,82 +41,76 @@ smoke:
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
 	$(BINARY) doctor; \
-	$(BINARY) demo "$$tmp/builtin-demo" --out "$$tmp/builtin-demo.zip"; \
+	$(BINARY) datadog scan --fixture ./testdata/datadog/small.json --workdir "$$tmp/.openexit"; \
+	$(BINARY) datadog plan --target grafana-lgtm --workdir "$$tmp/.openexit"; \
+	$(BINARY) datadog export --out "$$tmp/migration" --workdir "$$tmp/.openexit"; \
+	test -s "$$tmp/migration/index.html"; \
+	test -s "$$tmp/migration/manifest.json"; \
+	test -s "$$tmp/migration/SHA256SUMS"; \
+	! grep -R 'vector(0)' "$$tmp/migration/generated"
+
+experimental-smoke:
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	$(BINARY) experimental demo "$$tmp/builtin-demo" --out "$$tmp/builtin-demo.zip"; \
 	test -s "$$tmp/builtin-demo.zip"; \
 	$(BINARY) verify-bundle "$$tmp/builtin-demo.zip"; \
-	$(BINARY) init "$$tmp/datadog-demo"; \
-	$(BINARY) collect fixture --project "$$tmp/datadog-demo" --input ./testdata/datadog/small.json; \
-	$(BINARY) assess --project "$$tmp/datadog-demo" --target grafana-lgtm; \
-	$(BINARY) map --project "$$tmp/datadog-demo"; \
-	$(BINARY) generate --project "$$tmp/datadog-demo" --all; \
-	$(BINARY) validate --project "$$tmp/datadog-demo"; \
-	$(BINARY) export --project "$$tmp/datadog-demo" --format zip --out "$$tmp/openexit-demo.zip"; \
+	$(BINARY) experimental init "$$tmp/datadog-demo"; \
+	$(BINARY) experimental collect fixture --project "$$tmp/datadog-demo" --input ./testdata/datadog/small.json; \
+	$(BINARY) experimental assess --project "$$tmp/datadog-demo" --target grafana-lgtm; \
+	$(BINARY) experimental map --project "$$tmp/datadog-demo"; \
+	$(BINARY) experimental generate --project "$$tmp/datadog-demo" --all; \
+	$(BINARY) experimental validate --project "$$tmp/datadog-demo"; \
+	$(BINARY) experimental export --project "$$tmp/datadog-demo" --format zip --out "$$tmp/openexit-demo.zip"; \
 	$(BINARY) verify-bundle "$$tmp/openexit-demo.zip"; \
-	$(BINARY) init "$$tmp/ghe-demo" --source github-enterprise --target forgejo; \
-	$(BINARY) collect github-fixture --project "$$tmp/ghe-demo" --input ./testdata/github-enterprise/small.json; \
-	$(BINARY) assess --project "$$tmp/ghe-demo" --target forgejo; \
-	$(BINARY) map --project "$$tmp/ghe-demo"; \
-	$(BINARY) generate --project "$$tmp/ghe-demo" --all; \
-	$(BINARY) validate --project "$$tmp/ghe-demo"; \
-	$(BINARY) export --project "$$tmp/ghe-demo" --format zip --out "$$tmp/ghe-demo.zip"; \
+	$(BINARY) experimental init "$$tmp/ghe-demo" --source github-enterprise --target forgejo; \
+	$(BINARY) experimental collect github-fixture --project "$$tmp/ghe-demo" --input ./testdata/github-enterprise/small.json; \
+	$(BINARY) experimental assess --project "$$tmp/ghe-demo" --target forgejo; \
+	$(BINARY) experimental map --project "$$tmp/ghe-demo"; \
+	$(BINARY) experimental generate --project "$$tmp/ghe-demo" --all; \
+	$(BINARY) experimental validate --project "$$tmp/ghe-demo"; \
+	$(BINARY) experimental export --project "$$tmp/ghe-demo" --format zip --out "$$tmp/ghe-demo.zip"; \
 	$(BINARY) verify-bundle "$$tmp/ghe-demo.zip"; \
-	$(BINARY) init "$$tmp/identity-demo" --source identity --target keycloak-zitadel; \
-	$(BINARY) collect identity-fixture --project "$$tmp/identity-demo" --input ./testdata/identity/small.json; \
-	$(BINARY) assess --project "$$tmp/identity-demo" --target keycloak-zitadel; \
-	$(BINARY) map --project "$$tmp/identity-demo"; \
-	$(BINARY) generate --project "$$tmp/identity-demo" --all; \
-	$(BINARY) validate --project "$$tmp/identity-demo"; \
-	$(BINARY) export --project "$$tmp/identity-demo" --format zip --out "$$tmp/identity-demo.zip"; \
+	$(BINARY) experimental init "$$tmp/identity-demo" --source identity --target keycloak-zitadel; \
+	$(BINARY) experimental collect identity-fixture --project "$$tmp/identity-demo" --input ./testdata/identity/small.json; \
+	$(BINARY) experimental assess --project "$$tmp/identity-demo" --target keycloak-zitadel; \
+	$(BINARY) experimental map --project "$$tmp/identity-demo"; \
+	$(BINARY) experimental generate --project "$$tmp/identity-demo" --all; \
+	$(BINARY) experimental validate --project "$$tmp/identity-demo"; \
+	$(BINARY) experimental export --project "$$tmp/identity-demo" --format zip --out "$$tmp/identity-demo.zip"; \
 	$(BINARY) verify-bundle "$$tmp/identity-demo.zip"; \
-	$(BINARY) init "$$tmp/edge-demo" --source edge --target varnish-haproxy-coraza; \
-	$(BINARY) collect edge-fixture --project "$$tmp/edge-demo" --input ./testdata/edge/small.json; \
-	$(BINARY) assess --project "$$tmp/edge-demo" --target varnish-haproxy-coraza; \
-	$(BINARY) map --project "$$tmp/edge-demo"; \
-	$(BINARY) generate --project "$$tmp/edge-demo" --all; \
-	$(BINARY) validate --project "$$tmp/edge-demo"; \
-	$(BINARY) export --project "$$tmp/edge-demo" --format zip --out "$$tmp/edge-demo.zip"; \
+	$(BINARY) experimental init "$$tmp/edge-demo" --source edge --target varnish-haproxy-coraza; \
+	$(BINARY) experimental collect edge-fixture --project "$$tmp/edge-demo" --input ./testdata/edge/small.json; \
+	$(BINARY) experimental assess --project "$$tmp/edge-demo" --target varnish-haproxy-coraza; \
+	$(BINARY) experimental map --project "$$tmp/edge-demo"; \
+	$(BINARY) experimental generate --project "$$tmp/edge-demo" --all; \
+	$(BINARY) experimental validate --project "$$tmp/edge-demo"; \
+	$(BINARY) experimental export --project "$$tmp/edge-demo" --format zip --out "$$tmp/edge-demo.zip"; \
 	$(BINARY) verify-bundle "$$tmp/edge-demo.zip"; \
-	$(BINARY) init "$$tmp/ai-demo" --source ai-provider --target vllm-litellm; \
-	$(BINARY) collect ai-fixture --project "$$tmp/ai-demo" --input ./testdata/ai-provider/small.json; \
-	$(BINARY) assess --project "$$tmp/ai-demo" --target vllm-litellm; \
-	$(BINARY) map --project "$$tmp/ai-demo"; \
-	$(BINARY) generate --project "$$tmp/ai-demo" --all; \
-	$(BINARY) validate --project "$$tmp/ai-demo"; \
-	$(BINARY) export --project "$$tmp/ai-demo" --format zip --out "$$tmp/ai-demo.zip"; \
+	$(BINARY) experimental init "$$tmp/ai-demo" --source ai-provider --target vllm-litellm; \
+	$(BINARY) experimental collect ai-fixture --project "$$tmp/ai-demo" --input ./testdata/ai-provider/small.json; \
+	$(BINARY) experimental assess --project "$$tmp/ai-demo" --target vllm-litellm; \
+	$(BINARY) experimental map --project "$$tmp/ai-demo"; \
+	$(BINARY) experimental generate --project "$$tmp/ai-demo" --all; \
+	$(BINARY) experimental validate --project "$$tmp/ai-demo"; \
+	$(BINARY) experimental export --project "$$tmp/ai-demo" --format zip --out "$$tmp/ai-demo.zip"; \
 	$(BINARY) verify-bundle "$$tmp/ai-demo.zip"
 
 example: build
-	rm -rf $(EXAMPLE_DIR)/openexit.yaml \
-		$(EXAMPLE_DIR)/inventory \
-		$(EXAMPLE_DIR)/assessment \
-		$(EXAMPLE_DIR)/mapping \
-		$(EXAMPLE_DIR)/generated-config \
-		$(EXAMPLE_DIR)/evidence \
-		$(EXAMPLE_DIR)/validation \
-		$(EXAMPLE_BUNDLE)
-	mkdir -p $(EXAMPLE_DIR)
-	$(BINARY) init $(EXAMPLE_DIR) --source datadog --target grafana-lgtm
-	$(BINARY) collect fixture --project $(EXAMPLE_DIR) --input $(EXAMPLE_INPUT)
-	$(BINARY) assess --project $(EXAMPLE_DIR) --target grafana-lgtm
-	$(BINARY) map --project $(EXAMPLE_DIR)
-	$(BINARY) generate --project $(EXAMPLE_DIR) --all
-	$(BINARY) validate --project $(EXAMPLE_DIR)
-	$(BINARY) export --project $(EXAMPLE_DIR) --format zip --out $(EXAMPLE_BUNDLE)
+	$(BINARY) datadog scan --fixture $(EXAMPLE_INPUT) --workdir $(EXAMPLE_STATE)
+	$(BINARY) datadog plan --target grafana-lgtm --workdir $(EXAMPLE_STATE)
+	$(BINARY) datadog export --force --out $(EXAMPLE_DIR) --workdir $(EXAMPLE_STATE)
 
 example-smoke: build
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
-	$(BINARY) init "$$tmp/example" --source datadog --target grafana-lgtm; \
-	$(BINARY) collect fixture --project "$$tmp/example" --input ./$(EXAMPLE_INPUT); \
-	$(BINARY) assess --project "$$tmp/example" --target grafana-lgtm; \
-	$(BINARY) map --project "$$tmp/example"; \
-	$(BINARY) generate --project "$$tmp/example" --all; \
-	$(BINARY) validate --project "$$tmp/example"; \
-	$(BINARY) export --project "$$tmp/example" --format zip --out "$$tmp/openexit-example.zip"; \
-	$(BINARY) verify-bundle "$$tmp/openexit-example.zip"; \
-	test -s "$$tmp/openexit-example.zip"
+	$(BINARY) datadog scan --fixture ./$(EXAMPLE_INPUT) --workdir "$$tmp/.openexit"; \
+	$(BINARY) datadog plan --target grafana-lgtm --workdir "$$tmp/.openexit"; \
+	$(BINARY) datadog export --out "$$tmp/migration" --workdir "$$tmp/.openexit"; \
+	test -s "$$tmp/migration/index.html"; \
+	test -s "$$tmp/migration/manifest.json"
 
-verify: lint test build smoke example-smoke
+verify: lint test build smoke experimental-smoke example-smoke
 
 release-dist:
 	rm -rf dist
