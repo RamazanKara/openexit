@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.1.0 - 2026-07-18
+
+- Refocused the v0.1 product on one workflow: `openexit datadog scan`, `plan --target grafana-lgtm`, and `export --out <directory>`.
+- Added a versioned, endpoint-auditable Datadog observability catalog with GET-only collection, full pagination, redacted evidence, fail-closed partial-scan handling, and stale-plan invalidation.
+- Added deterministic per-resource and per-component conversion statuses (`exact`, `approximate`, `manual`, and `unsupported`) with explicit semantic changes and no fake `vector(0)` alert placeholders.
+- Added source-linked Grafana dashboards, Prometheus alert candidates, Alloy/OpenTelemetry baselines, a self-contained HTML migration report, and a transparent exit-readiness formula.
+- Added schema-backed provenance and validation manifests plus transactional directory export with per-file source references and `SHA256SUMS`.
+- Moved the earlier multi-provider engine under `openexit experimental` while retaining hidden root aliases for compatibility.
 - Added `openexit doctor` for local runtime diagnostics covering version metadata, embedded schemas, and optional validator availability.
 - Added preview support for fixture-based OpenAI/Anthropic to vLLM/LiteLLM assessment.
 - Added explicit source/target project initialization and validation consistency checks for all assessment paths.
@@ -46,8 +54,6 @@
 - Added `make release-check` and wired the draft-release workflow to run the full release gate before packaging artifacts.
 - Updated push CI to run the same release readiness gate, including smoke pipelines and bundle verification.
 - Updated CI and release workflows to Node.js 24-native GitHub Actions.
-
-## 0.1.0 - 2026-05-24
 
 - Initial OpenExit implementation.
 - Added mocked live Datadog collector coverage and evidence ref hardening.

@@ -11,14 +11,15 @@ make build
 make release-dist VERSION=0.1.0-dev
 ```
 
-Keep changes local-first and deterministic. New collectors must default to read-only behavior, must never store credentials, and must redact raw evidence before it is written to disk.
+Keep changes local-first and deterministic. The primary Datadog client must remain GET-only, must never store credentials, and must redact source evidence before it is written to disk.
 
 ## Design Principles
 
 - Prefer explicit risk and manual-review flags over optimistic conversion.
-- Keep AI optional and outside the source of truth.
-- Add tests for new analyzer rules, collectors, and generated artifacts.
+- Keep AI conversion and automatic deployment out of the primary v0.1 workflow.
+- Add tests for catalog endpoints, pagination, redaction, converters, provenance, scoring, and generated artifacts.
 - Generated target files must be labeled as candidates.
+- Never emit executable placeholders for behavior that was not translated.
 
 ## Pull Requests
 
