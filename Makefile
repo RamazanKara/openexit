@@ -14,8 +14,9 @@ GOLANGCI_LINT ?= bin/golangci-lint
 EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
 EXAMPLE_STATE ?= examples/datadog-to-grafana/.openexit
 EXAMPLE_DIR ?= examples/datadog-to-grafana/migration
+README_DEMO_TAPE ?= docs/assets/openexit-demo.tape
 
-.PHONY: build test fmt fmt-check lint golangci-lint smoke experimental-smoke example example-smoke verify release-dist install-smoke release-check clean
+.PHONY: build test fmt fmt-check lint golangci-lint smoke experimental-smoke example example-smoke readme-demo verify release-dist install-smoke release-check clean
 
 build:
 	mkdir -p $(dir $(BINARY))
@@ -109,6 +110,10 @@ example-smoke: build
 	$(BINARY) datadog export --out "$$tmp/migration" --workdir "$$tmp/.openexit"; \
 	test -s "$$tmp/migration/index.html"; \
 	test -s "$$tmp/migration/manifest.json"
+
+readme-demo: build
+	@command -v vhs >/dev/null 2>&1 || (echo "vhs is required: https://github.com/charmbracelet/vhs"; exit 1)
+	vhs $(README_DEMO_TAPE)
 
 verify: lint test build smoke experimental-smoke example-smoke
 

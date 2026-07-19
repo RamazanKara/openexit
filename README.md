@@ -6,6 +6,14 @@ OpenExit v0.1 does one job: inventory a Datadog organization, translate the dete
 
 It does not deploy anything. It does not write to Datadog. It does not use AI to guess conversions.
 
+<p align="center">
+  <a href="#try-it-without-datadog-credentials">
+    <img src="docs/assets/openexit-demo.gif" alt="OpenExit scans a Datadog fixture, creates a Grafana LGTM migration plan, validates it, and exports Grafana, Prometheus, Alloy, and OpenTelemetry candidates." width="1200">
+  </a>
+</p>
+
+<p align="center"><sub>Real fixture run · deterministic output · unsafe conversions stay manual</sub></p>
+
 ## Workflow
 
 ```bash
@@ -180,6 +188,8 @@ make verify
 ```
 
 `make verify` runs formatting, static analysis, unit and end-to-end tests, a Datadog scan/plan/export smoke test, and compatibility tests for the experimental engine.
+
+Regenerate the fixture-backed README animation with `make readme-demo` ([VHS](https://github.com/charmbracelet/vhs) required).
 
 ## License
 
