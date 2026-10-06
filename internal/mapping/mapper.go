@@ -1,7 +1,6 @@
 package mapping
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,13 +20,6 @@ const (
 	APIVersion = "openexit.dev/v1alpha1"
 	Kind       = "Mapping"
 )
-
-type Mapper interface {
-	Name() string
-	Source() string
-	Target() string
-	Map(ctx context.Context, inv *inventory.Inventory, findings []assessment.Finding) (*MappingResult, error)
-}
 
 type MappingResult struct {
 	APIVersion       string         `json:"apiVersion" yaml:"apiVersion"`
