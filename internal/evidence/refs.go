@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+
+	"github.com/RamazanKara/openexit/internal/inventory"
 )
 
 func PathForRef(projectDir, ref string) (string, error) {
@@ -84,28 +86,5 @@ func PathForRef(projectDir, ref string) (string, error) {
 	default:
 		dir = kind
 	}
-	return filepath.Join(projectDir, "evidence", source, dir, slugPath(id)+".json"), nil
-}
-
-func slugPath(value string) string {
-	value = strings.ToLower(strings.TrimSpace(value))
-	var b strings.Builder
-	lastDash := false
-	for _, r := range value {
-		ok := (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')
-		if ok {
-			b.WriteRune(r)
-			lastDash = false
-			continue
-		}
-		if !lastDash {
-			b.WriteByte('-')
-			lastDash = true
-		}
-	}
-	out := strings.Trim(b.String(), "-")
-	if out == "" {
-		return "unnamed"
-	}
-	return out
+	return filepath.Join(projectDir, "evidence", source, dir, inventory.Slug(id)+".json"), nil
 }

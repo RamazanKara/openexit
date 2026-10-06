@@ -152,12 +152,6 @@ func CheckProject(projectDir string) (*ProjectStatus, error) {
 	return status, nil
 }
 
-func RequiredProjectDirs() []string {
-	out := make([]string, len(requiredProjectDirs))
-	copy(out, requiredProjectDirs)
-	return out
-}
-
 func (status *ProjectStatus) layoutOK() bool {
 	return status != nil && status.ConfigOK && len(status.Missing) == 0
 }

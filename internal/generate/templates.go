@@ -39,9 +39,3 @@ var aiMarkdownArtifacts = []string{
 	"evaluation-plan",
 	"data-sensitivity-report",
 }
-
-func MarkdownArtifacts() []string {
-	out := make([]string, len(markdownArtifacts))
-	copy(out, markdownArtifacts)
-	return out
-}
