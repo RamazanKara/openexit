@@ -80,7 +80,7 @@ resolve_version() {
 
 verify_checksum() {
 	asset="$1"
-	awk -v want="$asset" '$2 == want { print }' "$tmp/SHA256SUMS" > "$tmp/SHA256SUMS.selected"
+	awk -v want="$asset" '$2 == want || $2 == ("*" want) { print }' "$tmp/SHA256SUMS" > "$tmp/SHA256SUMS.selected"
 	[ -s "$tmp/SHA256SUMS.selected" ] || fail "SHA256SUMS has no entry for $asset"
 	if command -v sha256sum >/dev/null 2>&1; then
 		(cd "$tmp" && sha256sum -c SHA256SUMS.selected >/dev/null) || fail "checksum verification failed for $asset"

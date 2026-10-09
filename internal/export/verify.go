@@ -34,6 +34,7 @@ type VerificationReport struct {
 	ManifestFiles   int              `json:"manifestFiles"`
 	ChecksumEntries int              `json:"checksumEntries"`
 	ArchiveFiles    int              `json:"archiveFiles"`
+	DirectoryFiles  int              `json:"directoryFiles,omitempty"`
 	Errors          []string         `json:"errors,omitempty"`
 }
 
@@ -42,6 +43,9 @@ func Verify(opts VerifyOptions) (*VerificationReport, error) {
 	if strings.TrimSpace(opts.BundlePath) == "" {
 		reportError(report, "--bundle is required")
 		return report, verificationError(report)
+	}
+	if info, err := os.Stat(opts.BundlePath); err == nil && info.IsDir() {
+		return verifyDirectory(opts.BundlePath)
 	}
 	reader, err := zip.OpenReader(opts.BundlePath)
 	if err != nil {
@@ -112,7 +116,7 @@ func verifyManifest(files map[string][]byte, report *VerificationReport) *Bundle
 		reportError(report, "missing "+bundlePrefix+"/manifest.json")
 		return nil
 	}
-	if err := validateManifestSchema(data); err != nil {
+	if err := validateManifestSchema(data, "openexit.evidence-bundle.schema.json"); err != nil {
 		reportError(report, "manifest schema: "+err.Error())
 		return nil
 	}
@@ -214,8 +218,8 @@ func verifyChecksums(files map[string][]byte, report *VerificationReport) {
 	}
 }
 
-func validateManifestSchema(data []byte) error {
-	schemaData, err := publicschemas.FS.ReadFile("openexit.evidence-bundle.schema.json")
+func validateManifestSchema(data []byte, schemaFile string) error {
+	schemaData, err := publicschemas.FS.ReadFile(schemaFile)
 	if err != nil {
 		return err
 	}
@@ -225,10 +229,10 @@ func validateManifestSchema(data []byte) error {
 	if err != nil {
 		return err
 	}
-	if err := compiler.AddResource("openexit.evidence-bundle.schema.json", document); err != nil {
+	if err := compiler.AddResource(schemaFile, document); err != nil {
 		return err
 	}
-	schema, err := compiler.Compile("openexit.evidence-bundle.schema.json")
+	schema, err := compiler.Compile(schemaFile)
 	if err != nil {
 		return err
 	}

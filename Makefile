@@ -1,5 +1,7 @@
 GO ?= go
-BINARY ?= bin/openexit
+SHELL := sh
+EXEEXT := $(shell $(GO) env GOEXE)
+BINARY ?= bin/openexit$(EXEEXT)
 VERSION ?= 0.1.0-dev
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -10,20 +12,35 @@ RELEASE_MANIFEST ?= RELEASE_MANIFEST.json
 RELEASE_SBOM ?= SBOM.cdx.json
 RELEASE_ASSETS ?= install.sh openexit.bash _openexit openexit.fish openexit.ps1 $(RELEASE_SBOM)
 GOLANGCI_LINT_VERSION ?= v2.12.2
-GOLANGCI_LINT ?= bin/golangci-lint
+GOLANGCI_LINT ?= bin/golangci-lint$(EXEEXT)
 EXAMPLE_INPUT ?= examples/datadog-to-grafana/input/datadog-fixture.json
 EXAMPLE_STATE ?= examples/datadog-to-grafana/.openexit
 EXAMPLE_DIR ?= examples/datadog-to-grafana/migration
 README_DEMO_TAPE ?= docs/assets/openexit-demo.tape
 
-.PHONY: build test fmt fmt-check lint golangci-lint smoke experimental-smoke example example-smoke readme-demo verify release-dist install-smoke release-check clean
+.PHONY: build test fuzz govulncheck fmt fmt-check lint golangci-lint smoke experimental-smoke example example-smoke readme-demo verify release-dist install-smoke release-check clean
 
 build:
 	mkdir -p $(dir $(BINARY))
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/openexit
 
 test:
-	$(GO) test -race ./...
+	@if [ "$$($(GO) env CGO_ENABLED)" = "1" ]; then \
+		$(GO) test -race ./...; \
+	else \
+		echo "CGO_ENABLED=0: running tests without the race detector"; \
+		$(GO) test ./...; \
+	fi
+
+fuzz:
+	$(GO) test ./internal/export -run '^$$' -fuzz '^FuzzDirectoryChecksums$$' -fuzztime=5s -parallel=2
+	$(GO) test ./internal/export -run '^$$' -fuzz '^FuzzDirectoryManifest$$' -fuzztime=5s -parallel=2
+	$(GO) test ./internal/datadogplan -run '^$$' -fuzz '^FuzzDatadogQueries$$' -fuzztime=5s -parallel=2
+	$(GO) test ./internal/release -run '^$$' -fuzz '^FuzzReleaseChecksums$$' -fuzztime=5s -parallel=2
+
+govulncheck:
+	GOBIN=$(CURDIR)/bin $(GO) install golang.org/x/vuln/cmd/govulncheck@v1.8.0
+	bin/govulncheck$(EXEEXT) ./...
 
 fmt:
 	gofmt -w $(GOFILES)
@@ -47,6 +64,7 @@ smoke:
 	$(BINARY) datadog scan --fixture ./testdata/datadog/small.json --workdir "$$tmp/.openexit"; \
 	$(BINARY) datadog plan --target grafana-lgtm --workdir "$$tmp/.openexit"; \
 	$(BINARY) datadog export --out "$$tmp/migration" --workdir "$$tmp/.openexit"; \
+	$(BINARY) verify-bundle "$$tmp/migration"; \
 	test -s "$$tmp/migration/index.html"; \
 	test -s "$$tmp/migration/manifest.json"; \
 	test -s "$$tmp/migration/SHA256SUMS"; \
@@ -117,7 +135,7 @@ readme-demo: build
 	@command -v vhs >/dev/null 2>&1 || (echo "vhs is required: https://github.com/charmbracelet/vhs"; exit 1)
 	vhs $(README_DEMO_TAPE)
 
-verify: lint test build smoke experimental-smoke example-smoke
+verify: lint test fuzz govulncheck build smoke experimental-smoke example-smoke
 
 release-dist:
 	rm -rf dist

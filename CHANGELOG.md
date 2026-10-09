@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Fixed release verification and installer selection of GNU binary-mode SHA256SUMS produced on Windows, with parser regression and fuzz coverage.
+
+- Added `--json` to Datadog scan, plan, and export, reusing the existing inventory, plan, and bundle manifest formats while preserving failure exit statuses.
+- Added read-only `datadog explain <source-ref>` with text and JSON conversion decisions, component queries, semantic changes, review guidance, evidence, and output links.
+- Extended `verify-bundle` to exported migration directories with schema, file-size, SHA-256, completeness, duplicate-entry, and path/symlink checks; checksum errors include line numbers.
+- Preserve diagnostic inventory for live scans with no readable resources, including fully permission-denied scans.
+- Added table-driven regression tests and checksum, manifest, and Datadog query fuzz tests; fixed the zip-tampering test's open-file rename on Windows.
+- Consolidated CI into one `make verify` workflow with bounded fuzzing and govulncheck; Make targets support Windows executable suffixes and skip race detection explicitly when cgo is disabled.
+- Documented local release builds with version metadata and SHA256SUMS; no release publication is automated.
+
 ## 0.1.0 - 2026-07-18
 
 - Refocused the v0.1 product on one workflow: `openexit datadog scan`, `plan --target grafana-lgtm`, and `export --out <directory>`.

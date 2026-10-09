@@ -1567,6 +1567,9 @@ func corruptBundleEntry(t *testing.T, bundlePath, entryName string, replacement 
 	if !replaced {
 		t.Fatalf("bundle entry %s not found", entryName)
 	}
+	if err := reader.Close(); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.Rename(tmpPath, bundlePath); err != nil {
 		t.Fatal(err)
 	}

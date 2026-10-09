@@ -49,13 +49,48 @@ GitHub Enterprise, identity, edge, AI-provider, and legacy project workflows rem
 
 ## Release Commands
 
-Run the full gate on Linux, macOS, or WSL with a C compiler for `-race`. The shell installer supports Linux and macOS; it does not run on native Windows. Push/manual CI runs only lint, test, and build; the separate manual draft-release workflow runs `make release-check`.
+Run `make verify` locally with Go, GNU Make, and a POSIX shell (Git Bash on Windows). Race tests run only when cgo is enabled; otherwise the gate reports the skip. The single push/manual CI workflow uses this same target. GitHub Actions availability is not required for local verification. The shell installer and `make install-smoke` support Linux and macOS; they do not run on native Windows.
 
 ```bash
 make verify VERSION=0.1.0
 make release-check VERSION=0.1.0
 openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums
 ```
+
+## Local Builds
+
+Prepare release artifacts locally without publishing anything:
+
+```bash
+make verify
+make release-dist VERSION=0.1.0-dev
+./bin/openexit verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums
+(cd dist && sha256sum -c SHA256SUMS)
+```
+
+On Windows with Git Bash, the verifier binary is `./bin/openexit.exe`. `release-dist` replaces `dist/` and builds Linux, macOS, and Windows binaries plus installer, completions, SBOM, manifest, and checksums. Set the existing `VERSION`, `COMMIT`, and `DATE` Make variables to fixed values when comparing repeat builds. Run `make release-check` on Linux or macOS to include the installer smoke test.
+
+For a single Windows amd64 binary from native PowerShell:
+
+```powershell
+$releaseVersion = '0.1.0-dev'
+$releaseCommit = git rev-parse --short HEAD
+$releaseDate = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+$versionPackage = 'github.com/RamazanKara/openexit/internal/version'
+$stamp = "-s -w -X $versionPackage.Version=$releaseVersion -X $versionPackage.Commit=$releaseCommit -X $versionPackage.Date=$releaseDate"
+$artifact = "openexit_${releaseVersion}_windows_amd64.exe"
+$env:CGO_ENABLED = '0'
+$env:GOOS = 'windows'
+$env:GOARCH = 'amd64'
+New-Item -ItemType Directory -Force dist | Out-Null
+go build -trimpath -ldflags $stamp -o "dist/$artifact" ./cmd/openexit
+& "./dist/$artifact" release-manifest --dist dist --platform windows/amd64 --out dist/RELEASE_MANIFEST.json
+$hash = (Get-FileHash "dist/$artifact" -Algorithm SHA256).Hash.ToLowerInvariant()
+"$hash  $artifact" | Set-Content dist/SHA256SUMS -Encoding ascii
+& "./dist/$artifact" verify-release dist/RELEASE_MANIFEST.json --dist dist --require-checksums
+```
+
+These commands create local files only. They do not tag, commit, push, or publish a release.
 
 ## Draft Release Summary
 

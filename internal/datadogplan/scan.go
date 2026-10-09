@@ -53,6 +53,9 @@ func Scan(ctx context.Context, opts ScanOptions) (*Inventory, error) {
 		return nil, err
 	}
 	defer func() { _ = os.RemoveAll(stage) }()
+	if err := os.MkdirAll(filepath.Join(stage, "evidence"), 0o755); err != nil {
+		return nil, err
+	}
 
 	var inv *Inventory
 	if opts.Fixture != "" {

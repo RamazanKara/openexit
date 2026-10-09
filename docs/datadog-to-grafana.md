@@ -88,7 +88,9 @@ Every inventory resource has:
 - a source URL where Datadog exposes a useful UI location;
 - dependency references where they are discoverable.
 
-Every conversion record links the source reference, evidence path, status, reason codes, semantic changes, component decisions, and generated outputs. The export manifest reverses this mapping by listing source references for evidence and generated files.
+Every conversion record links the source reference, evidence path, status, reason codes, semantic changes, component decisions, and generated outputs. Inspect a single record with `openexit datadog explain <source-ref> [--json]`. The export manifest reverses this mapping by listing source references for evidence and generated files.
+
+Recipients can run `openexit verify-bundle migration/ [--json]` to check the manifest and all file checksums offline. See [the CLI reference](cli.md) for output and error behavior.
 
 ## Validation and Export Gate
 

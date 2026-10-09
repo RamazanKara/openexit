@@ -908,8 +908,8 @@ func newExportCommand() *cobra.Command {
 func newVerifyBundleCommand() *cobra.Command {
 	var jsonOutput bool
 	cmd := &cobra.Command{
-		Use:   "verify-bundle <bundle.zip>",
-		Short: "Verify an exported OpenExit evidence bundle",
+		Use:   "verify-bundle <directory|bundle.zip>",
+		Short: "Verify an exported migration directory or legacy evidence zip",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			report, err := openexport.Verify(openexport.VerifyOptions{BundlePath: args[0]})
@@ -944,7 +944,11 @@ func writeBundleVerification(w io.Writer, report *openexport.VerificationReport)
 	if report.Validation.Status != "" {
 		_, _ = fmt.Fprintf(w, "validation: %s (checks=%d passed=%d failed=%d warnings=%d)\n", report.Validation.Status, report.Validation.Checks, report.Validation.Passed, report.Validation.Failed, report.Validation.Warnings)
 	}
-	_, _ = fmt.Fprintf(w, "files: archive=%d manifest=%d checksums=%d\n", report.ArchiveFiles, report.ManifestFiles, report.ChecksumEntries)
+	if report.DirectoryFiles > 0 {
+		_, _ = fmt.Fprintf(w, "files: directory=%d manifest=%d checksums=%d\n", report.DirectoryFiles, report.ManifestFiles, report.ChecksumEntries)
+	} else {
+		_, _ = fmt.Fprintf(w, "files: archive=%d manifest=%d checksums=%d\n", report.ArchiveFiles, report.ManifestFiles, report.ChecksumEntries)
+	}
 	for _, message := range report.Errors {
 		_, _ = fmt.Fprintf(w, "error: %s\n", message)
 	}

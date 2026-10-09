@@ -24,6 +24,15 @@ openexit datadog export --out migration/
 
 Open `migration/index.html` in any browser. The report is self-contained and can be attached to an issue, reviewed in a pull request artifact, or shared with an observability team without running OpenExit.
 
+Inspect a resource's recorded decision or verify a received directory offline:
+
+```bash
+openexit datadog explain datadog:monitor:123456
+openexit verify-bundle migration/ --json
+```
+
+`datadog scan`, `plan`, and `export` also accept `--json` to write their inventory, plan, or bundle manifest to stdout. Errors still produce a nonzero exit; a partial scan or failed plan can include a JSON result for diagnosis. See [CLI examples and output contracts](docs/cli.md).
+
 ## What You Get
 
 ```text
@@ -107,6 +116,15 @@ make build
 export PATH="$PWD/bin:$PATH"
 ```
 
+Native Windows builds need Go; GNU Make and Git Bash are needed for the Make targets:
+
+```powershell
+go build -trimpath -o bin/openexit.exe ./cmd/openexit
+.\bin\openexit.exe doctor
+```
+
+See [local release preparation](docs/release.md#local-builds) for version stamping and `SHA256SUMS`.
+
 On Linux and macOS, published release binaries can also be installed with:
 
 ```bash
@@ -188,7 +206,7 @@ make test
 make verify
 ```
 
-`make test` runs the Go tests with the race detector and requires a C compiler. `make verify` also runs formatting, static analysis, a build, a Datadog scan/plan/export smoke test, and compatibility tests for the experimental engine. CI runs `make lint`, `make test`, and `make build` on pushes and manual dispatch; run these targets locally when GitHub Actions is unavailable.
+`make test` runs with the race detector when `go env CGO_ENABLED` is `1` (a C compiler is required); otherwise it reports that race detection is skipped and runs ordinary tests. `make verify` also runs formatting, static analysis (including staticcheck and go vet), bounded parser fuzzing, govulncheck, a build, Datadog scan/plan/export/verification smoke tests, and experimental compatibility smoke tests. The single CI workflow runs `make verify`; run the same target locally when GitHub Actions is unavailable.
 
 Regenerate the fixture-backed README animation with `make readme-demo` ([VHS](https://github.com/charmbracelet/vhs) required).
 

@@ -48,17 +48,45 @@ Reruns validation and copies the fixed migration payload into a review directory
 
 The export includes a schema-backed `manifest.json` and `SHA256SUMS`. It rejects stale plans, critical validation failures, unsafe paths, symlinks, and secret-like content.
 
+### JSON output
+
+Add `--json` to `datadog scan`, `plan`, or `export` to emit exactly the persisted inventory, migration plan, or bundle manifest as one JSON document on stdout. Existing text output is the default. The JSON documents use the existing [public schemas](schemas.md).
+
+```bash
+openexit datadog scan --fixture testdata/datadog/small.json --json > inventory.json
+openexit datadog plan --json > plan.json
+openexit datadog export --out migration/ --json > bundle.json
+```
+
+A persisted partial scan or failed plan is still emitted with a nonzero exit status. Failures before a result exists leave stdout empty; diagnostics go to stderr. Check the exit status before treating output as successful. Keep redirected files outside the work and export directories.
+
+### `datadog explain <source-ref>`
+
+Shows the recorded status, reason codes, semantic changes, widget/query decisions, source and target queries, review guidance, evidence path, and generated outputs for one resource. Use the full `sourceRef` from the plan, such as `datadog:monitor:123456`.
+
+```bash
+openexit datadog explain datadog:monitor:123456
+openexit datadog explain datadog:dashboard:abc-123 --json
+openexit datadog explain datadog:monitor:123456 --workdir migration/
+```
+
+`--workdir` defaults to `.openexit` and also accepts an exported migration directory. `--json` emits the resource's conversion record. This command is local and read-only; it refuses missing, malformed, or stale plans and reports unknown references. It explains the saved decision without rerunning conversion or approving the generated candidates.
+
 ## Runtime and Release Utilities
 
 - `openexit version`
 - `openexit doctor [--json] [--strict]`
 - `openexit completion bash|zsh|fish|powershell`
 - `openexit sbom [--out SBOM.cdx.json]`
-- `openexit verify-bundle <legacy-bundle.zip> [--json]`
+- `openexit verify-bundle <migration-directory|legacy-bundle.zip> [--json]`
 - `openexit release-manifest [flags]`
 - `openexit verify-release <manifest.json> [flags]`
 
-`doctor` verifies build metadata, embedded schema compilation, and optional local validators. Release commands and legacy zip verification are retained for distribution compatibility.
+`doctor` verifies build metadata, embedded schema compilation, and optional local validators.
+
+`verify-bundle migration/` checks an exported directory offline without changing files. It validates `manifest.json` against the embedded migration-bundle schema, checks file sizes and SHA-256 digests, and requires complete `SHA256SUMS` coverage including the manifest. Missing or extra payload files, duplicate entries, unsafe paths, symlinks, and malformed checksums fail verification. Checksum syntax errors include line numbers; LF and CRLF checksum files are accepted. JSON reports include `status`, `errors`, `manifestFiles`, `checksumEntries`, and `directoryFiles`; failures retain a nonzero exit. Legacy zip verification keeps its existing behavior.
+
+Checksums establish integrity relative to the supplied manifest, not publisher authenticity. Verification does not rerun migration validation or certify production readiness.
 
 ## Experimental Multi-provider Engine
 

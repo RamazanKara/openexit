@@ -371,6 +371,10 @@ func readChecksums(path string, report *VerificationReport, require bool) map[st
 		}
 		return nil
 	}
+	return parseChecksums(data, report)
+}
+
+func parseChecksums(data []byte, report *VerificationReport) map[string]string {
 	checksums := map[string]string{}
 	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
 	for _, line := range lines {
@@ -384,6 +388,9 @@ func readChecksums(path string, report *VerificationReport, require bool) map[st
 			continue
 		}
 		digest, rel := parts[0], parts[1]
+		if strings.HasPrefix(line, digest+" *") {
+			rel = strings.TrimPrefix(rel, "*")
+		}
 		report.ChecksumEntries++
 		if !isSHA256Hex(digest) {
 			reportError(report, "invalid SHA256SUMS digest for "+rel)
