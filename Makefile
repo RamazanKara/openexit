@@ -4,7 +4,7 @@ VERSION ?= 0.1.0-dev
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -s -w -X github.com/RamazanKara/openexit/internal/version.Version=$(VERSION) -X github.com/RamazanKara/openexit/internal/version.Commit=$(COMMIT) -X github.com/RamazanKara/openexit/internal/version.Date=$(DATE)
-GOFILES := $(shell find . -name '*.go' -not -path './bin/*' -not -path './dist/*')
+GOFILES := $(shell find . -type d \( -name bin -o -name dist \) -prune -o -name '*.go' -print)
 PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
 RELEASE_MANIFEST ?= RELEASE_MANIFEST.json
 RELEASE_SBOM ?= SBOM.cdx.json
@@ -23,23 +23,25 @@ build:
 	CGO_ENABLED=0 $(GO) build -trimpath -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/openexit
 
 test:
-	$(GO) test ./...
+	$(GO) test -race ./...
 
 fmt:
 	gofmt -w $(GOFILES)
 
 fmt-check:
-	@test -z "$$(gofmt -l $(GOFILES))" || (echo "gofmt required:"; gofmt -l $(GOFILES); exit 1)
+	@files=$$(gofmt -l $(GOFILES)) || exit 1; \
+	test -z "$$files" || (printf 'gofmt required:\n%s\n' "$$files"; exit 1)
 
 lint: fmt-check golangci-lint
 	$(GO) vet ./...
 
 golangci-lint:
-	GOBIN=$(CURDIR)/bin $(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	@$(GOLANGCI_LINT) version --short 2>/dev/null | grep -qx '$(patsubst v%,%,$(GOLANGCI_LINT_VERSION))' || \
+		GOBIN=$(CURDIR)/bin $(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 	$(GOLANGCI_LINT) run
 
 smoke:
-	tmp=$$(mktemp -d); \
+	set -e; tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
 	$(BINARY) doctor; \
 	$(BINARY) datadog scan --fixture ./testdata/datadog/small.json --workdir "$$tmp/.openexit"; \
@@ -51,7 +53,7 @@ smoke:
 	! grep -R 'vector(0)' "$$tmp/migration/generated"
 
 experimental-smoke:
-	tmp=$$(mktemp -d); \
+	set -e; tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
 	$(BINARY) experimental demo "$$tmp/builtin-demo" --out "$$tmp/builtin-demo.zip"; \
 	test -s "$$tmp/builtin-demo.zip"; \
@@ -103,7 +105,7 @@ example: build
 	$(BINARY) datadog export --force --out $(EXAMPLE_DIR) --workdir $(EXAMPLE_STATE)
 
 example-smoke: build
-	tmp=$$(mktemp -d); \
+	set -e; tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
 	$(BINARY) datadog scan --fixture ./$(EXAMPLE_INPUT) --workdir "$$tmp/.openexit"; \
 	$(BINARY) datadog plan --target grafana-lgtm --workdir "$$tmp/.openexit"; \
@@ -120,7 +122,7 @@ verify: lint test build smoke experimental-smoke example-smoke
 release-dist:
 	rm -rf dist
 	mkdir -p dist
-	for target in $(PLATFORMS); do \
+	set -e; for target in $(PLATFORMS); do \
 		os=$${target%/*}; \
 		arch=$${target#*/}; \
 		ext=""; \
@@ -140,7 +142,7 @@ release-dist:
 	cd dist && sha256sum openexit_* $(RELEASE_ASSETS) > SHA256SUMS
 
 install-smoke: release-dist
-	tmp=$$(mktemp -d); \
+	set -e; tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
 	OPENEXIT_VERSION=$(VERSION) OPENEXIT_BASE_URL=$(CURDIR)/dist BIN_DIR="$$tmp/bin" sh scripts/install.sh; \
 	"$$tmp/bin/openexit" version | grep -q 'version: $(VERSION)'

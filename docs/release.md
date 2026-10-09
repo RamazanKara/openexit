@@ -49,6 +49,8 @@ GitHub Enterprise, identity, edge, AI-provider, and legacy project workflows rem
 
 ## Release Commands
 
+Run the full gate on Linux, macOS, or WSL with a C compiler for `-race`. The shell installer supports Linux and macOS; it does not run on native Windows. Push/manual CI runs only lint, test, and build; the separate manual draft-release workflow runs `make release-check`.
+
 ```bash
 make verify VERSION=0.1.0
 make release-check VERSION=0.1.0

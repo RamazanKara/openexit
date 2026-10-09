@@ -1,13 +1,14 @@
 # AI Assist
 
-AI assist is optional. The default provider is `noop`, and deterministic artifacts do not depend on AI output.
+AI assist belongs to the experimental engine and is optional. The default provider is `noop`, and deterministic artifacts do not depend on AI output.
 
 AI output must use the `.ai.md` suffix and must include a review warning.
 
 ## No-op Provider
 
 ```bash
-openexit assist summarize \
+openexit experimental demo ./demo
+openexit experimental assist summarize \
   --project ./demo \
   --provider noop \
   --out ./demo/assessment/executive-summary.ai.md
@@ -33,13 +34,13 @@ Set the LiteLLM endpoint through environment variables:
 
 ```bash
 export OPENEXIT_LITELLM_BASE_URL=http://localhost:4000
-export OPENEXIT_LITELLM_API_KEY=<optional-placeholder>
+export OPENEXIT_LITELLM_API_KEY='<optional-placeholder>'
 ```
 
 Then run:
 
 ```bash
-openexit assist summarize \
+openexit experimental assist summarize \
   --project ./demo \
   --provider litellm \
   --model qwen \

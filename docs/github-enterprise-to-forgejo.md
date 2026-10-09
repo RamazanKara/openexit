@@ -18,15 +18,15 @@ The live collector gathers repository, team, branch protection, Actions workflow
 Live collection:
 
 ```bash
-export GITHUB_TOKEN=<read-only-token>
-openexit init ./ghe-live --source github-enterprise --target forgejo
-openexit collect github --project ./ghe-live --owner acme --token-env GITHUB_TOKEN
+export GITHUB_TOKEN='<read-only-token>'
+openexit experimental init ./ghe-live --source github-enterprise --target forgejo
+openexit experimental collect github --project ./ghe-live --owner acme --token-env GITHUB_TOKEN
 ```
 
 For GitHub Enterprise Server:
 
 ```bash
-openexit collect github --project ./ghe-live --owner acme --base-url https://github.example.com/api/v3
+openexit experimental collect github --project ./ghe-live --owner acme --base-url https://github.example.com/api/v3
 ```
 
 Use `--repo` one or more times to limit collection to selected repositories. Repository names can be passed as `name` or `owner/name`.

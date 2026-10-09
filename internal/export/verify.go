@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path"
 	"sort"
 	"strings"
@@ -52,11 +53,18 @@ func Verify(opts VerifyOptions) (*VerificationReport, error) {
 	files := map[string][]byte{}
 	for _, file := range reader.File {
 		if file.FileInfo().IsDir() {
+			if file.Mode()&os.ModeType != os.ModeDir {
+				reportError(report, "non-regular archive entry "+file.Name)
+			}
 			continue
 		}
 		report.ArchiveFiles++
 		if err := safeArchiveName(file.Name); err != nil {
 			reportError(report, err.Error())
+			continue
+		}
+		if !file.Mode().IsRegular() {
+			reportError(report, "non-regular archive entry "+file.Name)
 			continue
 		}
 		if _, exists := files[file.Name]; exists {
@@ -141,6 +149,15 @@ func verifyManifest(files map[string][]byte, report *VerificationReport) *Bundle
 			reportError(report, "manifest size mismatch for "+entry.Path)
 		}
 	}
+	for name := range files {
+		rel := strings.TrimPrefix(name, bundlePrefix+"/")
+		if rel == "manifest.json" || rel == "checksums.txt" || rel == "README.md" {
+			continue
+		}
+		if _, exists := seen[rel]; !exists {
+			reportError(report, "missing manifest entry for "+rel)
+		}
+	}
 	return &manifest
 }
 
@@ -151,18 +168,17 @@ func verifyChecksums(files map[string][]byte, report *VerificationReport) {
 		return
 	}
 	seen := map[string]struct{}{}
-	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
+		line = strings.TrimSuffix(line, "\r")
 		if line == "" {
 			continue
 		}
-		parts := strings.Fields(line)
-		if len(parts) != 2 {
+		digest, rel, ok := strings.Cut(line, "  ")
+		if !ok {
 			reportError(report, "malformed checksum line "+line)
 			continue
 		}
-		digest, rel := parts[0], parts[1]
 		report.ChecksumEntries++
 		if !isSHA256Hex(digest) {
 			reportError(report, "invalid checksum digest for "+rel)
@@ -238,6 +254,9 @@ func safeManifestPath(rel string) error {
 	if strings.HasPrefix(rel, "/") || strings.HasPrefix(rel, `\`) {
 		return errors.New("absolute path not allowed")
 	}
+	if strings.ContainsAny(rel, ":\r\n\x00") {
+		return errors.New("unsafe path not allowed")
+	}
 	cleaned := path.Clean(strings.ReplaceAll(rel, `\`, "/"))
 	if cleaned == "." || cleaned != rel {
 		return errors.New("unclean path not allowed")
@@ -245,6 +264,9 @@ func safeManifestPath(rel string) error {
 	for _, part := range strings.Split(cleaned, "/") {
 		if part == ".." {
 			return errors.New("path traversal not allowed")
+		}
+		if strings.TrimRight(part, " .") != part {
+			return errors.New("unsafe path not allowed")
 		}
 	}
 	return nil

@@ -52,7 +52,7 @@ Every Datadog resource gets one conversion status:
 | `manual` | The resource is inventoried, but no executable guess is emitted for the unsafe part. |
 | `unsupported` | The capability is outside the Grafana LGTM v0.1 target. |
 
-Complex anomaly, outlier, forecast, composite, formula, and unsupported query behavior remains manual. OpenExit never hides missing work behind `vector(0)` or another fake executable result.
+Complex anomaly, outlier, forecast, composite, formula, and unsupported query behavior remains manual. The Datadog v0.1 workflow never hides missing work behind `vector(0)` or another fake executable result.
 
 ## Why the Output Is Reviewable
 
@@ -97,16 +97,17 @@ The score is migration-plan coverage, not cutover approval or production readine
 
 ## Install
 
-Build from source with Go 1.25 or newer:
+Build from source with Go 1.26.9 or newer, GNU Make, and a POSIX shell (Linux, macOS, or WSL):
 
 ```bash
 git clone https://github.com/RamazanKara/openexit.git
 cd openexit
 make build
 ./bin/openexit version
+export PATH="$PWD/bin:$PATH"
 ```
 
-Release binaries can also be installed with:
+On Linux and macOS, published release binaries can also be installed with:
 
 ```bash
 curl -fsSL https://github.com/RamazanKara/openexit/releases/latest/download/install.sh | sh
@@ -187,7 +188,7 @@ make test
 make verify
 ```
 
-`make verify` runs formatting, static analysis, unit and end-to-end tests, a Datadog scan/plan/export smoke test, and compatibility tests for the experimental engine.
+`make test` runs the Go tests with the race detector and requires a C compiler. `make verify` also runs formatting, static analysis, a build, a Datadog scan/plan/export smoke test, and compatibility tests for the experimental engine. CI runs `make lint`, `make test`, and `make build` on pushes and manual dispatch; run these targets locally when GitHub Actions is unavailable.
 
 Regenerate the fixture-backed README animation with `make readme-demo` ([VHS](https://github.com/charmbracelet/vhs) required).
 

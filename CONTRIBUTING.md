@@ -4,12 +4,16 @@ Thanks for helping make OpenExit useful and trustworthy.
 
 ## Development
 
+Use Go 1.26.9 or newer, GNU Make, a POSIX shell, and a C compiler for race tests. On Windows, use WSL for the full release gate, including the Linux/macOS installer smoke test.
+
 ```bash
 make test
 make lint
 make build
 make release-dist VERSION=0.1.0-dev
 ```
+
+CI runs lint, race tests, and build on push or manual dispatch. These same local Make targets are the gate when GitHub Actions is unavailable; `make verify` adds fixture smoke tests. The separate draft-release workflow remains manually dispatched.
 
 Keep changes local-first and deterministic. The primary Datadog client must remain GET-only, must never store credentials, and must redact source evidence before it is written to disk.
 

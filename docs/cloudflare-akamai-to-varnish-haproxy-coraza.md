@@ -20,9 +20,9 @@ The live Akamai collector gathers Edge DNS recordsets, Property Manager hostname
 Live Cloudflare collection:
 
 ```bash
-export CLOUDFLARE_API_TOKEN=<read-only-token>
-openexit init ./cloudflare-live --source edge --target varnish-haproxy-coraza
-openexit collect cloudflare --project ./cloudflare-live --zone-id <zone-id> --token-env CLOUDFLARE_API_TOKEN
+export CLOUDFLARE_API_TOKEN='<read-only-token>'
+openexit experimental init ./cloudflare-live --source edge --target varnish-haproxy-coraza
+openexit experimental collect cloudflare --project ./cloudflare-live --zone-id '<zone-id>' --token-env CLOUDFLARE_API_TOKEN
 ```
 
 The collector treats plan-specific or unavailable Cloudflare products as warnings. Missing ruleset phases do not block DNS, TLS, page-rule, or available ruleset evidence collection.
@@ -30,8 +30,8 @@ The collector treats plan-specific or unavailable Cloudflare products as warning
 Live Akamai collection:
 
 ```bash
-openexit init ./akamai-live --source edge --target varnish-haproxy-coraza
-openexit collect akamai \
+openexit experimental init ./akamai-live --source edge --target varnish-haproxy-coraza
+openexit experimental collect akamai \
   --project ./akamai-live \
   --zone example.com \
   --property-id prp_12345 \

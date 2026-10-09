@@ -20,29 +20,29 @@ The live Auth0 collector gathers clients, role metadata and member counts, actio
 Live Okta collection:
 
 ```bash
-export OKTA_API_TOKEN=<read-only-token>
-openexit init ./okta-live --source identity --target keycloak-zitadel
-openexit collect okta --project ./okta-live --org-url https://dev-123456.okta.com --token-env OKTA_API_TOKEN
+export OKTA_API_TOKEN='<read-only-token>'
+openexit experimental init ./okta-live --source identity --target keycloak-zitadel
+openexit experimental collect okta --project ./okta-live --org-url https://dev-123456.okta.com --token-env OKTA_API_TOKEN
 ```
 
 To capture emergency account readiness, pass one or more break-glass users:
 
 ```bash
-openexit collect okta --project ./okta-live --org-url https://dev-123456.okta.com --break-glass-user breakglass-admin@example.com
+openexit experimental collect okta --project ./okta-live --org-url https://dev-123456.okta.com --break-glass-user breakglass-admin@example.com
 ```
 
 Live Auth0 collection:
 
 ```bash
-export AUTH0_MANAGEMENT_TOKEN=<read-only-management-token>
-openexit init ./auth0-live --source identity --target keycloak-zitadel
-openexit collect auth0 --project ./auth0-live --domain https://example.us.auth0.com --token-env AUTH0_MANAGEMENT_TOKEN
+export AUTH0_MANAGEMENT_TOKEN='<read-only-management-token>'
+openexit experimental init ./auth0-live --source identity --target keycloak-zitadel
+openexit experimental collect auth0 --project ./auth0-live --domain https://example.us.auth0.com --token-env AUTH0_MANAGEMENT_TOKEN
 ```
 
 To capture emergency account readiness, pass one or more break-glass users by email, username, or Auth0 user ID:
 
 ```bash
-openexit collect auth0 --project ./auth0-live --domain https://example.us.auth0.com --break-glass-user breakglass-admin@example.com
+openexit experimental collect auth0 --project ./auth0-live --domain https://example.us.auth0.com --break-glass-user breakglass-admin@example.com
 ```
 
 Auth0 API surface used:

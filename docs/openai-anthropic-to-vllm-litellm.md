@@ -56,32 +56,32 @@ API surface used:
 ## Demo
 
 ```bash
-openexit init ./ai-demo --source ai-provider --target vllm-litellm
-openexit collect ai-fixture --project ./ai-demo --input ./testdata/ai-provider/small.json
-openexit run --project ./ai-demo
+openexit experimental init ./ai-demo --source ai-provider --target vllm-litellm
+openexit experimental collect ai-fixture --project ./ai-demo --input ./testdata/ai-provider/small.json
+openexit experimental run --project ./ai-demo
 ```
 
 ## Live OpenAI Demo
 
 ```bash
-export OPENAI_ADMIN_KEY=<admin-key>
-openexit init ./openai-live --source ai-provider --target vllm-litellm
-openexit collect openai \
+export OPENAI_ADMIN_KEY='<admin-key>'
+openexit experimental init ./openai-live --source ai-provider --target vllm-litellm
+openexit experimental collect openai \
   --project ./openai-live \
   --admin-key-env OPENAI_ADMIN_KEY \
   --workspace acme \
   --owner platform-ai \
   --fallback-strategy manual-queue \
   --fallback-manual-queue
-openexit run --project ./openai-live
+openexit experimental run --project ./openai-live
 ```
 
 ## Live Anthropic Demo
 
 ```bash
-export ANTHROPIC_ADMIN_KEY=<admin-key>
-openexit init ./anthropic-live --source ai-provider --target vllm-litellm
-openexit collect anthropic \
+export ANTHROPIC_ADMIN_KEY='<admin-key>'
+openexit experimental init ./anthropic-live --source ai-provider --target vllm-litellm
+openexit experimental collect anthropic \
   --project ./anthropic-live \
   --admin-key-env ANTHROPIC_ADMIN_KEY \
   --workspace platform \
@@ -89,7 +89,7 @@ openexit collect anthropic \
   --owner platform-ai \
   --fallback-strategy manual-queue \
   --fallback-manual-queue
-openexit run --project ./anthropic-live
+openexit experimental run --project ./anthropic-live
 ```
 
 ## Generated Artifacts

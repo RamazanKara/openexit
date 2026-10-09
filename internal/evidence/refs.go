@@ -15,10 +15,15 @@ func PathForRef(projectDir, ref string) (string, error) {
 	}
 	rest := strings.TrimPrefix(ref, prefix)
 	parts := strings.Split(rest, "/")
-	if len(parts) < 3 {
+	if len(parts) != 3 || parts[2] == "" {
 		return "", fmt.Errorf("invalid evidence ref %q", ref)
 	}
 	source, kind, id := parts[0], parts[1], parts[2]
+	for _, part := range []string{source, kind} {
+		if part == "" || strings.TrimRight(part, " .") != part || strings.ContainsAny(part, `\:`) {
+			return "", fmt.Errorf("invalid evidence ref %q", ref)
+		}
+	}
 	var dir string
 	switch kind {
 	case "dashboard":

@@ -115,6 +115,9 @@ func bundleFiles(projectDir string) ([]string, error) {
 		if d.IsDir() {
 			return nil
 		}
+		if err := safeManifestPath(filepath.ToSlash(rel)); err != nil {
+			return fmt.Errorf("refusing to export %s: %w", rel, err)
+		}
 		files = append(files, path)
 		return nil
 	})
